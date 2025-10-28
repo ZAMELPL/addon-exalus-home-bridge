@@ -1,0 +1,43 @@
+{
+  "name": "addon-exalus-bridge",
+  "version": "1.0.0",
+  "main": "dist/Startup.js",
+  "scripts": {
+    "bundle": "esbuild src/Startup.ts --bundle --platform=node --target=node18 --outfile=dist/bundle.js --sourcemap --external:bufferutil --external:utf-8-validate --external:jsdom --external:canvas && npm run bundle:copy-meta && npm run copy:jsdom-worker",
+    "bundle:copy-meta": "node -e \"const fs=require('fs'),p=['package.json','package-lock.json']; if(!fs.existsSync('dist')) fs.mkdirSync('dist'); for(const f of p) if(fs.existsSync(f)) fs.copyFileSync(f, 'dist/'+f);\"",
+    "copy:jsdom-worker": "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force dist | Out-Null; Copy-Item node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js dist/xhr-sync-worker.js\"",
+    "start": "node dist/Startup.js",
+    "dev": "ts-node src/Startup.ts",
+    "dev:watch": "ts-node --watch src/Startup.ts",
+    "clean": "rm -rf dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "jsdom": "^27.0.1",
+    "lavva.exalushome": "^2.0.262",
+    "mqtt": "^5.14.1",
+    "ws": "^8.18.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.5",
+    "@types/js-yaml": "^4.0.9",
+    "@types/jsdom": "^27.0.0",
+    "@types/node": "^24.9.1",
+    "esbuild": "^0.25.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "sideEffects": [
+    "dist/**",
+    "src/Shims/LocalStorage.ts",
+    "src/Services/ControllerDiscoveryService/ControllerDiscoveryService.ts"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "description": "Exalus Home Bridge TypeScript Application"
+}

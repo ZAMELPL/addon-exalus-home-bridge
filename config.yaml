@@ -1,0 +1,33 @@
+name: Exalus Home Bridge
+description: "Exalus bridge add-on that allows to integrate Exalus Home via MQTT"
+version: "1.0.2"
+slug: exalus-home-bridge
+init: false
+arch:
+  - amd64
+  - aarch64
+services:
+  - mqtt:need
+host_network: true
+options:
+  controller:
+    run_from_cloud: false
+  mqtt:
+    host: "core-mosquitto"
+    port: 1883
+    baseTopic: "homeassistant"
+    ssl: false
+schema:
+  controller:
+    serial: str
+    pin: str
+    username: str
+    password: str
+    run_from_cloud: bool?
+  mqtt:
+    host: str
+    port: int
+    username: str?
+    password: str?
+    baseTopic: str
+    ssl: bool

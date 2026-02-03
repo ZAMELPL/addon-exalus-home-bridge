@@ -1,6 +1,6 @@
 {
   "name": "addon-exalus-bridge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/Startup.js",
   "scripts": {
     "bundle": "esbuild src/Startup.ts --bundle --platform=node --target=node18 --outfile=dist/bundle.js --sourcemap --external:bufferutil --external:utf-8-validate --external:jsdom --external:canvas && npm run bundle:copy-meta && npm run copy:jsdom-worker",
@@ -9,7 +9,7 @@
     "start": "node dist/Startup.js",
     "dev": "ts-node src/Startup.ts",
     "dev:watch": "ts-node --watch src/Startup.ts",
-    "clean": "rm -rf dist",
+    "clean": "powershell -NoProfile -Command \"Remove-Item -Recurse -Force dist -ErrorAction SilentlyContinue\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

@@ -28881,9 +28881,9 @@ var NodeLocalStorage = class {
       if (import_node_fs.default.existsSync(this.file)) {
         const txt = import_node_fs.default.readFileSync(this.file, "utf8");
         this.store = JSON.parse(txt);
-        console.log(`[LocalStorage] Loaded from ${this.file}`);
+        console.info(`[LocalStorage] Loaded from ${this.file}`);
       } else {
-        console.log(`[LocalStorage] File not found, will create: ${this.file}`);
+        console.info(`[LocalStorage] File not found, will create: ${this.file}`);
       }
     } catch (e) {
       console.warn("[LocalStorage] load failed:", e.message);
@@ -28915,15 +28915,15 @@ var import_node_util = require("node:util");
 var execFileAsync = (0, import_node_util.promisify)(import_node_child_process.execFile);
 var ControllerDiscoveryService = class {
   async FindControllerAsync(controllerHostName) {
-    console.log(`[DISCOVERY] Starting search for controller with hostname: ${controllerHostName}`);
+    console.info(`[DISCOVERY] Starting search for controller with hostname: ${controllerHostName}`);
     const target = controllerHostName.trim();
     if (!target) return null;
     try {
-      console.log(`[DISCOVERY] Trying mDNS for host ${target}.local`);
+      console.info(`[DISCOVERY] Trying mDNS for host ${target}.local`);
       const host = `${target.toLowerCase()}.local`;
       const ip = await this.resolveHostWithTimeout(host, 5e3);
       if (ip && await this.isReachable(ip, 3e3)) {
-        console.log(`[DISCOVERY] Found controller at ${ip} via mDNS`);
+        console.info(`[DISCOVERY] Found controller at ${ip} via mDNS`);
         return ip;
       }
     } catch (ex) {
@@ -28931,14 +28931,14 @@ var ControllerDiscoveryService = class {
     }
     try {
       const llmnrName = `ExalusTR7-${target}`;
-      console.log(`[DISCOVERY] Trying llmnr-query for ${llmnrName}`);
+      console.info(`[DISCOVERY] Trying llmnr-query for ${llmnrName}`);
       const { stdout } = await execFileAsync("llmnr-query", [llmnrName], { timeout: 3e3 });
       const out = (stdout || "").trim();
       const ipMatch = out.match(/\b(\d{1,3}(?:\.\d{1,3}){3})\b/);
       if (ipMatch) {
         const ip = ipMatch[1];
         if (await this.isReachable(ip, 3e3)) {
-          console.log(`[DISCOVERY] Found controller at ${ip} via llmnr-query`);
+          console.info(`[DISCOVERY] Found controller at ${ip} via llmnr-query`);
           return ip;
         }
       }
@@ -28946,7 +28946,7 @@ var ControllerDiscoveryService = class {
     } catch (ex) {
       console.error(`[DISCOVERY] llmnr-query failed: ${ex}`);
     }
-    console.log(`[DISCOVERY] Controller ${target} not found via mDNS or llmnr-query`);
+    console.info(`[DISCOVERY] Controller ${target} not found via mDNS or llmnr-query`);
     return null;
   }
   // --------- helpers ---------
@@ -28981,10 +28981,10 @@ var ControllerDiscoveryService = class {
 (function install2() {
   const g = globalThis;
   if (typeof g.HaosControllerDiscoveryService === "undefined" || g.HaosControllerDiscoveryService === null) {
-    console.log("[DISCOVERY] Installing HaosControllerDiscoveryService singleton");
+    console.info("[DISCOVERY] Installing HaosControllerDiscoveryService singleton");
     g.HaosControllerDiscoveryService = new ControllerDiscoveryService();
   } else {
-    console.log("[DISCOVERY] HaosControllerDiscoveryService singleton already installed");
+    console.warn("[DISCOVERY] HaosControllerDiscoveryService singleton already installed");
   }
 })();
 
@@ -51931,11 +51931,11 @@ var ComponentRepository = class {
   static LoadFromStorage() {
     const stored = global.localStorage.getItem("mqtt_components");
     if (!stored) {
-      console.log("[MQTT] No components in storage");
+      console.info("[MQTT] No components in storage");
       return;
     }
     const parsed = JSON.parse(stored);
-    console.log(`[MQTT] Loaded ${parsed.length} components from storage`);
+    console.info(`[MQTT] Loaded ${parsed.length} components from storage`);
     this._components = new Map(
       parsed.map(([id, serialized]) => [id, MappedComponent.fromJSON(serialized)])
     );
@@ -53033,12 +53033,12 @@ var MqttTranslateService = class {
       "online",
       { retain: true }
     );
-    this._client.on("reconnect", () => console.log("[MQTT] Reconnecting..."));
-    this._client.on("close", () => console.log("[MQTT] Connection closed"));
+    this._client.on("reconnect", () => console.info("[MQTT] Reconnecting..."));
+    this._client.on("close", () => console.info("[MQTT] Connection closed"));
     this._client.on("error", (err) => console.warn("[MQTT] Error:", err.message, err.name, err.stack));
-    this._client.on("offline", () => console.log("[MQTT] Offline"));
+    this._client.on("offline", () => console.info("[MQTT] Offline"));
     this._client.on("message", (topic, message) => {
-      console.log(`[MQTT] Message received on ${topic}:`, message.toString());
+      console.debug(`[MQTT] Message received on ${topic}:`, message.toString());
       const channelId = this.GetChannelIdFromTopic(topic);
       if (channelId) {
         const topics = ComponentRepository.GetComponentTopics(channelId);
@@ -53055,7 +53055,7 @@ var MqttTranslateService = class {
         }
       }
     });
-    console.log("[MQTT] Connected:", url);
+    console.info("[MQTT] Connected:", url);
   }
   GetChannelIdFromTopic(topic) {
     const parts = topic.split("/");
@@ -53091,7 +53091,7 @@ var MqttTranslateService = class {
     }
     this._client.publish(topic, data, { retain, qos: 0 }, (err) => {
       if (err) console.warn("[MQTT] Publish error:", err.message);
-      else console.log(`[MQTT] Published to topic ${topic}:`, data);
+      else console.debug(`[MQTT] Published to topic ${topic}:`, data);
     });
   }
   SubscribeForCommandsTopics(mapping) {
@@ -53160,7 +53160,7 @@ var MqttTranslateService = class {
       this.SubscribeForCommandsTopics(mapping);
     }
     const removedComponents = ComponentRepository.RegisterAndCompareComponents(allMappings);
-    console.log(`[MQTT] Removed ${removedComponents.length} components`);
+    console.info(`[MQTT] Removed ${removedComponents.length} components`);
     for (const removed of removedComponents) {
       const configTopic = `${this._discoveryPrefix}/${removed.platform}/${removed.unique_id}/config`;
       this.PublishJson(configTopic, {}, true);
@@ -53238,7 +53238,7 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
     const g = globalThis;
     g.__homeBridge_instance = value;
   }
-  static Init(hostExchange) {
+  static Init(configService2) {
     try {
       if (this._isInitialized) {
         console.warn("[HOME_BRIDGE] ExalusHomeBridge already initialized!");
@@ -53246,7 +53246,7 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
       }
       this.Instance = new _ExalusHomeBridge();
       this._isInitialized = true;
-      this._hostExchange = hostExchange;
+      this._hostExchange = configService2;
     } catch (error) {
       console.error("[HOME_BRIDGE] Failed to initialize ExalusHomeBridge:", error);
     }
@@ -53256,7 +53256,7 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
     const connection = Api.Get(ExalusConnectionService.ServiceName);
     const found = globalThis.localControllerIp;
     if (found) {
-      console.log(`[HOME_BRIDGE] Controller found in local network at IP: ${found}`);
+      console.info(`[HOME_BRIDGE] Controller found in local network at IP: ${found}`);
       const connInfo = await connection.ConnectAsync(found);
       if (connInfo == ConnectionResult.Connected) {
         connection.AuthorizeAsync(new AuthorizationInfo(cfg.controller.serial, cfg.controller.pin));
@@ -53266,7 +53266,7 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
         process.exit(1);
       }
     } else {
-      console.log(`[HOME_BRIDGE] Controller not found in local network or run_from_cloud optionis true, connecting via cloud...`);
+      console.info(`[HOME_BRIDGE] Controller not found in local network or run_from_cloud optionis true, connecting via cloud...`);
     }
     if (forceReconnection)
       connection.DisconnectAsync();
@@ -53275,8 +53275,8 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
   async LoginToControllerAsync() {
     const cfg = await _ExalusHomeBridge._hostExchange.GetConfigAsync();
     const session = Api.Get(SessionService.ServiceName);
-    session.OnUserLoggedOutEvent().Subscribe((user) => console.log(`User logged out from controller! (${user?.Email})`));
-    session.OnUserLoggedInEvent().Subscribe((user) => console.log(`User logged in to controller (${user?.Email})`));
+    session.OnUserLoggedOutEvent().Subscribe((user) => console.info(`User logged out from controller! (${user?.Email})`));
+    session.OnUserLoggedInEvent().Subscribe((user) => console.info(`User logged in to controller (${user?.Email})`));
     this.EnableReportConnectionState();
     const loginResult = await session.UserLogInAsync(cfg.controller.username, cfg.controller.password);
     if (loginResult && LoginError[loginResult] != void 0) {
@@ -53291,19 +53291,19 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
     let devices = await devicesApi.GetDevicesAsync(true);
     devices.forEach((device) => {
       device.OnDeviceStateChangedEvent().Subscribe((state) => {
-        console.log(`[HOME_BRIDGE] ${(/* @__PURE__ */ new Date()).toLocaleString("pl-PL")} -- Device ${device.Name} state changed: `, state);
+        console.debug(`[HOME_BRIDGE] ${(/* @__PURE__ */ new Date()).toLocaleString("pl-PL")} -- Device ${device.Name} state changed: `, state);
         this._mqttTranslator.UpdateDeviceState(state, device);
       });
     });
     devicesApi.OnDeviceRegisteredEvent().Subscribe((device) => {
-      console.log(`[HOME_BRIDGE] New device registered: ${device.Name}`);
+      console.info(`[HOME_BRIDGE] New device registered: ${device.Name}`);
       this._mqttTranslator.AddDevice(device);
     });
     devicesApi.OnDeviceRemovedEvent().Subscribe((device) => {
-      console.log(`[HOME_BRIDGE] Device removed: ${device.Name}`);
+      console.info(`[HOME_BRIDGE] Device removed: ${device.Name}`);
       this._mqttTranslator.RemoveDevice(device);
     });
-    console.log(`[HOME_BRIDGE] Initial device configuration for ${devices.length} devices.`);
+    console.info(`[HOME_BRIDGE] Initial device configuration for ${devices.length} devices.`);
     await this._mqttTranslator.ConfigureDevicesAsync(devices);
   }
   async ConnectToMqttBrokerAsync() {
@@ -53332,7 +53332,7 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
   EnableConnectionWatchdog() {
     if (this._watchdogEnabled) return;
     this._watchdogEnabled = true;
-    console.log("[HOME_BRIDGE] Connection watchdog enabled.");
+    console.info("[HOME_BRIDGE] Connection watchdog enabled.");
     const appStateService = Api.Get(AppStateService.ServiceName);
     appStateService.OnAppStateChanged().Subscribe((appState) => {
       if (appState == AppState.FailedToConnect) {
@@ -53345,10 +53345,10 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
             this._reconnectRetryScheduled = false;
             return;
           }
-          console.log("[HOME_BRIDGE] AppState is FailedToConnect, trying to reconnect...");
+          console.warn("[HOME_BRIDGE] AppState is FailedToConnect, trying to reconnect...");
           const res = await this.ReconnectAndReAuthorize();
           if (res) {
-            console.log("[HOME_BRIDGE] Reconnect succeeded.");
+            console.info("[HOME_BRIDGE] Reconnect succeeded.");
             this._reconnectRetryScheduled = false;
           } else {
             console.warn("[HOME_BRIDGE] Reconnect failed, retrying in 30s...");
@@ -53370,7 +53370,7 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
             setTimeout(async () => {
               const res = await this.ReconnectAndReAuthorize(true);
               if (res) {
-                console.log("[HOME_BRIDGE] Health check reconnect succeeded.");
+                console.info("[HOME_BRIDGE] Health check reconnect succeeded.");
                 this._reconnectRetryScheduled = false;
               } else {
                 console.warn("[HOME_BRIDGE] Health check reconnect failed; will rely on existing retry chain or next health check.");
@@ -53404,8 +53404,8 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
 };
 
 // src/Services/HostExchangeService/HostExchangeService.ts
-var import_node_fs2 = require("node:fs");
-var HostExchangeService = class {
+var import_fs = require("fs");
+var ConfigService = class {
   constructor(configFilePath = "/data/options.json", devConfigPath) {
     this._configFilePath = configFilePath;
     this._devConfigPath = devConfigPath;
@@ -53413,7 +53413,7 @@ var HostExchangeService = class {
   async GetConfigAsync(forceReload = false) {
     if (this._cached && !forceReload) return this._cached;
     const file = await this.resolveConfigPath();
-    const rawText = await import_node_fs2.promises.readFile(file, "utf-8");
+    const rawText = await import_fs.promises.readFile(file, "utf-8");
     const raw = JSON.parse(rawText);
     const c = raw?.controller ?? {};
     const normalized = {
@@ -53426,7 +53426,8 @@ var HostExchangeService = class {
           c.runFromCloud ?? c.run_from_cloud ?? false
         )
       },
-      mqtt: raw?.mqtt
+      mqtt: raw?.mqtt,
+      general: raw?.general
     };
     this._cached = normalized;
     return normalized;
@@ -53438,6 +53439,13 @@ var HostExchangeService = class {
 };
 
 // src/Startup.ts
+var order4 = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3,
+  none: 4
+};
 var Startup = class _Startup {
   static StartDomEmulation() {
     const dom = new import_jsdom.JSDOM(`<!DOCTYPE html><html><body></body></html>`, { url: "http://localhost/" });
@@ -53479,7 +53487,7 @@ var Startup = class _Startup {
     const g = globalThis;
     const controllerIp = await globalThis.HaosControllerDiscoveryService.FindControllerAsync(serial);
     if (controllerIp) {
-      console.log(`[STARTUP] Local controller IP found: ${controllerIp}`);
+      console.info(`[STARTUP] Local controller IP found: ${controllerIp}`);
       globalThis.localControllerIp = controllerIp;
       const url = `http://${controllerIp}/`;
       if (g.__jsdom?.reconfigure) {
@@ -53487,13 +53495,36 @@ var Startup = class _Startup {
       } else {
         g.window.location.href = url;
       }
-      console.log("[STARTUP] New location:", window.location.hostname);
+      console.info("[STARTUP] New location:", window.location.hostname);
     }
   }
-  static async Initialize() {
-    const hostExchange = new HostExchangeService();
-    const config = await hostExchange.GetConfigAsync();
-    console.log(`[STARTUP] Initialize options: runFromCloud=${config.controller.runFromCloud}`);
+  static async SetLogLevel(configService2) {
+    const config = await configService2.GetConfigAsync();
+    const raw = String(config.general?.logLevel ?? "info").trim().toLowerCase();
+    const level = raw in order4 ? raw : "info";
+    const threshold = order4[level];
+    const original = {
+      debug: console.debug.bind(console),
+      info: console.info.bind(console),
+      warn: console.warn.bind(console),
+      error: console.error.bind(console),
+      log: console.log.bind(console)
+    };
+    const noop = () => {
+    };
+    const allow = (msgLevel) => threshold !== order4.none && order4[msgLevel] >= threshold;
+    console.debug = allow("debug") ? original.debug : noop;
+    console.info = allow("info") ? original.info : noop;
+    console.warn = allow("warn") ? original.warn : noop;
+    console.error = allow("error") ? original.error : noop;
+    console.log = allow("info") ? original.log : noop;
+    if (level !== "none") {
+      original.log(`[STARTUP] Log level set to: ${level}`);
+    }
+  }
+  static async Initialize(configService2) {
+    const config = await configService2.GetConfigAsync();
+    console.info(`[STARTUP] Initialize options: runFromCloud=${config.controller.runFromCloud}`);
     try {
       process.on("SIGTERM", this.OnShutdown);
       process.on("SIGINT", this.OnShutdown);
@@ -53506,24 +53537,25 @@ var Startup = class _Startup {
       if (!config.controller.runFromCloud) {
         await _Startup.FindLocalControllerIpAsync(config.controller.serial);
       } else {
-        console.log("[STARTUP] Running from cloud, skipping local controller discovery.");
+        console.info("[STARTUP] Running from cloud, skipping local controller discovery.");
       }
       Api.Init();
-      console.log("[STARTUP] Api initialized");
-      ExalusHomeBridge.Init(hostExchange);
-      console.log("[STARTUP] ExalusHomeBridge initialized");
+      console.info("[STARTUP] Api initialized");
+      Api.Get(LoggerService.ServiceName).LogLevel = order4[config.general?.logLevel || "info"];
+      ExalusHomeBridge.Init(configService2);
+      console.info("[STARTUP] ExalusHomeBridge initialized");
       ComponentRepository.LoadFromStorage();
-      console.log("[STARTUP] ComponentRepository loaded from storage");
+      console.info("[STARTUP] ComponentRepository loaded from storage");
       await ExalusHomeBridge.Instance.ConnectToMqttBrokerAsync();
-      console.log("[STARTUP] ExalusHomeBridge connected to MQTT broker");
+      console.info("[STARTUP] ExalusHomeBridge connected to MQTT broker");
       await ExalusHomeBridge.Instance.ConnectToControllerAsync();
-      console.log("[STARTUP] ExalusHomeBridge connected to Exalus Controller");
+      console.info("[STARTUP] ExalusHomeBridge connected to Exalus Controller");
       await ExalusHomeBridge.Instance.LoginToControllerAsync();
-      console.log("[STARTUP] ExalusHomeBridge logged in to Exalus Controller");
+      console.info("[STARTUP] ExalusHomeBridge logged in to Exalus Controller");
       await ExalusHomeBridge.Instance.AssignToEventsAndConfigureDevices();
-      console.log("[STARTUP] ExalusHomeBridge assigned to lib events");
+      console.info("[STARTUP] ExalusHomeBridge assigned to lib events");
       await ExalusHomeBridge.Instance.ReportConnectionStateAsync();
-      console.log("[STARTUP] App initialized!");
+      console.info("[STARTUP] App initialized!");
     } catch (error) {
       const msg = String(error?.message || error).toLowerCase();
       console.error("\u2757Failed to start application:", msg);
@@ -53535,14 +53567,16 @@ var Startup = class _Startup {
     }
   }
   static OnShutdown() {
-    console.log("\u{1F4F4} Shutting down application...");
+    console.info("\u{1F4F4} Shutting down application...");
     process.exit(0);
   }
 };
+var configService = new ConfigService();
+Startup.SetLogLevel(configService);
 Startup.StartDomEmulation();
-Startup.Initialize();
+Startup.Initialize(configService);
 process.stdin.resume();
-console.log("App is running \u2014 process will stay alive until terminated.");
+console.info("App is running \u2014 process will stay alive until terminated.");
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   Startup

@@ -34,3 +34,20 @@ Notes to developers after forking or using the github template feature:
 
 [amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
 [aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
+
+
+ ### Quick start guide
+ 
+1. Add a repository to your HAOS
+ 
+     <img src=".github/images//git_1.jpg" width="670" >
+<br>
+
+2. Install the add-on from the repository
+
+   <img src=".github/images//git_2.jpg" width="670" >
+<br>
+
+3. Read the documentation to learn about the configuration of the add-on.
+
+   <img src=".github/images//git_3.jpg" width="670" >

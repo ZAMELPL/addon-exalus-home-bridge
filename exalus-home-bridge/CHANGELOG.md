@@ -1,7 +1,8 @@
-## What’s changed
+## 1.0.4
+
+- Added DOCS.md with integration manual
+- Added quick start quide to repository README 
+
+## 1.0.3
 
 - Added an option to set the logging level of the add-on (default set to warn)
-
-## Bug fixes
-
-## Dependency updates

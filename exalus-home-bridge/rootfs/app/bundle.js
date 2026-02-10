@@ -52100,6 +52100,10 @@ var ConfigurationTranslator = class {
         results.push(...this.BuildEnergySensor(device, channel));
         continue;
       }
+      if (SupportsResponses(channel, DeviceResponseType.MeasuredWindSpeed)) {
+        results.push(this.BuildWindSpeedSensor(device, channel));
+        continue;
+      }
     }
     return results;
   }
@@ -52612,6 +52616,23 @@ var ConfigurationTranslator = class {
     }
     return sensors;
   }
+  BuildWindSpeedSensor(device, channel) {
+    const topics = this.BuildTopics("sensor" /* SENSOR */, channel);
+    const component = {
+      unique_id: channel.ChannelId,
+      object_id: channel.ChannelId,
+      name: channel.Name,
+      device: this.BuildDeviceInfo(device),
+      platform: "sensor" /* SENSOR */,
+      value_template: "{{ value_json.value }}",
+      device_class: "wind_speed",
+      state_class: "measurement",
+      unit_of_measurement: "m/s",
+      state_topic: topics.state
+    };
+    const topicsMap = /* @__PURE__ */ new Map([[0 /* stateTopic */, component.state_topic || ""]]);
+    return new MappedComponent(component, topics.discoveryBaseTopic, "sensor" /* SENSOR */, topicsMap);
+  }
 };
 
 // src/Services/MqttTranslateService/Translators/StatesTranslator.ts
@@ -52627,6 +52648,9 @@ var StateTranslator = class {
       results.push(this.BuildAvailabilityState(state, availabilityTopic));
     } else {
       let stateTopics = topics.get(0 /* stateTopic */);
+      if (stateTopics == null) {
+        console.warn(`[STATE_TRANSLATOR] No state topic for channel ${channelId} for ${state.TypeAsEnum}.`);
+      }
       switch (state.TypeAsEnum) {
         case DeviceResponseType.LightBrightness: {
           if (!stateTopics) return [];
@@ -52688,6 +52712,11 @@ var StateTranslator = class {
         }
         case DeviceResponseType.MeasuredEnergy: {
           results.push(...this.BuildEnergyState(state, channelId));
+          break;
+        }
+        case DeviceResponseType.WindSpeedState: {
+          if (!stateTopics) return [];
+          results.push(this.BuildWindSpeedState(state, stateTopics));
           break;
         }
         default:
@@ -52794,6 +52823,12 @@ var StateTranslator = class {
       res.push({ state: retState, devStateTopic: component.state_topic });
     }
     return res;
+  }
+  BuildWindSpeedState(state, stateTopics) {
+    const retState = {
+      value: state.Data.Value
+    };
+    return { state: retState, devStateTopic: stateTopics };
   }
 };
 

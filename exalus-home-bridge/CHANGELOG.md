@@ -1,3 +1,7 @@
+## 1.0.5
+
+- Support for the "WindSpeed" state in sensors (WSZF-BiDi)
+
 ## 1.0.4
 
 - Added DOCS.md with integration manual

@@ -1,3 +1,8 @@
+## 1.0.6
+
+- Fixed state subscription issues and component mappings
+- Update dependencies
+
 ## 1.0.5
 
 - Support for the "WindSpeed" state in sensors (WSZF-BiDi)

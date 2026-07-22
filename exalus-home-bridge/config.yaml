@@ -1,6 +1,6 @@
 name: Exalus Home Bridge
 description: "Exalus bridge add-on that allows to integrate Exalus Home via MQTT"
-version: "1.0.5"
+version: "1.0.6"
 slug: exalus-home-bridge
 init: false
 arch:

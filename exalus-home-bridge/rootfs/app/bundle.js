@@ -13162,7 +13162,7 @@ var require_package = __commonJS({
     module2.exports = {
       name: "mqtt",
       description: "A library for the MQTT protocol",
-      version: "5.14.1",
+      version: "5.15.2",
       contributors: [
         "Adam Rudd <adamvrr@gmail.com>",
         "Matteo Collina <matteo.collina@gmail.com> (https://github.com/mcollina)",
@@ -13233,30 +13233,8 @@ var require_package = __commonJS({
         "changelog-init": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
         release: "read -p 'GITHUB_TOKEN: ' GITHUB_TOKEN && export GITHUB_TOKEN=$GITHUB_TOKEN && release-it"
       },
-      "release-it": {
-        github: {
-          release: true
-        },
-        git: {
-          tagName: "v${version}",
-          commitMessage: "chore(release): ${version}"
-        },
-        hooks: {
-          "before:init": [
-            "npm run test"
-          ]
-        },
-        npm: {
-          publish: true
-        },
-        plugins: {
-          "@release-it/conventional-changelog": {
-            preset: "angular",
-            infile: "CHANGELOG.md"
-          }
-        }
-      },
       publishConfig: {
+        registry: "https://registry.npmjs.org",
         provenance: true
       },
       "pre-commit": [
@@ -13288,6 +13266,18 @@ var require_package = __commonJS({
         split2: "^4.2.0",
         "worker-timers": "^8.0.23",
         ws: "^8.18.3"
+      },
+      overrides: {
+        levelup: {
+          bl: "1.2.3",
+          semver: "5.7.2"
+        },
+        "pre-commit": {
+          "cross-spawn": "7.0.6"
+        },
+        "release-it": {
+          undici: "7.24.5"
+        }
       },
       devDependencies: {
         "@eslint/eslintrc": "^3.3.1",
@@ -17972,6 +17962,98 @@ var require_TypedEmitter = __commonJS({
   }
 });
 
+// node_modules/fast-unique-numbers/build/node/factories/add-unique-number.js
+var require_add_unique_number = __commonJS({
+  "node_modules/fast-unique-numbers/build/node/factories/add-unique-number.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    exports2.createAddUniqueNumber = void 0;
+    var createAddUniqueNumber = (generateUniqueNumber) => {
+      return (set) => {
+        const number = generateUniqueNumber(set);
+        set.add(number);
+        return number;
+      };
+    };
+    exports2.createAddUniqueNumber = createAddUniqueNumber;
+  }
+});
+
+// node_modules/fast-unique-numbers/build/node/factories/cache.js
+var require_cache = __commonJS({
+  "node_modules/fast-unique-numbers/build/node/factories/cache.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    exports2.createCache = void 0;
+    var createCache = (lastNumberWeakMap) => {
+      return (collection, nextNumber) => {
+        lastNumberWeakMap.set(collection, nextNumber);
+        return nextNumber;
+      };
+    };
+    exports2.createCache = createCache;
+  }
+});
+
+// node_modules/fast-unique-numbers/build/node/factories/generate-unique-number.js
+var require_generate_unique_number = __commonJS({
+  "node_modules/fast-unique-numbers/build/node/factories/generate-unique-number.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    exports2.createGenerateUniqueNumber = void 0;
+    var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER === void 0 ? 9007199254740991 : Number.MAX_SAFE_INTEGER;
+    var TWO_TO_THE_POWER_OF_TWENTY_NINE = 536870912;
+    var TWO_TO_THE_POWER_OF_THIRTY = TWO_TO_THE_POWER_OF_TWENTY_NINE * 2;
+    var createGenerateUniqueNumber = (cache, lastNumberWeakMap) => {
+      return (collection) => {
+        const lastNumber = lastNumberWeakMap.get(collection);
+        let nextNumber = lastNumber === void 0 ? collection.size : lastNumber < TWO_TO_THE_POWER_OF_THIRTY ? lastNumber + 1 : 0;
+        if (!collection.has(nextNumber)) {
+          return cache(collection, nextNumber);
+        }
+        if (collection.size < TWO_TO_THE_POWER_OF_TWENTY_NINE) {
+          while (collection.has(nextNumber)) {
+            nextNumber = Math.floor(Math.random() * TWO_TO_THE_POWER_OF_THIRTY);
+          }
+          return cache(collection, nextNumber);
+        }
+        if (collection.size > MAX_SAFE_INTEGER) {
+          throw new Error("Congratulations, you created a collection of unique numbers which uses all available integers!");
+        }
+        while (collection.has(nextNumber)) {
+          nextNumber = Math.floor(Math.random() * MAX_SAFE_INTEGER);
+        }
+        return cache(collection, nextNumber);
+      };
+    };
+    exports2.createGenerateUniqueNumber = createGenerateUniqueNumber;
+  }
+});
+
+// node_modules/fast-unique-numbers/build/node/module.js
+var require_module = __commonJS({
+  "node_modules/fast-unique-numbers/build/node/module.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", {
+      value: true
+    });
+    exports2.generateUniqueNumber = exports2.addUniqueNumber = void 0;
+    var _addUniqueNumber = require_add_unique_number();
+    var _cache = require_cache();
+    var _generateUniqueNumber = require_generate_unique_number();
+    var LAST_NUMBER_WEAK_MAP = /* @__PURE__ */ new WeakMap();
+    var cache = (0, _cache.createCache)(LAST_NUMBER_WEAK_MAP);
+    var generateUniqueNumber = exports2.generateUniqueNumber = (0, _generateUniqueNumber.createGenerateUniqueNumber)(cache, LAST_NUMBER_WEAK_MAP);
+    var addUniqueNumber = exports2.addUniqueNumber = (0, _addUniqueNumber.createAddUniqueNumber)(generateUniqueNumber);
+  }
+});
+
 // node_modules/@babel/runtime/helpers/typeof.js
 var require_typeof = __commonJS({
   "node_modules/@babel/runtime/helpers/typeof.js"(exports2, module2) {
@@ -18120,98 +18202,6 @@ var require_slicedToArray = __commonJS({
       return arrayWithHoles(r) || iterableToArrayLimit(r, e) || unsupportedIterableToArray(r, e) || nonIterableRest();
     }
     module2.exports = _slicedToArray, module2.exports.__esModule = true, module2.exports["default"] = module2.exports;
-  }
-});
-
-// node_modules/fast-unique-numbers/build/node/factories/add-unique-number.js
-var require_add_unique_number = __commonJS({
-  "node_modules/fast-unique-numbers/build/node/factories/add-unique-number.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", {
-      value: true
-    });
-    exports2.createAddUniqueNumber = void 0;
-    var createAddUniqueNumber = (generateUniqueNumber) => {
-      return (set) => {
-        const number = generateUniqueNumber(set);
-        set.add(number);
-        return number;
-      };
-    };
-    exports2.createAddUniqueNumber = createAddUniqueNumber;
-  }
-});
-
-// node_modules/fast-unique-numbers/build/node/factories/cache.js
-var require_cache = __commonJS({
-  "node_modules/fast-unique-numbers/build/node/factories/cache.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", {
-      value: true
-    });
-    exports2.createCache = void 0;
-    var createCache = (lastNumberWeakMap) => {
-      return (collection, nextNumber) => {
-        lastNumberWeakMap.set(collection, nextNumber);
-        return nextNumber;
-      };
-    };
-    exports2.createCache = createCache;
-  }
-});
-
-// node_modules/fast-unique-numbers/build/node/factories/generate-unique-number.js
-var require_generate_unique_number = __commonJS({
-  "node_modules/fast-unique-numbers/build/node/factories/generate-unique-number.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", {
-      value: true
-    });
-    exports2.createGenerateUniqueNumber = void 0;
-    var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER === void 0 ? 9007199254740991 : Number.MAX_SAFE_INTEGER;
-    var TWO_TO_THE_POWER_OF_TWENTY_NINE = 536870912;
-    var TWO_TO_THE_POWER_OF_THIRTY = TWO_TO_THE_POWER_OF_TWENTY_NINE * 2;
-    var createGenerateUniqueNumber = (cache, lastNumberWeakMap) => {
-      return (collection) => {
-        const lastNumber = lastNumberWeakMap.get(collection);
-        let nextNumber = lastNumber === void 0 ? collection.size : lastNumber < TWO_TO_THE_POWER_OF_THIRTY ? lastNumber + 1 : 0;
-        if (!collection.has(nextNumber)) {
-          return cache(collection, nextNumber);
-        }
-        if (collection.size < TWO_TO_THE_POWER_OF_TWENTY_NINE) {
-          while (collection.has(nextNumber)) {
-            nextNumber = Math.floor(Math.random() * TWO_TO_THE_POWER_OF_THIRTY);
-          }
-          return cache(collection, nextNumber);
-        }
-        if (collection.size > MAX_SAFE_INTEGER) {
-          throw new Error("Congratulations, you created a collection of unique numbers which uses all available integers!");
-        }
-        while (collection.has(nextNumber)) {
-          nextNumber = Math.floor(Math.random() * MAX_SAFE_INTEGER);
-        }
-        return cache(collection, nextNumber);
-      };
-    };
-    exports2.createGenerateUniqueNumber = createGenerateUniqueNumber;
-  }
-});
-
-// node_modules/fast-unique-numbers/build/node/module.js
-var require_module = __commonJS({
-  "node_modules/fast-unique-numbers/build/node/module.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", {
-      value: true
-    });
-    exports2.generateUniqueNumber = exports2.addUniqueNumber = void 0;
-    var _addUniqueNumber = require_add_unique_number();
-    var _cache = require_cache();
-    var _generateUniqueNumber = require_generate_unique_number();
-    var LAST_NUMBER_WEAK_MAP = /* @__PURE__ */ new WeakMap();
-    var cache = (0, _cache.createCache)(LAST_NUMBER_WEAK_MAP);
-    var generateUniqueNumber = exports2.generateUniqueNumber = (0, _generateUniqueNumber.createGenerateUniqueNumber)(cache, LAST_NUMBER_WEAK_MAP);
-    var addUniqueNumber = exports2.addUniqueNumber = (0, _addUniqueNumber.createAddUniqueNumber)(generateUniqueNumber);
   }
 });
 
@@ -18569,13 +18559,9 @@ var require_regenerator2 = __commonJS({
 var require_bundle = __commonJS({
   "node_modules/broker-factory/build/es5/bundle.js"(exports2, module2) {
     (function(global2, factory) {
-      typeof exports2 === "object" && typeof module2 !== "undefined" ? factory(exports2, require_defineProperty(), require_slicedToArray(), require_module(), require_asyncToGenerator(), require_regenerator2()) : typeof define === "function" && define.amd ? define(["exports", "@babel/runtime/helpers/defineProperty", "@babel/runtime/helpers/slicedToArray", "fast-unique-numbers", "@babel/runtime/helpers/asyncToGenerator", "@babel/runtime/regenerator"], factory) : (global2 = typeof globalThis !== "undefined" ? globalThis : global2 || self, factory(global2.brokerFactory = {}, global2._defineProperty, global2._slicedToArray, global2.fastUniqueNumbers, global2._asyncToGenerator, global2._regeneratorRuntime));
-    })(exports2, (function(exports3, _defineProperty, _slicedToArray, fastUniqueNumbers, _asyncToGenerator, _regeneratorRuntime) {
+      typeof exports2 === "object" && typeof module2 !== "undefined" ? factory(exports2, require_module(), require_defineProperty(), require_slicedToArray(), require_asyncToGenerator(), require_regenerator2()) : typeof define === "function" && define.amd ? define(["exports", "fast-unique-numbers", "@babel/runtime/helpers/defineProperty", "@babel/runtime/helpers/slicedToArray", "@babel/runtime/helpers/asyncToGenerator", "@babel/runtime/regenerator"], factory) : (global2 = typeof globalThis !== "undefined" ? globalThis : global2 || self, factory(global2.brokerFactory = {}, global2.fastUniqueNumbers, global2._defineProperty, global2._slicedToArray, global2._asyncToGenerator, global2._regeneratorRuntime));
+    })(exports2, (function(exports3, fastUniqueNumbers, _defineProperty, _slicedToArray, _asyncToGenerator, _regeneratorRuntime) {
       "use strict";
-      var isMessagePort = function isMessagePort2(sender) {
-        return typeof sender.start === "function";
-      };
-      var PORT_MAP = /* @__PURE__ */ new WeakMap();
       function ownKeys$1(e, r) {
         var t = Object.keys(e);
         if (Object.getOwnPropertySymbols) {
@@ -18597,68 +18583,79 @@ var require_bundle = __commonJS({
         }
         return e;
       }
-      var extendBrokerImplementation = function extendBrokerImplementation2(partialBrokerImplementation) {
-        return _objectSpread$1(_objectSpread$1({}, partialBrokerImplementation), {}, {
-          connect: function connect(_ref) {
-            var call = _ref.call;
-            return /* @__PURE__ */ _asyncToGenerator(/* @__PURE__ */ _regeneratorRuntime.mark(function _callee() {
-              var _MessageChannel, port1, port2, portId;
-              return _regeneratorRuntime.wrap(function(_context) {
-                while (1) switch (_context.prev = _context.next) {
-                  case 0:
-                    _MessageChannel = new MessageChannel(), port1 = _MessageChannel.port1, port2 = _MessageChannel.port2;
-                    _context.next = 1;
-                    return call("connect", {
-                      port: port1
-                    }, [port1]);
-                  case 1:
-                    portId = _context.sent;
-                    PORT_MAP.set(port2, portId);
-                    return _context.abrupt("return", port2);
-                  case 2:
-                  case "end":
-                    return _context.stop();
+      var createBrokerFactory = function createBrokerFactory2(createOrGetOngoingRequests, extendBrokerImplementation, generateUniqueNumber, isMessagePort2) {
+        return function(brokerImplementation) {
+          var fullBrokerImplementation = extendBrokerImplementation(brokerImplementation);
+          return function(sender) {
+            var ongoingRequests = createOrGetOngoingRequests(sender);
+            sender.addEventListener("message", function(_ref) {
+              var message = _ref.data;
+              var id = message.id;
+              if (id !== null && ongoingRequests.has(id)) {
+                var _ongoingRequests$get = ongoingRequests.get(id), reject = _ongoingRequests$get.reject, resolve = _ongoingRequests$get.resolve;
+                ongoingRequests["delete"](id);
+                if (message.error === void 0) {
+                  resolve(message.result);
+                } else {
+                  reject(new Error(message.error.message));
                 }
-              }, _callee);
-            }));
-          },
-          disconnect: function disconnect(_ref3) {
-            var call = _ref3.call;
-            return /* @__PURE__ */ (function() {
-              var _ref4 = _asyncToGenerator(/* @__PURE__ */ _regeneratorRuntime.mark(function _callee2(port) {
-                var portId;
-                return _regeneratorRuntime.wrap(function(_context2) {
-                  while (1) switch (_context2.prev = _context2.next) {
-                    case 0:
-                      portId = PORT_MAP.get(port);
-                      if (!(portId === void 0)) {
-                        _context2.next = 1;
-                        break;
-                      }
-                      throw new Error("The given port is not connected.");
-                    case 1:
-                      _context2.next = 2;
-                      return call("disconnect", {
-                        portId
-                      });
-                    case 2:
-                    case "end":
-                      return _context2.stop();
-                  }
-                }, _callee2);
-              }));
-              return function(_x) {
-                return _ref4.apply(this, arguments);
-              };
-            })();
-          },
-          isSupported: function isSupported(_ref5) {
-            var call = _ref5.call;
-            return function() {
-              return call("isSupported");
+              }
+            });
+            if (isMessagePort2(sender)) {
+              sender.start();
+            }
+            var call = function call2(method) {
+              var params = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : null;
+              var transferables = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
+              return new Promise(function(resolve, reject) {
+                var id = generateUniqueNumber(ongoingRequests);
+                ongoingRequests.set(id, {
+                  reject,
+                  resolve
+                });
+                if (params === null) {
+                  sender.postMessage({
+                    id,
+                    method
+                  }, transferables);
+                } else {
+                  sender.postMessage({
+                    id,
+                    method,
+                    params
+                  }, transferables);
+                }
+              });
             };
+            var notify = function notify2(method, params) {
+              var transferables = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
+              sender.postMessage({
+                id: null,
+                method,
+                params
+              }, transferables);
+            };
+            var functions = {};
+            for (var _i = 0, _Object$entries = Object.entries(fullBrokerImplementation); _i < _Object$entries.length; _i++) {
+              var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2), key = _Object$entries$_i[0], handler = _Object$entries$_i[1];
+              functions = _objectSpread$1(_objectSpread$1({}, functions), {}, _defineProperty({}, key, handler({
+                call,
+                notify
+              })));
+            }
+            return _objectSpread$1({}, functions);
+          };
+        };
+      };
+      var createCreateOrGetOngoingRequests = function createCreateOrGetOngoingRequests2(ongoingRequestsMap) {
+        return function(sender) {
+          if (ongoingRequestsMap.has(sender)) {
+            return ongoingRequestsMap.get(sender);
           }
-        });
+          var ongoingRequests = /* @__PURE__ */ new Map();
+          ongoingRequestsMap.set(sender, ongoingRequests);
+          return ongoingRequests;
+        };
       };
       function ownKeys(e, r) {
         var t = Object.keys(e);
@@ -18681,77 +18678,75 @@ var require_bundle = __commonJS({
         }
         return e;
       }
-      var ONGOING_REQUESTS = /* @__PURE__ */ new WeakMap();
-      var createOrGetOngoingRequests = function createOrGetOngoingRequests2(sender) {
-        if (ONGOING_REQUESTS.has(sender)) {
-          return ONGOING_REQUESTS.get(sender);
-        }
-        var ongoingRequests = /* @__PURE__ */ new Map();
-        ONGOING_REQUESTS.set(sender, ongoingRequests);
-        return ongoingRequests;
-      };
-      var createBroker = function createBroker2(brokerImplementation) {
-        var fullBrokerImplementation = extendBrokerImplementation(brokerImplementation);
-        return function(sender) {
-          var ongoingRequests = createOrGetOngoingRequests(sender);
-          sender.addEventListener("message", function(_ref) {
-            var message = _ref.data;
-            var id = message.id;
-            if (id !== null && ongoingRequests.has(id)) {
-              var _ongoingRequests$get = ongoingRequests.get(id), reject = _ongoingRequests$get.reject, resolve = _ongoingRequests$get.resolve;
-              ongoingRequests["delete"](id);
-              if (message.error === void 0) {
-                resolve(message.result);
-              } else {
-                reject(new Error(message.error.message));
-              }
+      var createExtendBrokerImplementation = function createExtendBrokerImplementation2(portMap) {
+        return function(partialBrokerImplementation) {
+          return _objectSpread(_objectSpread({}, partialBrokerImplementation), {}, {
+            connect: function connect(_ref) {
+              var call = _ref.call;
+              return /* @__PURE__ */ _asyncToGenerator(/* @__PURE__ */ _regeneratorRuntime.mark(function _callee() {
+                var _MessageChannel, port1, port2, portId;
+                return _regeneratorRuntime.wrap(function(_context) {
+                  while (1) switch (_context.prev = _context.next) {
+                    case 0:
+                      _MessageChannel = new MessageChannel(), port1 = _MessageChannel.port1, port2 = _MessageChannel.port2;
+                      _context.next = 1;
+                      return call("connect", {
+                        port: port1
+                      }, [port1]);
+                    case 1:
+                      portId = _context.sent;
+                      portMap.set(port2, portId);
+                      return _context.abrupt("return", port2);
+                    case 2:
+                    case "end":
+                      return _context.stop();
+                  }
+                }, _callee);
+              }));
+            },
+            disconnect: function disconnect(_ref3) {
+              var call = _ref3.call;
+              return /* @__PURE__ */ (function() {
+                var _ref4 = _asyncToGenerator(/* @__PURE__ */ _regeneratorRuntime.mark(function _callee2(port) {
+                  var portId;
+                  return _regeneratorRuntime.wrap(function(_context2) {
+                    while (1) switch (_context2.prev = _context2.next) {
+                      case 0:
+                        portId = portMap.get(port);
+                        if (!(portId === void 0)) {
+                          _context2.next = 1;
+                          break;
+                        }
+                        throw new Error("The given port is not connected.");
+                      case 1:
+                        _context2.next = 2;
+                        return call("disconnect", {
+                          portId
+                        });
+                      case 2:
+                      case "end":
+                        return _context2.stop();
+                    }
+                  }, _callee2);
+                }));
+                return function(_x) {
+                  return _ref4.apply(this, arguments);
+                };
+              })();
+            },
+            isSupported: function isSupported(_ref5) {
+              var call = _ref5.call;
+              return function() {
+                return call("isSupported");
+              };
             }
           });
-          if (isMessagePort(sender)) {
-            sender.start();
-          }
-          var call = function call2(method) {
-            var params = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : null;
-            var transferables = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
-            return new Promise(function(resolve, reject) {
-              var id = fastUniqueNumbers.generateUniqueNumber(ongoingRequests);
-              ongoingRequests.set(id, {
-                reject,
-                resolve
-              });
-              if (params === null) {
-                sender.postMessage({
-                  id,
-                  method
-                }, transferables);
-              } else {
-                sender.postMessage({
-                  id,
-                  method,
-                  params
-                }, transferables);
-              }
-            });
-          };
-          var notify = function notify2(method, params) {
-            var transferables = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
-            sender.postMessage({
-              id: null,
-              method,
-              params
-            }, transferables);
-          };
-          var functions = {};
-          for (var _i = 0, _Object$entries = Object.entries(fullBrokerImplementation); _i < _Object$entries.length; _i++) {
-            var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2), key = _Object$entries$_i[0], handler = _Object$entries$_i[1];
-            functions = _objectSpread(_objectSpread({}, functions), {}, _defineProperty({}, key, handler({
-              call,
-              notify
-            })));
-          }
-          return _objectSpread({}, functions);
         };
       };
+      var isMessagePort = function isMessagePort2(sender) {
+        return typeof sender.start === "function";
+      };
+      var createBroker = createBrokerFactory(createCreateOrGetOngoingRequests(/* @__PURE__ */ new WeakMap()), createExtendBrokerImplementation(/* @__PURE__ */ new WeakMap()), fastUniqueNumbers.generateUniqueNumber, isMessagePort);
       exports3.createBroker = createBroker;
     }));
   }
@@ -18761,64 +18756,52 @@ var require_bundle = __commonJS({
 var require_bundle2 = __commonJS({
   "node_modules/worker-timers-broker/build/es5/bundle.js"(exports2, module2) {
     (function(global2, factory) {
-      typeof exports2 === "object" && typeof module2 !== "undefined" ? factory(exports2, require_typeof(), require_bundle(), require_module()) : typeof define === "function" && define.amd ? define(["exports", "@babel/runtime/helpers/typeof", "broker-factory", "fast-unique-numbers"], factory) : (global2 = typeof globalThis !== "undefined" ? globalThis : global2 || self, factory(global2.workerTimersBroker = {}, global2._typeof, global2.brokerFactory, global2.fastUniqueNumbers));
-    })(exports2, (function(exports3, _typeof, brokerFactory, fastUniqueNumbers) {
+      typeof exports2 === "object" && typeof module2 !== "undefined" ? factory(exports2, require_bundle(), require_module(), require_typeof()) : typeof define === "function" && define.amd ? define(["exports", "broker-factory", "fast-unique-numbers", "@babel/runtime/helpers/typeof"], factory) : (global2 = typeof globalThis !== "undefined" ? globalThis : global2 || self, factory(global2.workerTimersBroker = {}, global2.brokerFactory, global2.fastUniqueNumbers, global2._typeof));
+    })(exports2, (function(exports3, brokerFactory, fastUniqueNumbers, _typeof) {
       "use strict";
-      var scheduledIntervalsState = /* @__PURE__ */ new Map([[0, null]]);
-      var scheduledTimeoutsState = /* @__PURE__ */ new Map([[0, null]]);
-      var wrap = brokerFactory.createBroker({
-        clearInterval: function clearInterval2(_ref) {
-          var call = _ref.call;
+      var createClearIntervalFactory = function createClearIntervalFactory2(scheduledIntervalsState2) {
+        return function(clear) {
           return function(timerId) {
-            if (_typeof(scheduledIntervalsState.get(timerId)) === "symbol") {
-              scheduledIntervalsState.set(timerId, null);
-              call("clear", {
-                timerId,
-                timerType: "interval"
-              }).then(function() {
-                scheduledIntervalsState["delete"](timerId);
+            if (_typeof(scheduledIntervalsState2.get(timerId)) === "symbol") {
+              scheduledIntervalsState2.set(timerId, null);
+              clear(timerId).then(function() {
+                scheduledIntervalsState2["delete"](timerId);
               });
             }
           };
-        },
-        clearTimeout: function clearTimeout2(_ref2) {
-          var call = _ref2.call;
+        };
+      };
+      var createClearTimeoutFactory = function createClearTimeoutFactory2(scheduledTimeoutsState2) {
+        return function(clear) {
           return function(timerId) {
-            if (_typeof(scheduledTimeoutsState.get(timerId)) === "symbol") {
-              scheduledTimeoutsState.set(timerId, null);
-              call("clear", {
-                timerId,
-                timerType: "timeout"
-              }).then(function() {
-                scheduledTimeoutsState["delete"](timerId);
+            if (_typeof(scheduledTimeoutsState2.get(timerId)) === "symbol") {
+              scheduledTimeoutsState2.set(timerId, null);
+              clear(timerId).then(function() {
+                scheduledTimeoutsState2["delete"](timerId);
               });
             }
           };
-        },
-        setInterval: function setInterval2(_ref3) {
-          var call = _ref3.call;
+        };
+      };
+      var createSetIntervalFactory = function createSetIntervalFactory2(generateUniqueNumber, scheduledIntervalsState2) {
+        return function(set) {
           return function(func) {
             var delay = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 0;
             for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
               args[_key - 2] = arguments[_key];
             }
             var symbol = Symbol();
-            var timerId = fastUniqueNumbers.generateUniqueNumber(scheduledIntervalsState);
-            scheduledIntervalsState.set(timerId, symbol);
+            var timerId = generateUniqueNumber(scheduledIntervalsState2);
+            scheduledIntervalsState2.set(timerId, symbol);
             var _schedule = function schedule() {
-              return call("set", {
-                delay,
-                now: performance.timeOrigin + performance.now(),
-                timerId,
-                timerType: "interval"
-              }).then(function() {
-                var state = scheduledIntervalsState.get(timerId);
+              return set(delay, timerId).then(function() {
+                var state = scheduledIntervalsState2.get(timerId);
                 if (state === void 0) {
                   throw new Error("The timer is in an undefined state.");
                 }
                 if (state === symbol) {
                   func.apply(void 0, args);
-                  if (scheduledIntervalsState.get(timerId) === symbol) {
+                  if (scheduledIntervalsState2.get(timerId) === symbol) {
                     _schedule();
                   }
                 }
@@ -18827,34 +18810,78 @@ var require_bundle2 = __commonJS({
             _schedule();
             return timerId;
           };
-        },
-        setTimeout: function setTimeout2(_ref4) {
-          var call = _ref4.call;
+        };
+      };
+      var createSetTimeoutFactory = function createSetTimeoutFactory2(generateUniqueNumber, scheduledTimeoutsState2) {
+        return function(set) {
           return function(func) {
             var delay = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : 0;
-            for (var _len2 = arguments.length, args = new Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-              args[_key2 - 2] = arguments[_key2];
+            for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+              args[_key - 2] = arguments[_key];
             }
             var symbol = Symbol();
-            var timerId = fastUniqueNumbers.generateUniqueNumber(scheduledTimeoutsState);
-            scheduledTimeoutsState.set(timerId, symbol);
-            call("set", {
-              delay,
-              now: performance.timeOrigin + performance.now(),
-              timerId,
-              timerType: "timeout"
-            }).then(function() {
-              var state = scheduledTimeoutsState.get(timerId);
+            var timerId = generateUniqueNumber(scheduledTimeoutsState2);
+            scheduledTimeoutsState2.set(timerId, symbol);
+            set(delay, timerId).then(function() {
+              var state = scheduledTimeoutsState2.get(timerId);
               if (state === void 0) {
                 throw new Error("The timer is in an undefined state.");
               }
               if (state === symbol) {
-                scheduledTimeoutsState["delete"](timerId);
+                scheduledTimeoutsState2["delete"](timerId);
                 func.apply(void 0, args);
               }
             });
             return timerId;
           };
+        };
+      };
+      var scheduledIntervalsState = /* @__PURE__ */ new Map([[0, null]]);
+      var scheduledTimeoutsState = /* @__PURE__ */ new Map([[0, null]]);
+      var createClearInterval = createClearIntervalFactory(scheduledIntervalsState);
+      var createClearTimeout = createClearTimeoutFactory(scheduledTimeoutsState);
+      var createSetInterval = createSetIntervalFactory(fastUniqueNumbers.generateUniqueNumber, scheduledIntervalsState);
+      var createSetTimeout = createSetTimeoutFactory(fastUniqueNumbers.generateUniqueNumber, scheduledTimeoutsState);
+      var wrap = brokerFactory.createBroker({
+        clearInterval: function clearInterval2(_ref) {
+          var call = _ref.call;
+          return createClearInterval(function(timerId) {
+            return call("clear", {
+              timerId,
+              timerType: "interval"
+            });
+          });
+        },
+        clearTimeout: function clearTimeout2(_ref2) {
+          var call = _ref2.call;
+          return createClearTimeout(function(timerId) {
+            return call("clear", {
+              timerId,
+              timerType: "timeout"
+            });
+          });
+        },
+        setInterval: function setInterval2(_ref3) {
+          var call = _ref3.call;
+          return createSetInterval(function(delay, timerId) {
+            return call("set", {
+              delay,
+              now: performance.timeOrigin + performance.now(),
+              timerId,
+              timerType: "interval"
+            });
+          });
+        },
+        setTimeout: function setTimeout2(_ref4) {
+          var call = _ref4.call;
+          return createSetTimeout(function(delay, timerId) {
+            return call("set", {
+              delay,
+              now: performance.timeOrigin + performance.now(),
+              timerId,
+              timerType: "timeout"
+            });
+          });
         }
       });
       var load = function load2(url) {
@@ -18891,7 +18918,7 @@ var require_bundle3 = __commonJS({
           return broker;
         };
       };
-      var worker = `(()=>{var e={45:(e,t,r)=>{var n=r(738).default;e.exports=function(e,t){if("object"!=n(e)||!e)return e;var r=e[Symbol.toPrimitive];if(void 0!==r){var o=r.call(e,t||"default");if("object"!=n(o))return o;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)},e.exports.__esModule=!0,e.exports.default=e.exports},79:e=>{e.exports=function(e,t){(null==t||t>e.length)&&(t=e.length);for(var r=0,n=Array(t);r<t;r++)n[r]=e[r];return n},e.exports.__esModule=!0,e.exports.default=e.exports},122:(e,t,r)=>{var n=r(79);e.exports=function(e,t){if(e){if("string"==typeof e)return n(e,t);var r={}.toString.call(e).slice(8,-1);return"Object"===r&&e.constructor&&(r=e.constructor.name),"Map"===r||"Set"===r?Array.from(e):"Arguments"===r||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(r)?n(e,t):void 0}},e.exports.__esModule=!0,e.exports.default=e.exports},156:e=>{e.exports=function(e,t){var r=null==e?null:"undefined"!=typeof Symbol&&e[Symbol.iterator]||e["@@iterator"];if(null!=r){var n,o,u,a,i=[],s=!0,c=!1;try{if(u=(r=r.call(e)).next,0===t){if(Object(r)!==r)return;s=!1}else for(;!(s=(n=u.call(r)).done)&&(i.push(n.value),i.length!==t);s=!0);}catch(e){c=!0,o=e}finally{try{if(!s&&null!=r.return&&(a=r.return(),Object(a)!==a))return}finally{if(c)throw o}}return i}},e.exports.__esModule=!0,e.exports.default=e.exports},172:e=>{e.exports=function(e,t){this.v=e,this.k=t},e.exports.__esModule=!0,e.exports.default=e.exports},293:e=>{function t(e,t,r,n,o,u,a){try{var i=e[u](a),s=i.value}catch(e){return void r(e)}i.done?t(s):Promise.resolve(s).then(n,o)}e.exports=function(e){return function(){var r=this,n=arguments;return new Promise(function(o,u){var a=e.apply(r,n);function i(e){t(a,o,u,i,s,"next",e)}function s(e){t(a,o,u,i,s,"throw",e)}i(void 0)})}},e.exports.__esModule=!0,e.exports.default=e.exports},373:e=>{e.exports=function(e){var t=Object(e),r=[];for(var n in t)r.unshift(n);return function e(){for(;r.length;)if((n=r.pop())in t)return e.value=n,e.done=!1,e;return e.done=!0,e}},e.exports.__esModule=!0,e.exports.default=e.exports},389:function(e,t){!function(e){"use strict";var t=function(e){return function(t){var r=e(t);return t.add(r),r}},r=function(e){return function(t,r){return e.set(t,r),r}},n=void 0===Number.MAX_SAFE_INTEGER?9007199254740991:Number.MAX_SAFE_INTEGER,o=536870912,u=2*o,a=function(e,t){return function(r){var a=t.get(r),i=void 0===a?r.size:a<u?a+1:0;if(!r.has(i))return e(r,i);if(r.size<o){for(;r.has(i);)i=Math.floor(Math.random()*u);return e(r,i)}if(r.size>n)throw new Error("Congratulations, you created a collection of unique numbers which uses all available integers!");for(;r.has(i);)i=Math.floor(Math.random()*n);return e(r,i)}},i=new WeakMap,s=r(i),c=a(s,i),f=t(c);e.addUniqueNumber=f,e.generateUniqueNumber=c}(t)},472:function(e,t,r){!function(e,t,r,n){"use strict";var o=function(e,t){return function(r){var o=t.get(r);if(void 0===o)return Promise.resolve(!1);var u=n(o,2),a=u[0],i=u[1];return e(a),t.delete(r),i(!1),Promise.resolve(!0)}},u=function(e,t){var r=function(n,o,u,a){var i=n-e.now();i>0?o.set(a,[t(r,i,n,o,u,a),u]):(o.delete(a),u(!0))};return r},a=function(e,t,r,n){return function(o,u,a){var i=o+u-t.timeOrigin,s=i-t.now();return new Promise(function(t){e.set(a,[r(n,s,i,e,t,a),t])})}},i=new Map,s=o(globalThis.clearTimeout,i),c=new Map,f=o(globalThis.clearTimeout,c),l=u(performance,globalThis.setTimeout),p=a(i,performance,globalThis.setTimeout,l),d=a(c,performance,globalThis.setTimeout,l);r.createWorker(self,{clear:function(){var r=e(t.mark(function e(r){var n,o,u;return t.wrap(function(e){for(;;)switch(e.prev=e.next){case 0:return n=r.timerId,o=r.timerType,e.next=1,"interval"===o?s(n):f(n);case 1:return u=e.sent,e.abrupt("return",{result:u});case 2:case"end":return e.stop()}},e)}));function n(e){return r.apply(this,arguments)}return n}(),set:function(){var r=e(t.mark(function e(r){var n,o,u,a,i;return t.wrap(function(e){for(;;)switch(e.prev=e.next){case 0:return n=r.delay,o=r.now,u=r.timerId,a=r.timerType,e.next=1,("interval"===a?p:d)(n,o,u);case 1:return i=e.sent,e.abrupt("return",{result:i});case 2:case"end":return e.stop()}},e)}));function n(e){return r.apply(this,arguments)}return n}()})}(r(293),r(756),r(623),r(715))},546:e=>{function t(r,n,o,u){var a=Object.defineProperty;try{a({},"",{})}catch(r){a=0}e.exports=t=function(e,r,n,o){function u(r,n){t(e,r,function(e){return this._invoke(r,n,e)})}r?a?a(e,r,{value:n,enumerable:!o,configurable:!o,writable:!o}):e[r]=n:(u("next",0),u("throw",1),u("return",2))},e.exports.__esModule=!0,e.exports.default=e.exports,t(r,n,o,u)}e.exports=t,e.exports.__esModule=!0,e.exports.default=e.exports},579:(e,t,r)=>{var n=r(738).default;e.exports=function(e){if(null!=e){var t=e["function"==typeof Symbol&&Symbol.iterator||"@@iterator"],r=0;if(t)return t.call(e);if("function"==typeof e.next)return e;if(!isNaN(e.length))return{next:function(){return e&&r>=e.length&&(e=void 0),{value:e&&e[r++],done:!e}}}}throw new TypeError(n(e)+" is not iterable")},e.exports.__esModule=!0,e.exports.default=e.exports},623:function(e,t,r){!function(e,t,r,n,o){"use strict";var u={INTERNAL_ERROR:-32603,INVALID_PARAMS:-32602,METHOD_NOT_FOUND:-32601},a=function(e,t){return Object.assign(new Error(e),{status:t})},i=function(e){return a('The requested method called "'.concat(e,'" is not supported.'),u.METHOD_NOT_FOUND)},s=function(e){return a('The handler of the method called "'.concat(e,'" returned no required result.'),u.INTERNAL_ERROR)},c=function(e){return a('The handler of the method called "'.concat(e,'" returned an unexpected result.'),u.INTERNAL_ERROR)},f=function(e){return a('The specified parameter called "portId" with the given value "'.concat(e,'" does not identify a port connected to this worker.'),u.INVALID_PARAMS)},l=function(e,n){return function(){var o=t(r.mark(function t(o){var u,a,f,l,p,d,v,x,y,b,h,m,_,g,w;return r.wrap(function(t){for(;;)switch(t.prev=t.next){case 0:if(u=o.data,a=u.id,f=u.method,l=u.params,p=n[f],t.prev=1,void 0!==p){t.next=2;break}throw i(f);case 2:if(void 0!==(d=void 0===l?p():p(l))){t.next=3;break}throw s(f);case 3:if(!(d instanceof Promise)){t.next=5;break}return t.next=4,d;case 4:g=t.sent,t.next=6;break;case 5:g=d;case 6:if(v=g,null!==a){t.next=8;break}if(void 0===v.result){t.next=7;break}throw c(f);case 7:t.next=10;break;case 8:if(void 0!==v.result){t.next=9;break}throw c(f);case 9:x=v.result,y=v.transferables,b=void 0===y?[]:y,e.postMessage({id:a,result:x},b);case 10:t.next=12;break;case 11:t.prev=11,w=t.catch(1),h=w.message,m=w.status,_=void 0===m?-32603:m,e.postMessage({error:{code:_,message:h},id:a});case 12:case"end":return t.stop()}},t,null,[[1,11]])}));return function(e){return o.apply(this,arguments)}}()},p=function(){return new Promise(function(e){var t=new ArrayBuffer(0),r=new MessageChannel,n=r.port1,o=r.port2;n.onmessage=function(t){var r=t.data;return e(null!==r)},o.postMessage(t,[t])})};function d(e,t){var r=Object.keys(e);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(e);t&&(n=n.filter(function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable})),r.push.apply(r,n)}return r}function v(e){for(var t=1;t<arguments.length;t++){var r=null!=arguments[t]?arguments[t]:{};t%2?d(Object(r),!0).forEach(function(t){n(e,t,r[t])}):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(r)):d(Object(r)).forEach(function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(r,t))})}return e}var x=new Map,y=function(e,n,u){return v(v({},n),{},{connect:function(t){var r=t.port;r.start();var u=e(r,n),a=o.generateUniqueNumber(x);return x.set(a,function(){u(),r.close(),x.delete(a)}),{result:a}},disconnect:function(e){var t=e.portId,r=x.get(t);if(void 0===r)throw f(t);return r(),{result:null}},isSupported:function(){var e=t(r.mark(function e(){var t,n,o;return r.wrap(function(e){for(;;)switch(e.prev=e.next){case 0:return e.next=1,p();case 1:if(!e.sent){e.next=5;break}if(!((t=u())instanceof Promise)){e.next=3;break}return e.next=2,t;case 2:o=e.sent,e.next=4;break;case 3:o=t;case 4:return n=o,e.abrupt("return",{result:n});case 5:return e.abrupt("return",{result:!1});case 6:case"end":return e.stop()}},e)}));function n(){return e.apply(this,arguments)}return n}()})},b=function(e,t){var r=y(b,t,arguments.length>2&&void 0!==arguments[2]?arguments[2]:function(){return!0}),n=l(e,r);return e.addEventListener("message",n),function(){return e.removeEventListener("message",n)}};e.createWorker=b,e.isSupported=p}(t,r(293),r(756),r(693),r(389))},633:(e,t,r)=>{var n=r(172),o=r(993),u=r(869),a=r(887),i=r(791),s=r(373),c=r(579);function f(){"use strict";var t=o(),r=t.m(f),l=(Object.getPrototypeOf?Object.getPrototypeOf(r):r.__proto__).constructor;function p(e){var t="function"==typeof e&&e.constructor;return!!t&&(t===l||"GeneratorFunction"===(t.displayName||t.name))}var d={throw:1,return:2,break:3,continue:3};function v(e){var t,r;return function(n){t||(t={stop:function(){return r(n.a,2)},catch:function(){return n.v},abrupt:function(e,t){return r(n.a,d[e],t)},delegateYield:function(e,o,u){return t.resultName=o,r(n.d,c(e),u)},finish:function(e){return r(n.f,e)}},r=function(e,r,o){n.p=t.prev,n.n=t.next;try{return e(r,o)}finally{t.next=n.n}}),t.resultName&&(t[t.resultName]=n.v,t.resultName=void 0),t.sent=n.v,t.next=n.n;try{return e.call(this,t)}finally{n.p=t.prev,n.n=t.next}}}return(e.exports=f=function(){return{wrap:function(e,r,n,o){return t.w(v(e),r,n,o&&o.reverse())},isGeneratorFunction:p,mark:t.m,awrap:function(e,t){return new n(e,t)},AsyncIterator:i,async:function(e,t,r,n,o){return(p(t)?a:u)(v(e),t,r,n,o)},keys:s,values:c}},e.exports.__esModule=!0,e.exports.default=e.exports)()}e.exports=f,e.exports.__esModule=!0,e.exports.default=e.exports},693:(e,t,r)=>{var n=r(736);e.exports=function(e,t,r){return(t=n(t))in e?Object.defineProperty(e,t,{value:r,enumerable:!0,configurable:!0,writable:!0}):e[t]=r,e},e.exports.__esModule=!0,e.exports.default=e.exports},715:(e,t,r)=>{var n=r(987),o=r(156),u=r(122),a=r(752);e.exports=function(e,t){return n(e)||o(e,t)||u(e,t)||a()},e.exports.__esModule=!0,e.exports.default=e.exports},736:(e,t,r)=>{var n=r(738).default,o=r(45);e.exports=function(e){var t=o(e,"string");return"symbol"==n(t)?t:t+""},e.exports.__esModule=!0,e.exports.default=e.exports},738:e=>{function t(r){return e.exports=t="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},e.exports.__esModule=!0,e.exports.default=e.exports,t(r)}e.exports=t,e.exports.__esModule=!0,e.exports.default=e.exports},752:e=>{e.exports=function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")},e.exports.__esModule=!0,e.exports.default=e.exports},756:(e,t,r)=>{var n=r(633)();e.exports=n;try{regeneratorRuntime=n}catch(e){"object"==typeof globalThis?globalThis.regeneratorRuntime=n:Function("r","regeneratorRuntime = r")(n)}},791:(e,t,r)=>{var n=r(172),o=r(546);e.exports=function e(t,r){function u(e,o,a,i){try{var s=t[e](o),c=s.value;return c instanceof n?r.resolve(c.v).then(function(e){u("next",e,a,i)},function(e){u("throw",e,a,i)}):r.resolve(c).then(function(e){s.value=e,a(s)},function(e){return u("throw",e,a,i)})}catch(e){i(e)}}var a;this.next||(o(e.prototype),o(e.prototype,"function"==typeof Symbol&&Symbol.asyncIterator||"@asyncIterator",function(){return this})),o(this,"_invoke",function(e,t,n){function o(){return new r(function(t,r){u(e,n,t,r)})}return a=a?a.then(o,o):o()},!0)},e.exports.__esModule=!0,e.exports.default=e.exports},869:(e,t,r)=>{var n=r(887);e.exports=function(e,t,r,o,u){var a=n(e,t,r,o,u);return a.next().then(function(e){return e.done?e.value:a.next()})},e.exports.__esModule=!0,e.exports.default=e.exports},887:(e,t,r)=>{var n=r(993),o=r(791);e.exports=function(e,t,r,u,a){return new o(n().w(e,t,r,u),a||Promise)},e.exports.__esModule=!0,e.exports.default=e.exports},987:e=>{e.exports=function(e){if(Array.isArray(e))return e},e.exports.__esModule=!0,e.exports.default=e.exports},993:(e,t,r)=>{var n=r(546);function o(){var t,r,u="function"==typeof Symbol?Symbol:{},a=u.iterator||"@@iterator",i=u.toStringTag||"@@toStringTag";function s(e,o,u,a){var i=o&&o.prototype instanceof f?o:f,s=Object.create(i.prototype);return n(s,"_invoke",function(e,n,o){var u,a,i,s=0,f=o||[],l=!1,p={p:0,n:0,v:t,a:d,f:d.bind(t,4),d:function(e,r){return u=e,a=0,i=t,p.n=r,c}};function d(e,n){for(a=e,i=n,r=0;!l&&s&&!o&&r<f.length;r++){var o,u=f[r],d=p.p,v=u[2];e>3?(o=v===n)&&(i=u[(a=u[4])?5:(a=3,3)],u[4]=u[5]=t):u[0]<=d&&((o=e<2&&d<u[1])?(a=0,p.v=n,p.n=u[1]):d<v&&(o=e<3||u[0]>n||n>v)&&(u[4]=e,u[5]=n,p.n=v,a=0))}if(o||e>1)return c;throw l=!0,n}return function(o,f,v){if(s>1)throw TypeError("Generator is already running");for(l&&1===f&&d(f,v),a=f,i=v;(r=a<2?t:i)||!l;){u||(a?a<3?(a>1&&(p.n=-1),d(a,i)):p.n=i:p.v=i);try{if(s=2,u){if(a||(o="next"),r=u[o]){if(!(r=r.call(u,i)))throw TypeError("iterator result is not an object");if(!r.done)return r;i=r.value,a<2&&(a=0)}else 1===a&&(r=u.return)&&r.call(u),a<2&&(i=TypeError("The iterator does not provide a '"+o+"' method"),a=1);u=t}else if((r=(l=p.n<0)?i:e.call(n,p))!==c)break}catch(e){u=t,a=1,i=e}finally{s=1}}return{value:r,done:l}}}(e,u,a),!0),s}var c={};function f(){}function l(){}function p(){}r=Object.getPrototypeOf;var d=[][a]?r(r([][a]())):(n(r={},a,function(){return this}),r),v=p.prototype=f.prototype=Object.create(d);function x(e){return Object.setPrototypeOf?Object.setPrototypeOf(e,p):(e.__proto__=p,n(e,i,"GeneratorFunction")),e.prototype=Object.create(v),e}return l.prototype=p,n(v,"constructor",p),n(p,"constructor",l),l.displayName="GeneratorFunction",n(p,i,"GeneratorFunction"),n(v),n(v,i,"Generator"),n(v,a,function(){return this}),n(v,"toString",function(){return"[object Generator]"}),(e.exports=o=function(){return{w:s,m:x}},e.exports.__esModule=!0,e.exports.default=e.exports)()}e.exports=o,e.exports.__esModule=!0,e.exports.default=e.exports}},t={};function r(n){var o=t[n];if(void 0!==o)return o.exports;var u=t[n]={exports:{}};return e[n].call(u.exports,u,u.exports,r),u.exports}r.n=e=>{var t=e&&e.__esModule?()=>e.default:()=>e;return r.d(t,{a:t}),t},r.d=(e,t)=>{for(var n in t)r.o(t,n)&&!r.o(e,n)&&Object.defineProperty(e,n,{enumerable:!0,get:t[n]})},r.o=(e,t)=>Object.prototype.hasOwnProperty.call(e,t),(()=>{"use strict";r(472)})()})();`;
+      var worker = `(()=>{var e={389(e,t){!function(e){"use strict";var t=function(e){return function(t){var r=e(t);return t.add(r),r}},r=function(e){return function(t,r){return e.set(t,r),r}},n=void 0===Number.MAX_SAFE_INTEGER?9007199254740991:Number.MAX_SAFE_INTEGER,o=536870912,u=2*o,a=function(e,t){return function(r){var a=t.get(r),i=void 0===a?r.size:a<u?a+1:0;if(!r.has(i))return e(r,i);if(r.size<o){for(;r.has(i);)i=Math.floor(Math.random()*u);return e(r,i)}if(r.size>n)throw new Error("Congratulations, you created a collection of unique numbers which uses all available integers!");for(;r.has(i);)i=Math.floor(Math.random()*n);return e(r,i)}},i=new WeakMap,s=r(i),c=a(s,i),f=t(c);e.addUniqueNumber=f,e.generateUniqueNumber=c}(t)},623(e,t,r){!function(e,t,r,n,o){"use strict";var u={INTERNAL_ERROR:-32603,INVALID_PARAMS:-32602,METHOD_NOT_FOUND:-32601},a=function(e,t){return Object.assign(new Error(e),{status:t})},i=function(e){return a('The requested method called "'.concat(e,'" is not supported.'),u.METHOD_NOT_FOUND)},s=function(e){return a('The handler of the method called "'.concat(e,'" returned no required result.'),u.INTERNAL_ERROR)},c=function(e){return a('The handler of the method called "'.concat(e,'" returned an unexpected result.'),u.INTERNAL_ERROR)},f=function(e){return a('The specified parameter called "portId" with the given value "'.concat(e,'" does not identify a port connected to this worker.'),u.INVALID_PARAMS)},l=function(e,n){return function(){var o=t(r.mark(function t(o){var u,a,f,l,p,d,v,x,y,b,h,m,_,g,w;return r.wrap(function(t){for(;;)switch(t.prev=t.next){case 0:if(u=o.data,a=u.id,f=u.method,l=u.params,p=n[f],t.prev=1,void 0!==p){t.next=2;break}throw i(f);case 2:if(void 0!==(d=void 0===l?p():p(l))){t.next=3;break}throw s(f);case 3:if(!(d instanceof Promise)){t.next=5;break}return t.next=4,d;case 4:g=t.sent,t.next=6;break;case 5:g=d;case 6:if(v=g,null!==a){t.next=8;break}if(void 0===v.result){t.next=7;break}throw c(f);case 7:t.next=10;break;case 8:if(void 0!==v.result){t.next=9;break}throw c(f);case 9:x=v.result,y=v.transferables,b=void 0===y?[]:y,e.postMessage({id:a,result:x},b);case 10:t.next=12;break;case 11:t.prev=11,w=t.catch(1),h=w.message,m=w.status,_=void 0===m?-32603:m,e.postMessage({error:{code:_,message:h},id:a});case 12:case"end":return t.stop()}},t,null,[[1,11]])}));return function(e){return o.apply(this,arguments)}}()},p=function(){return new Promise(function(e){var t=new ArrayBuffer(0),r=new MessageChannel,n=r.port1,o=r.port2;n.onmessage=function(t){var r=t.data;return e(null!==r)},o.postMessage(t,[t])})};function d(e,t){var r=Object.keys(e);if(Object.getOwnPropertySymbols){var n=Object.getOwnPropertySymbols(e);t&&(n=n.filter(function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable})),r.push.apply(r,n)}return r}function v(e){for(var t=1;t<arguments.length;t++){var r=null!=arguments[t]?arguments[t]:{};t%2?d(Object(r),!0).forEach(function(t){n(e,t,r[t])}):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(r)):d(Object(r)).forEach(function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(r,t))})}return e}var x=new Map,y=function(e,n,u){return v(v({},n),{},{connect:function(t){var r=t.port;r.start();var u=e(r,n),a=o.generateUniqueNumber(x);return x.set(a,function(){u(),r.close(),x.delete(a)}),{result:a}},disconnect:function(e){var t=e.portId,r=x.get(t);if(void 0===r)throw f(t);return r(),{result:null}},isSupported:function(){var e=t(r.mark(function e(){var t,n,o;return r.wrap(function(e){for(;;)switch(e.prev=e.next){case 0:return e.next=1,p();case 1:if(!e.sent){e.next=5;break}if(!((t=u())instanceof Promise)){e.next=3;break}return e.next=2,t;case 2:o=e.sent,e.next=4;break;case 3:o=t;case 4:return n=o,e.abrupt("return",{result:n});case 5:return e.abrupt("return",{result:!1});case 6:case"end":return e.stop()}},e)}));function n(){return e.apply(this,arguments)}return n}()})},b=function(e,t){var r=y(b,t,arguments.length>2&&void 0!==arguments[2]?arguments[2]:function(){return!0}),n=l(e,r);return e.addEventListener("message",n),function(){return e.removeEventListener("message",n)}};e.createWorker=b,e.isSupported=p}(t,r(293),r(756),r(693),r(389))},472(e,t,r){!function(e,t,r,n){"use strict";var o=function(e,t){return function(r){var o=t.get(r);if(void 0===o)return Promise.resolve(!1);var u=n(o,2),a=u[0],i=u[1];return e(a),t.delete(r),i(!1),Promise.resolve(!0)}},u=function(e,t){var r=function(n,o,u,a){var i=n-e.now();i>0?o.set(a,[t(r,i,n,o,u,a),u]):(o.delete(a),u(!0))};return r},a=function(e,t,r,n){return function(o,u,a){var i=o+u-t.timeOrigin,s=i-t.now();return new Promise(function(t){e.set(a,[r(n,s,i,e,t,a),t])})}},i=new Map,s=o(globalThis.clearTimeout,i),c=new Map,f=o(globalThis.clearTimeout,c),l=u(performance,globalThis.setTimeout),p=a(i,performance,globalThis.setTimeout,l),d=a(c,performance,globalThis.setTimeout,l);r.createWorker(self,{clear:function(){var r=e(t.mark(function e(r){var n,o,u;return t.wrap(function(e){for(;;)switch(e.prev=e.next){case 0:return n=r.timerId,o=r.timerType,e.next=1,"interval"===o?s(n):f(n);case 1:return u=e.sent,e.abrupt("return",{result:u});case 2:case"end":return e.stop()}},e)}));function n(e){return r.apply(this,arguments)}return n}(),set:function(){var r=e(t.mark(function e(r){var n,o,u,a,i;return t.wrap(function(e){for(;;)switch(e.prev=e.next){case 0:return n=r.delay,o=r.now,u=r.timerId,a=r.timerType,e.next=1,("interval"===a?p:d)(n,o,u);case 1:return i=e.sent,e.abrupt("return",{result:i});case 2:case"end":return e.stop()}},e)}));function n(e){return r.apply(this,arguments)}return n}()})}(r(293),r(756),r(623),r(715))},172(e){e.exports=function(e,t){this.v=e,this.k=t},e.exports.__esModule=!0,e.exports.default=e.exports},79(e){e.exports=function(e,t){(null==t||t>e.length)&&(t=e.length);for(var r=0,n=Array(t);r<t;r++)n[r]=e[r];return n},e.exports.__esModule=!0,e.exports.default=e.exports},987(e){e.exports=function(e){if(Array.isArray(e))return e},e.exports.__esModule=!0,e.exports.default=e.exports},293(e){function t(e,t,r,n,o,u,a){try{var i=e[u](a),s=i.value}catch(e){return void r(e)}i.done?t(s):Promise.resolve(s).then(n,o)}e.exports=function(e){return function(){var r=this,n=arguments;return new Promise(function(o,u){var a=e.apply(r,n);function i(e){t(a,o,u,i,s,"next",e)}function s(e){t(a,o,u,i,s,"throw",e)}i(void 0)})}},e.exports.__esModule=!0,e.exports.default=e.exports},693(e,t,r){var n=r(736);e.exports=function(e,t,r){return(t=n(t))in e?Object.defineProperty(e,t,{value:r,enumerable:!0,configurable:!0,writable:!0}):e[t]=r,e},e.exports.__esModule=!0,e.exports.default=e.exports},156(e){e.exports=function(e,t){var r=null==e?null:"undefined"!=typeof Symbol&&e[Symbol.iterator]||e["@@iterator"];if(null!=r){var n,o,u,a,i=[],s=!0,c=!1;try{if(u=(r=r.call(e)).next,0===t){if(Object(r)!==r)return;s=!1}else for(;!(s=(n=u.call(r)).done)&&(i.push(n.value),i.length!==t);s=!0);}catch(e){c=!0,o=e}finally{try{if(!s&&null!=r.return&&(a=r.return(),Object(a)!==a))return}finally{if(c)throw o}}return i}},e.exports.__esModule=!0,e.exports.default=e.exports},752(e){e.exports=function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")},e.exports.__esModule=!0,e.exports.default=e.exports},993(e,t,r){var n=r(546);function o(){var t,r,u="function"==typeof Symbol?Symbol:{},a=u.iterator||"@@iterator",i=u.toStringTag||"@@toStringTag";function s(e,o,u,a){var i=o&&o.prototype instanceof f?o:f,s=Object.create(i.prototype);return n(s,"_invoke",function(e,n,o){var u,a,i,s=0,f=o||[],l=!1,p={p:0,n:0,v:t,a:d,f:d.bind(t,4),d:function(e,r){return u=e,a=0,i=t,p.n=r,c}};function d(e,n){for(a=e,i=n,r=0;!l&&s&&!o&&r<f.length;r++){var o,u=f[r],d=p.p,v=u[2];e>3?(o=v===n)&&(i=u[(a=u[4])?5:(a=3,3)],u[4]=u[5]=t):u[0]<=d&&((o=e<2&&d<u[1])?(a=0,p.v=n,p.n=u[1]):d<v&&(o=e<3||u[0]>n||n>v)&&(u[4]=e,u[5]=n,p.n=v,a=0))}if(o||e>1)return c;throw l=!0,n}return function(o,f,v){if(s>1)throw TypeError("Generator is already running");for(l&&1===f&&d(f,v),a=f,i=v;(r=a<2?t:i)||!l;){u||(a?a<3?(a>1&&(p.n=-1),d(a,i)):p.n=i:p.v=i);try{if(s=2,u){if(a||(o="next"),r=u[o]){if(!(r=r.call(u,i)))throw TypeError("iterator result is not an object");if(!r.done)return r;i=r.value,a<2&&(a=0)}else 1===a&&(r=u.return)&&r.call(u),a<2&&(i=TypeError("The iterator does not provide a '"+o+"' method"),a=1);u=t}else if((r=(l=p.n<0)?i:e.call(n,p))!==c)break}catch(e){u=t,a=1,i=e}finally{s=1}}return{value:r,done:l}}}(e,u,a),!0),s}var c={};function f(){}function l(){}function p(){}r=Object.getPrototypeOf;var d=[][a]?r(r([][a]())):(n(r={},a,function(){return this}),r),v=p.prototype=f.prototype=Object.create(d);function x(e){return Object.setPrototypeOf?Object.setPrototypeOf(e,p):(e.__proto__=p,n(e,i,"GeneratorFunction")),e.prototype=Object.create(v),e}return l.prototype=p,n(v,"constructor",p),n(p,"constructor",l),l.displayName="GeneratorFunction",n(p,i,"GeneratorFunction"),n(v),n(v,i,"Generator"),n(v,a,function(){return this}),n(v,"toString",function(){return"[object Generator]"}),(e.exports=o=function(){return{w:s,m:x}},e.exports.__esModule=!0,e.exports.default=e.exports)()}e.exports=o,e.exports.__esModule=!0,e.exports.default=e.exports},869(e,t,r){var n=r(887);e.exports=function(e,t,r,o,u){var a=n(e,t,r,o,u);return a.next().then(function(e){return e.done?e.value:a.next()})},e.exports.__esModule=!0,e.exports.default=e.exports},887(e,t,r){var n=r(993),o=r(791);e.exports=function(e,t,r,u,a){return new o(n().w(e,t,r,u),a||Promise)},e.exports.__esModule=!0,e.exports.default=e.exports},791(e,t,r){var n=r(172),o=r(546);e.exports=function e(t,r){function u(e,o,a,i){try{var s=t[e](o),c=s.value;return c instanceof n?r.resolve(c.v).then(function(e){u("next",e,a,i)},function(e){u("throw",e,a,i)}):r.resolve(c).then(function(e){s.value=e,a(s)},function(e){return u("throw",e,a,i)})}catch(e){i(e)}}var a;this.next||(o(e.prototype),o(e.prototype,"function"==typeof Symbol&&Symbol.asyncIterator||"@asyncIterator",function(){return this})),o(this,"_invoke",function(e,t,n){function o(){return new r(function(t,r){u(e,n,t,r)})}return a=a?a.then(o,o):o()},!0)},e.exports.__esModule=!0,e.exports.default=e.exports},546(e){function t(r,n,o,u){var a=Object.defineProperty;try{a({},"",{})}catch(r){a=0}e.exports=t=function(e,r,n,o){function u(r,n){t(e,r,function(e){return this._invoke(r,n,e)})}r?a?a(e,r,{value:n,enumerable:!o,configurable:!o,writable:!o}):e[r]=n:(u("next",0),u("throw",1),u("return",2))},e.exports.__esModule=!0,e.exports.default=e.exports,t(r,n,o,u)}e.exports=t,e.exports.__esModule=!0,e.exports.default=e.exports},373(e){e.exports=function(e){var t=Object(e),r=[];for(var n in t)r.unshift(n);return function e(){for(;r.length;)if((n=r.pop())in t)return e.value=n,e.done=!1,e;return e.done=!0,e}},e.exports.__esModule=!0,e.exports.default=e.exports},633(e,t,r){var n=r(172),o=r(993),u=r(869),a=r(887),i=r(791),s=r(373),c=r(579);function f(){"use strict";var t=o(),r=t.m(f),l=(Object.getPrototypeOf?Object.getPrototypeOf(r):r.__proto__).constructor;function p(e){var t="function"==typeof e&&e.constructor;return!!t&&(t===l||"GeneratorFunction"===(t.displayName||t.name))}var d={throw:1,return:2,break:3,continue:3};function v(e){var t,r;return function(n){t||(t={stop:function(){return r(n.a,2)},catch:function(){return n.v},abrupt:function(e,t){return r(n.a,d[e],t)},delegateYield:function(e,o,u){return t.resultName=o,r(n.d,c(e),u)},finish:function(e){return r(n.f,e)}},r=function(e,r,o){n.p=t.prev,n.n=t.next;try{return e(r,o)}finally{t.next=n.n}}),t.resultName&&(t[t.resultName]=n.v,t.resultName=void 0),t.sent=n.v,t.next=n.n;try{return e.call(this,t)}finally{n.p=t.prev,n.n=t.next}}}return(e.exports=f=function(){return{wrap:function(e,r,n,o){return t.w(v(e),r,n,o&&o.reverse())},isGeneratorFunction:p,mark:t.m,awrap:function(e,t){return new n(e,t)},AsyncIterator:i,async:function(e,t,r,n,o){return(p(t)?a:u)(v(e),t,r,n,o)},keys:s,values:c}},e.exports.__esModule=!0,e.exports.default=e.exports)()}e.exports=f,e.exports.__esModule=!0,e.exports.default=e.exports},579(e,t,r){var n=r(738).default;e.exports=function(e){if(null!=e){var t=e["function"==typeof Symbol&&Symbol.iterator||"@@iterator"],r=0;if(t)return t.call(e);if("function"==typeof e.next)return e;if(!isNaN(e.length))return{next:function(){return e&&r>=e.length&&(e=void 0),{value:e&&e[r++],done:!e}}}}throw new TypeError(n(e)+" is not iterable")},e.exports.__esModule=!0,e.exports.default=e.exports},715(e,t,r){var n=r(987),o=r(156),u=r(122),a=r(752);e.exports=function(e,t){return n(e)||o(e,t)||u(e,t)||a()},e.exports.__esModule=!0,e.exports.default=e.exports},45(e,t,r){var n=r(738).default;e.exports=function(e,t){if("object"!=n(e)||!e)return e;var r=e[Symbol.toPrimitive];if(void 0!==r){var o=r.call(e,t||"default");if("object"!=n(o))return o;throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===t?String:Number)(e)},e.exports.__esModule=!0,e.exports.default=e.exports},736(e,t,r){var n=r(738).default,o=r(45);e.exports=function(e){var t=o(e,"string");return"symbol"==n(t)?t:t+""},e.exports.__esModule=!0,e.exports.default=e.exports},738(e){function t(r){return e.exports=t="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},e.exports.__esModule=!0,e.exports.default=e.exports,t(r)}e.exports=t,e.exports.__esModule=!0,e.exports.default=e.exports},122(e,t,r){var n=r(79);e.exports=function(e,t){if(e){if("string"==typeof e)return n(e,t);var r={}.toString.call(e).slice(8,-1);return"Object"===r&&e.constructor&&(r=e.constructor.name),"Map"===r||"Set"===r?Array.from(e):"Arguments"===r||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(r)?n(e,t):void 0}},e.exports.__esModule=!0,e.exports.default=e.exports},756(e,t,r){var n=r(633)();e.exports=n;try{regeneratorRuntime=n}catch(e){"object"==typeof globalThis?globalThis.regeneratorRuntime=n:Function("r","regeneratorRuntime = r")(n)}}};const t={};function r(n){const o=t[n];if(void 0!==o)return o.exports;const u=t[n]={exports:{}};return e[n].call(u.exports,u,u.exports,r),u.exports}r.n=e=>{const t=e&&e.__esModule?()=>e.default:()=>e;return r.d(t,{a:t}),t},r.d=(e,t)=>{if(Array.isArray(t))for(var n=0;n<t.length;){var o=t[n++],u=t[n++];r.o(e,o)?0===u&&n++:0===u?Object.defineProperty(e,o,{enumerable:!0,value:t[n++]}):Object.defineProperty(e,o,{enumerable:!0,get:u})}else for(var o in t)r.o(t,o)&&!r.o(e,o)&&Object.defineProperty(e,o,{enumerable:!0,get:t[o]})},r.o=(e,t)=>Object.prototype.hasOwnProperty.call(e,t),(()=>{"use strict";r(472)})()})();`;
       var loadOrReturnBroker = createLoadOrReturnBroker(workerTimersBroker.load, worker);
       var clearInterval2 = function clearInterval3(timerId) {
         return loadOrReturnBroker().clearInterval(timerId);
@@ -20348,6 +20375,7 @@ var require_constants2 = __commonJS({
     if (hasBlob) BINARY_TYPES.push("blob");
     module2.exports = {
       BINARY_TYPES,
+      CLOSE_TIMEOUT: 3e4,
       EMPTY_BUFFER: Buffer.alloc(0),
       GUID: "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
       hasBlob,
@@ -20513,6 +20541,9 @@ var require_permessage_deflate = __commonJS({
        *     acknowledge disabling of client context takeover
        * @param {Number} [options.concurrencyLimit=10] The number of concurrent
        *     calls to zlib
+       * @param {Boolean} [options.isServer=false] Create the instance in either
+       *     server or client mode
+       * @param {Number} [options.maxPayload=0] The maximum allowed message length
        * @param {(Boolean|Number)} [options.serverMaxWindowBits] Request/confirm the
        *     use of a custom server window size
        * @param {Boolean} [options.serverNoContextTakeover=false] Request/accept
@@ -20523,15 +20554,12 @@ var require_permessage_deflate = __commonJS({
        *     deflate
        * @param {Object} [options.zlibInflateOptions] Options to pass to zlib on
        *     inflate
-       * @param {Boolean} [isServer=false] Create the instance in either server or
-       *     client mode
-       * @param {Number} [maxPayload=0] The maximum allowed message length
        */
-      constructor(options, isServer, maxPayload) {
-        this._maxPayload = maxPayload | 0;
+      constructor(options) {
         this._options = options || {};
         this._threshold = this._options.threshold !== void 0 ? this._options.threshold : 1024;
-        this._isServer = !!isServer;
+        this._maxPayload = this._options.maxPayload | 0;
+        this._isServer = !!this._options.isServer;
         this._deflate = null;
         this._inflate = null;
         this.params = null;
@@ -21105,6 +21133,10 @@ var require_receiver = __commonJS({
        *     extensions
        * @param {Boolean} [options.isServer=false] Specifies whether to operate in
        *     client or server mode
+       * @param {Number} [options.maxBufferedChunks=0] The maximum number of
+       *     buffered data chunks
+       * @param {Number} [options.maxFragments=0] The maximum number of message
+       *     fragments
        * @param {Number} [options.maxPayload=0] The maximum allowed message length
        * @param {Boolean} [options.skipUTF8Validation=false] Specifies whether or
        *     not to skip UTF-8 validation for text and close messages
@@ -21115,6 +21147,8 @@ var require_receiver = __commonJS({
         this._binaryType = options.binaryType || BINARY_TYPES[0];
         this._extensions = options.extensions || {};
         this._isServer = !!options.isServer;
+        this._maxBufferedChunks = options.maxBufferedChunks | 0;
+        this._maxFragments = options.maxFragments | 0;
         this._maxPayload = options.maxPayload | 0;
         this._skipUTF8Validation = !!options.skipUTF8Validation;
         this[kWebSocket] = void 0;
@@ -21129,6 +21163,7 @@ var require_receiver = __commonJS({
         this._opcode = 0;
         this._totalPayloadLength = 0;
         this._messageLength = 0;
+        this._numFragments = 0;
         this._fragments = [];
         this._errored = false;
         this._loop = false;
@@ -21144,6 +21179,18 @@ var require_receiver = __commonJS({
        */
       _write(chunk4, encoding, cb) {
         if (this._opcode === 8 && this._state == GET_INFO) return cb();
+        if (this._maxBufferedChunks > 0 && this._buffers.length >= this._maxBufferedChunks) {
+          cb(
+            this.createError(
+              RangeError,
+              "Too many buffered chunks",
+              false,
+              1008,
+              "WS_ERR_TOO_MANY_BUFFERED_PARTS"
+            )
+          );
+          return;
+        }
         this._bufferedBytes += chunk4.length;
         this._buffers.push(chunk4);
         this.startLoop(cb);
@@ -21467,6 +21514,17 @@ var require_receiver = __commonJS({
           this.controlMessage(data, cb);
           return;
         }
+        if (this._maxFragments > 0 && ++this._numFragments > this._maxFragments) {
+          const error = this.createError(
+            RangeError,
+            "Too many message fragments",
+            false,
+            1008,
+            "WS_ERR_TOO_MANY_BUFFERED_PARTS"
+          );
+          cb(error);
+          return;
+        }
         if (this._compressed) {
           this._state = INFLATING;
           this.decompress(data, cb);
@@ -21524,6 +21582,7 @@ var require_receiver = __commonJS({
         this._totalPayloadLength = 0;
         this._messageLength = 0;
         this._fragmented = 0;
+        this._numFragments = 0;
         this._fragments = [];
         if (this._opcode === 2) {
           let data;
@@ -21668,6 +21727,9 @@ var require_sender = __commonJS({
     "use strict";
     var { Duplex } = require("stream");
     var { randomFillSync } = require("crypto");
+    var {
+      types: { isUint8Array }
+    } = require("util");
     var PerMessageDeflate = require_permessage_deflate();
     var { EMPTY_BUFFER, kWebSocket, NOOP } = require_constants2();
     var { isBlob, isValidStatusCode } = require_validation();
@@ -21821,8 +21883,10 @@ var require_sender = __commonJS({
           buf.writeUInt16BE(code, 0);
           if (typeof data === "string") {
             buf.write(data, 2);
-          } else {
+          } else if (isUint8Array(data)) {
             buf.set(data, 2);
+          } else {
+            throw new TypeError("Second argument must be a string or a Uint8Array");
           }
         }
         const options = {
@@ -22550,6 +22614,7 @@ var require_websocket = __commonJS({
     var { isBlob } = require_validation();
     var {
       BINARY_TYPES,
+      CLOSE_TIMEOUT,
       EMPTY_BUFFER,
       GUID,
       kForOnEventAttribute,
@@ -22563,7 +22628,6 @@ var require_websocket = __commonJS({
     } = require_event_target();
     var { format, parse } = require_extension();
     var { toBuffer } = require_buffer_util();
-    var closeTimeout = 30 * 1e3;
     var kAborted = Symbol("kAborted");
     var protocolVersions = [8, 13];
     var readyStates = ["CONNECTING", "OPEN", "CLOSING", "CLOSED"];
@@ -22609,6 +22673,7 @@ var require_websocket = __commonJS({
           initAsClient(this, address, protocols, options);
         } else {
           this._autoPong = options.autoPong;
+          this._closeTimeout = options.closeTimeout;
           this._isServer = true;
         }
       }
@@ -22702,6 +22767,10 @@ var require_websocket = __commonJS({
        *     multiple times in the same tick
        * @param {Function} [options.generateMask] The function used to generate the
        *     masking key
+       * @param {Number} [options.maxBufferedChunks=0] The maximum number of
+       *     buffered data chunks
+       * @param {Number} [options.maxFragments=0] The maximum number of message
+       *     fragments
        * @param {Number} [options.maxPayload=0] The maximum allowed message size
        * @param {Boolean} [options.skipUTF8Validation=false] Specifies whether or
        *     not to skip UTF-8 validation for text and close messages
@@ -22713,6 +22782,8 @@ var require_websocket = __commonJS({
           binaryType: this.binaryType,
           extensions: this._extensions,
           isServer: this._isServer,
+          maxBufferedChunks: options.maxBufferedChunks,
+          maxFragments: options.maxFragments,
           maxPayload: options.maxPayload,
           skipUTF8Validation: options.skipUTF8Validation
         });
@@ -23010,7 +23081,10 @@ var require_websocket = __commonJS({
       const opts = {
         allowSynchronousEvents: true,
         autoPong: true,
+        closeTimeout: CLOSE_TIMEOUT,
         protocolVersion: protocolVersions[1],
+        maxBufferedChunks: 256 * 1024,
+        maxFragments: 16 * 1024,
         maxPayload: 100 * 1024 * 1024,
         skipUTF8Validation: false,
         perMessageDeflate: true,
@@ -23027,6 +23101,7 @@ var require_websocket = __commonJS({
         port: void 0
       };
       websocket._autoPong = opts.autoPong;
+      websocket._closeTimeout = opts.closeTimeout;
       if (!protocolVersions.includes(opts.protocolVersion)) {
         throw new RangeError(
           `Unsupported protocol version: ${opts.protocolVersion} (supported versions: ${protocolVersions.join(", ")})`
@@ -23038,7 +23113,7 @@ var require_websocket = __commonJS({
       } else {
         try {
           parsedUrl = new URL2(address);
-        } catch (e) {
+        } catch {
           throw new SyntaxError(`Invalid URL: ${address}`);
         }
       }
@@ -23086,11 +23161,11 @@ var require_websocket = __commonJS({
       opts.path = parsedUrl.pathname + parsedUrl.search;
       opts.timeout = opts.handshakeTimeout;
       if (opts.perMessageDeflate) {
-        perMessageDeflate = new PerMessageDeflate(
-          opts.perMessageDeflate !== true ? opts.perMessageDeflate : {},
-          false,
-          opts.maxPayload
-        );
+        perMessageDeflate = new PerMessageDeflate({
+          ...opts.perMessageDeflate,
+          isServer: false,
+          maxPayload: opts.maxPayload
+        });
         opts.headers["Sec-WebSocket-Extensions"] = format({
           [PerMessageDeflate.extensionName]: perMessageDeflate.offer()
         });
@@ -23164,9 +23239,9 @@ var require_websocket = __commonJS({
         emitErrorAndClose(websocket, err);
       });
       req.on("response", (res) => {
-        const location = res.headers.location;
+        const location2 = res.headers.location;
         const statusCode = res.statusCode;
-        if (location && opts.followRedirects && statusCode >= 300 && statusCode < 400) {
+        if (location2 && opts.followRedirects && statusCode >= 300 && statusCode < 400) {
           if (++websocket._redirects > opts.maxRedirects) {
             abortHandshake(websocket, req, "Maximum redirects exceeded");
             return;
@@ -23174,9 +23249,9 @@ var require_websocket = __commonJS({
           req.abort();
           let addr;
           try {
-            addr = new URL2(location, address);
+            addr = new URL2(location2, address);
           } catch (e) {
-            const err = new SyntaxError(`Invalid URL: ${location}`);
+            const err = new SyntaxError(`Invalid URL: ${location2}`);
             emitErrorAndClose(websocket, err);
             return;
           }
@@ -23252,6 +23327,8 @@ var require_websocket = __commonJS({
         websocket.setSocket(socket, head, {
           allowSynchronousEvents: opts.allowSynchronousEvents,
           generateMask: opts.generateMask,
+          maxBufferedChunks: opts.maxBufferedChunks,
+          maxFragments: opts.maxFragments,
           maxPayload: opts.maxPayload,
           skipUTF8Validation: opts.skipUTF8Validation
         });
@@ -23369,7 +23446,7 @@ var require_websocket = __commonJS({
     function setCloseTimer(websocket) {
       websocket._closeTimer = setTimeout(
         websocket._socket.destroy.bind(websocket._socket),
-        closeTimeout
+        websocket._closeTimeout
       );
     }
     function socketOnClose() {
@@ -23378,8 +23455,8 @@ var require_websocket = __commonJS({
       this.removeListener("data", socketOnData);
       this.removeListener("end", socketOnEnd);
       websocket._readyState = WebSocket2.CLOSING;
-      let chunk4;
-      if (!this._readableState.endEmitted && !websocket._closeFrameReceived && !websocket._receiver._writableState.errorEmitted && (chunk4 = websocket._socket.read()) !== null) {
+      if (!this._readableState.endEmitted && !websocket._closeFrameReceived && !websocket._receiver._writableState.errorEmitted && this._readableState.length !== 0) {
+        const chunk4 = this.read(this._readableState.length);
         websocket._receiver.write(chunk4);
       }
       websocket._receiver.end();
@@ -23570,7 +23647,7 @@ var require_websocket_server = __commonJS({
     var PerMessageDeflate = require_permessage_deflate();
     var subprotocol = require_subprotocol();
     var WebSocket2 = require_websocket();
-    var { GUID, kWebSocket } = require_constants2();
+    var { CLOSE_TIMEOUT, GUID, kWebSocket } = require_constants2();
     var keyRegex = /^[+/0-9A-Za-z]{22}==$/;
     var RUNNING = 0;
     var CLOSING = 1;
@@ -23589,8 +23666,15 @@ var require_websocket_server = __commonJS({
        *     pending connections
        * @param {Boolean} [options.clientTracking=true] Specifies whether or not to
        *     track clients
+       * @param {Number} [options.closeTimeout=30000] Duration in milliseconds to
+       *     wait for the closing handshake to finish after `websocket.close()` is
+       *     called
        * @param {Function} [options.handleProtocols] A hook to handle protocols
        * @param {String} [options.host] The hostname where to bind the server
+       * @param {Number} [options.maxBufferedChunks=262144] The maximum number of
+       *     buffered data chunks
+       * @param {Number} [options.maxFragments=16384] The maximum number of message
+       *     fragments
        * @param {Number} [options.maxPayload=104857600] The maximum allowed message
        *     size
        * @param {Boolean} [options.noServer=false] Enable no server mode
@@ -23612,11 +23696,14 @@ var require_websocket_server = __commonJS({
         options = {
           allowSynchronousEvents: true,
           autoPong: true,
+          maxBufferedChunks: 256 * 1024,
+          maxFragments: 16 * 1024,
           maxPayload: 100 * 1024 * 1024,
           skipUTF8Validation: false,
           perMessageDeflate: false,
           handleProtocols: null,
           clientTracking: true,
+          closeTimeout: CLOSE_TIMEOUT,
           verifyClient: null,
           noServer: false,
           backlog: null,
@@ -23797,11 +23884,11 @@ var require_websocket_server = __commonJS({
         const secWebSocketExtensions = req.headers["sec-websocket-extensions"];
         const extensions = {};
         if (this.options.perMessageDeflate && secWebSocketExtensions !== void 0) {
-          const perMessageDeflate = new PerMessageDeflate(
-            this.options.perMessageDeflate,
-            true,
-            this.options.maxPayload
-          );
+          const perMessageDeflate = new PerMessageDeflate({
+            ...this.options.perMessageDeflate,
+            isServer: true,
+            maxPayload: this.options.maxPayload
+          });
           try {
             const offers = extension.parse(secWebSocketExtensions);
             if (offers[PerMessageDeflate.extensionName]) {
@@ -23890,6 +23977,8 @@ var require_websocket_server = __commonJS({
         socket.removeListener("error", socketOnError);
         ws.setSocket(socket, head, {
           allowSynchronousEvents: this.options.allowSynchronousEvents,
+          maxBufferedChunks: this.options.maxBufferedChunks,
+          maxFragments: this.options.maxFragments,
           maxPayload: this.options.maxPayload,
           skipUTF8Validation: this.options.skipUTF8Validation
         });
@@ -23951,13 +24040,23 @@ var require_websocket_server = __commonJS({
 var require_ws = __commonJS({
   "node_modules/ws/index.js"(exports2, module2) {
     "use strict";
+    var createWebSocketStream = require_stream2();
+    var extension = require_extension();
+    var PerMessageDeflate = require_permessage_deflate();
+    var Receiver = require_receiver();
+    var Sender = require_sender();
+    var subprotocol = require_subprotocol();
     var WebSocket2 = require_websocket();
-    WebSocket2.createWebSocketStream = require_stream2();
-    WebSocket2.Server = require_websocket_server();
-    WebSocket2.Receiver = require_receiver();
-    WebSocket2.Sender = require_sender();
+    var WebSocketServer = require_websocket_server();
+    WebSocket2.createWebSocketStream = createWebSocketStream;
+    WebSocket2.extension = extension;
+    WebSocket2.PerMessageDeflate = PerMessageDeflate;
+    WebSocket2.Receiver = Receiver;
+    WebSocket2.Sender = Sender;
+    WebSocket2.Server = WebSocketServer;
+    WebSocket2.subprotocol = subprotocol;
     WebSocket2.WebSocket = WebSocket2;
-    WebSocket2.WebSocketServer = WebSocket2.Server;
+    WebSocket2.WebSocketServer = WebSocketServer;
     module2.exports = WebSocket2;
   }
 });
@@ -25626,6 +25725,23 @@ var require_util2 = __commonJS({
   }
 });
 
+// node_modules/ip-address/dist/address-error.js
+var require_address_error = __commonJS({
+  "node_modules/ip-address/dist/address-error.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.AddressError = void 0;
+    var AddressError = class extends Error {
+      constructor(message, parseMessage) {
+        super(message);
+        this.name = "AddressError";
+        this.parseMessage = parseMessage;
+      }
+    };
+    exports2.AddressError = AddressError;
+  }
+});
+
 // node_modules/ip-address/dist/common.js
 var require_common2 = __commonJS({
   "node_modules/ip-address/dist/common.js"(exports2) {
@@ -25633,9 +25749,11 @@ var require_common2 = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.isInSubnet = isInSubnet;
     exports2.isCorrect = isCorrect;
+    exports2.prefixLengthFromMask = prefixLengthFromMask;
     exports2.numberToPaddedHex = numberToPaddedHex;
     exports2.stringToPaddedHex = stringToPaddedHex;
     exports2.testBit = testBit;
+    var address_error_1 = require_address_error();
     function isInSubnet(address) {
       if (this.subnetMask < address.subnetMask) {
         return false;
@@ -25655,6 +25773,20 @@ var require_common2 = __commonJS({
         }
         return this.parsedSubnet === String(this.subnetMask);
       };
+    }
+    function prefixLengthFromMask(value, totalBits) {
+      const binary = value.toString(2).padStart(totalBits, "0");
+      if (binary.length > totalBits) {
+        throw new address_error_1.AddressError("Invalid subnet mask.");
+      }
+      const firstZero = binary.indexOf("0");
+      if (firstZero === -1) {
+        return totalBits;
+      }
+      if (binary.slice(firstZero).includes("1")) {
+        throw new address_error_1.AddressError("Invalid subnet mask.");
+      }
+      return firstZero;
     }
     function numberToPaddedHex(number) {
       return number.toString(16).padStart(2, "0");
@@ -25683,23 +25815,6 @@ var require_constants4 = __commonJS({
     exports2.GROUPS = 4;
     exports2.RE_ADDRESS = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/g;
     exports2.RE_SUBNET_STRING = /\/\d{1,2}$/;
-  }
-});
-
-// node_modules/ip-address/dist/address-error.js
-var require_address_error = __commonJS({
-  "node_modules/ip-address/dist/address-error.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.AddressError = void 0;
-    var AddressError = class extends Error {
-      constructor(message, parseMessage) {
-        super(message);
-        this.name = "AddressError";
-        this.parseMessage = parseMessage;
-      }
-    };
-    exports2.AddressError = AddressError;
   }
 });
 
@@ -25739,6 +25854,7 @@ var require_ipv4 = __commonJS({
     var common = __importStar(require_common2());
     var constants = __importStar(require_constants4());
     var address_error_1 = require_address_error();
+    var isCorrect4 = common.isCorrect(constants.BITS);
     var Address4 = class _Address4 {
       constructor(address) {
         this.groups = constants.GROUPS;
@@ -25747,7 +25863,7 @@ var require_ipv4 = __commonJS({
         this.subnet = "/32";
         this.subnetMask = 32;
         this.v4 = true;
-        this.isCorrect = common.isCorrect(constants.BITS);
+        this.isCorrect = isCorrect4;
         this.isInSubnet = common.isInSubnet;
         this.address = address;
         const subnet = constants.RE_SUBNET_STRING.exec(address);
@@ -25763,6 +25879,13 @@ var require_ipv4 = __commonJS({
         this.addressMinusSuffix = address;
         this.parsedAddress = this.parse(address);
       }
+      /**
+       * Returns true if the given string is a valid IPv4 address (with optional
+       * CIDR subnet), false otherwise. Host bits in the subnet portion are
+       * allowed (e.g. `192.168.1.5/24` is valid); for strict network-address
+       * validation compare `correctForm()` to `startAddress().correctForm()`,
+       * or use `networkForm()`.
+       */
       static isValid(address) {
         try {
           new _Address4(address);
@@ -25771,8 +25894,11 @@ var require_ipv4 = __commonJS({
           return false;
         }
       }
-      /*
-       * Parses a v4 address
+      /**
+       * Parses an IPv4 address string into its four octet groups and stores the
+       * result on `this.parsedAddress`. Called automatically by the constructor;
+       * you typically don't need to call it directly. Throws `AddressError` if
+       * the input is not a valid IPv4 address.
        */
       parse(address) {
         const groups = address.split(".");
@@ -25782,45 +25908,108 @@ var require_ipv4 = __commonJS({
         return groups;
       }
       /**
-       * Returns the correct form of an address
-       * @memberof Address4
-       * @instance
-       * @returns {String}
+       * Returns the address in correct form: octets joined with `.` and any
+       * leading zeros stripped (e.g. `192.168.1.1`). For IPv4 this matches the
+       * canonical dotted-decimal representation.
        */
       correctForm() {
         return this.parsedAddress.map((part) => parseInt(part, 10)).join(".");
       }
       /**
-       * Converts a hex string to an IPv4 address object
-       * @memberof Address4
-       * @static
+       * Construct an `Address4` from an address and a dotted-decimal subnet
+       * mask given as separate strings (e.g. as returned by Node's
+       * `os.networkInterfaces()`). Throws `AddressError` if the mask is
+       * non-contiguous (e.g. `255.0.255.0`).
+       * @example
+       * var address = Address4.fromAddressAndMask('192.168.1.1', '255.255.255.0');
+       * address.subnetMask; // 24
+       */
+      static fromAddressAndMask(address, mask) {
+        const bits = common.prefixLengthFromMask(new _Address4(mask).bigInt(), constants.BITS);
+        return new _Address4(`${address}/${bits}`);
+      }
+      /**
+       * Construct an `Address4` from an address and a Cisco-style wildcard mask
+       * given as separate strings (e.g. `0.0.0.255` for a `/24`). The wildcard
+       * mask is the bitwise inverse of the subnet mask. Throws `AddressError`
+       * if the mask is non-contiguous (e.g. `0.255.0.255`).
+       * @example
+       * var address = Address4.fromAddressAndWildcardMask('10.0.0.1', '0.0.0.255');
+       * address.subnetMask; // 24
+       */
+      static fromAddressAndWildcardMask(address, wildcardMask) {
+        const wildcard = new _Address4(wildcardMask).bigInt();
+        const allOnes = (BigInt(1) << BigInt(constants.BITS)) - BigInt(1);
+        const mask = wildcard ^ allOnes;
+        const bits = common.prefixLengthFromMask(mask, constants.BITS);
+        return new _Address4(`${address}/${bits}`);
+      }
+      /**
+       * Construct an `Address4` from a wildcard pattern with trailing `*`
+       * octets. The number of trailing wildcards determines the prefix
+       * length: each `*` represents 8 bits.
+       *
+       * Only trailing whole-octet wildcards are supported. Partial-octet
+       * wildcards (e.g. `192.168.0.1*`) and interior wildcards (e.g.
+       * `192.*.0.1`) throw `AddressError`.
+       * @example
+       * Address4.fromWildcard('192.168.0.*').subnet;   // '/24'
+       * Address4.fromWildcard('192.168.*.*').subnet;   // '/16'
+       * Address4.fromWildcard('*.*.*.*').subnet;       // '/0'
+       */
+      static fromWildcard(input) {
+        const groups = input.split(".");
+        if (groups.length !== constants.GROUPS) {
+          throw new address_error_1.AddressError("Wildcard pattern must have 4 octets");
+        }
+        let firstWildcard = -1;
+        for (let i = 0; i < groups.length; i++) {
+          if (groups[i] === "*") {
+            if (firstWildcard === -1) {
+              firstWildcard = i;
+            }
+          } else if (firstWildcard !== -1) {
+            throw new address_error_1.AddressError("Wildcard `*` must only appear in trailing octets (e.g. `192.168.0.*`)");
+          }
+        }
+        const trailing = firstWildcard === -1 ? 0 : groups.length - firstWildcard;
+        const replaced = groups.map((g) => g === "*" ? "0" : g);
+        const subnetBits = constants.BITS - trailing * 8;
+        return new _Address4(`${replaced.join(".")}/${subnetBits}`);
+      }
+      /**
+       * Converts a hex string to an IPv4 address object. Accepts 8 hex digits
+       * with optional `:` separators (e.g. `'7f000001'` or `'7f:00:00:01'`).
+       * Throws `AddressError` for any other length or for non-hex characters.
        * @param {string} hex - a hex string to convert
        * @returns {Address4}
        */
       static fromHex(hex) {
-        const padded = hex.replace(/:/g, "").padStart(8, "0");
+        const stripped = hex.replace(/:/g, "");
+        if (!/^[0-9a-fA-F]{8}$/.test(stripped)) {
+          throw new address_error_1.AddressError("IPv4 hex must be exactly 8 hex digits");
+        }
         const groups = [];
-        let i;
-        for (i = 0; i < 8; i += 2) {
-          const h = padded.slice(i, i + 2);
-          groups.push(parseInt(h, 16));
+        for (let i = 0; i < 8; i += 2) {
+          groups.push(parseInt(stripped.slice(i, i + 2), 16));
         }
         return new _Address4(groups.join("."));
       }
       /**
-       * Converts an integer into a IPv4 address object
-       * @memberof Address4
-       * @static
+       * Converts an integer into a IPv4 address object. The integer must be a
+       * non-negative safe integer in the range `[0, 2**32 - 1]`; otherwise
+       * `AddressError` is thrown.
        * @param {integer} integer - a number to convert
        * @returns {Address4}
        */
       static fromInteger(integer) {
-        return _Address4.fromHex(integer.toString(16));
+        if (!Number.isInteger(integer) || integer < 0 || integer > 4294967295) {
+          throw new address_error_1.AddressError("IPv4 integer must be in the range 0 to 2**32 - 1");
+        }
+        return _Address4.fromHex(integer.toString(16).padStart(8, "0"));
       }
       /**
        * Return an address from in-addr.arpa form
-       * @memberof Address4
-       * @static
        * @param {string} arpaFormAddress - an 'in-addr.arpa' form ipv4 address
        * @returns {Adress4}
        * @example
@@ -25834,17 +26023,15 @@ var require_ipv4 = __commonJS({
       }
       /**
        * Converts an IPv4 address object to a hex string
-       * @memberof Address4
-       * @instance
        * @returns {String}
        */
       toHex() {
         return this.parsedAddress.map((part) => common.stringToPaddedHex(part)).join(":");
       }
       /**
-       * Converts an IPv4 address object to an array of bytes
-       * @memberof Address4
-       * @instance
+       * Converts an IPv4 address object to an array of bytes.
+       *
+       * To get a Node.js `Buffer`, wrap the result: `Buffer.from(address.toArray())`.
        * @returns {Array}
        */
       toArray() {
@@ -25852,8 +26039,6 @@ var require_ipv4 = __commonJS({
       }
       /**
        * Converts an IPv4 address object to an IPv6 address group
-       * @memberof Address4
-       * @instance
        * @returns {String}
        */
       toGroup6() {
@@ -25866,8 +26051,6 @@ var require_ipv4 = __commonJS({
       }
       /**
        * Returns the address as a `bigint`
-       * @memberof Address4
-       * @instance
        * @returns {bigint}
        */
       bigInt() {
@@ -25875,8 +26058,6 @@ var require_ipv4 = __commonJS({
       }
       /**
        * Helper function getting start address.
-       * @memberof Address4
-       * @instance
        * @returns {bigint}
        */
       _startAddress() {
@@ -25885,8 +26066,6 @@ var require_ipv4 = __commonJS({
       /**
        * The first address in the range given by this address' subnet.
        * Often referred to as the Network Address.
-       * @memberof Address4
-       * @instance
        * @returns {Address4}
        */
       startAddress() {
@@ -25895,8 +26074,6 @@ var require_ipv4 = __commonJS({
       /**
        * The first host address in the range given by this address's subnet ie
        * the first address after the Network Address
-       * @memberof Address4
-       * @instance
        * @returns {Address4}
        */
       startAddressExclusive() {
@@ -25905,8 +26082,6 @@ var require_ipv4 = __commonJS({
       }
       /**
        * Helper function getting end address.
-       * @memberof Address4
-       * @instance
        * @returns {bigint}
        */
       _endAddress() {
@@ -25915,8 +26090,6 @@ var require_ipv4 = __commonJS({
       /**
        * The last address in the range given by this address' subnet
        * Often referred to as the Broadcast
-       * @memberof Address4
-       * @instance
        * @returns {Address4}
        */
       endAddress() {
@@ -25925,8 +26098,6 @@ var require_ipv4 = __commonJS({
       /**
        * The last host address in the range given by this address's subnet ie
        * the last address prior to the Broadcast Address
-       * @memberof Address4
-       * @instance
        * @returns {Address4}
        */
       endAddressExclusive() {
@@ -25934,20 +26105,76 @@ var require_ipv4 = __commonJS({
         return _Address4.fromBigInt(this._endAddress() - adjust);
       }
       /**
-       * Converts a BigInt to a v4 address object
-       * @memberof Address4
-       * @static
+       * The dotted-decimal form of the subnet mask, e.g. `255.255.240.0` for
+       * a `/20`. Returns an `Address4`; call `.correctForm()` for the string.
+       * @returns {Address4}
+       */
+      subnetMaskAddress() {
+        return _Address4.fromBigInt(BigInt(`0b${"1".repeat(this.subnetMask)}${"0".repeat(constants.BITS - this.subnetMask)}`));
+      }
+      /**
+       * The Cisco-style wildcard mask, e.g. `0.0.0.255` for a `/24`. This is
+       * the bitwise inverse of `subnetMaskAddress()`. Returns an `Address4`;
+       * call `.correctForm()` for the string.
+       * @returns {Address4}
+       */
+      wildcardMask() {
+        return _Address4.fromBigInt(BigInt(`0b${"0".repeat(this.subnetMask)}${"1".repeat(constants.BITS - this.subnetMask)}`));
+      }
+      /**
+       * The network address in CIDR string form, e.g. `192.168.1.0/24` for
+       * `192.168.1.5/24`. For an address with no explicit subnet the prefix is
+       * `/32`, e.g. `networkForm()` on `192.168.1.5` returns `192.168.1.5/32`.
+       * @returns {string}
+       */
+      networkForm() {
+        return `${this.startAddress().correctForm()}/${this.subnetMask}`;
+      }
+      /**
+       * Converts a BigInt to a v4 address object. The value must be in the
+       * range `[0, 2**32 - 1]`; otherwise `AddressError` is thrown.
        * @param {bigint} bigInt - a BigInt to convert
        * @returns {Address4}
        */
       static fromBigInt(bigInt) {
-        return _Address4.fromHex(bigInt.toString(16));
+        if (bigInt < 0n || bigInt > 0xffffffffn) {
+          throw new address_error_1.AddressError("IPv4 BigInt must be in the range 0 to 2**32 - 1");
+        }
+        return _Address4.fromHex(bigInt.toString(16).padStart(8, "0"));
+      }
+      /**
+       * Convert a byte array to an Address4 object.
+       *
+       * To convert from a Node.js `Buffer`, spread it: `Address4.fromByteArray([...buf])`.
+       * @param {Array<number>} bytes - an array of 4 bytes (0-255)
+       * @returns {Address4}
+       */
+      static fromByteArray(bytes) {
+        if (bytes.length !== 4) {
+          throw new address_error_1.AddressError("IPv4 addresses require exactly 4 bytes");
+        }
+        for (let i = 0; i < bytes.length; i++) {
+          if (!Number.isInteger(bytes[i]) || bytes[i] < 0 || bytes[i] > 255) {
+            throw new address_error_1.AddressError("All bytes must be integers between 0 and 255");
+          }
+        }
+        return this.fromUnsignedByteArray(bytes);
+      }
+      /**
+       * Convert an unsigned byte array to an Address4 object
+       * @param {Array<number>} bytes - an array of 4 unsigned bytes (0-255)
+       * @returns {Address4}
+       */
+      static fromUnsignedByteArray(bytes) {
+        if (bytes.length !== 4) {
+          throw new address_error_1.AddressError("IPv4 addresses require exactly 4 bytes");
+        }
+        const address = bytes.join(".");
+        return new _Address4(address);
       }
       /**
        * Returns the first n bits of the address, defaulting to the
        * subnet mask
-       * @memberof Address4
-       * @instance
        * @returns {String}
        */
       mask(mask) {
@@ -25958,8 +26185,6 @@ var require_ipv4 = __commonJS({
       }
       /**
        * Returns the bits in the given range as a base-2 string
-       * @memberof Address4
-       * @instance
        * @returns {string}
        */
       getBitsBase2(start, end) {
@@ -25967,10 +26192,8 @@ var require_ipv4 = __commonJS({
       }
       /**
        * Return the reversed ip6.arpa form of the address
-       * @memberof Address4
        * @param {Object} options
        * @param {boolean} options.omitSuffix - omit the "in-addr.arpa" suffix
-       * @instance
        * @returns {String}
        */
       reverseForm(options) {
@@ -25985,21 +26208,62 @@ var require_ipv4 = __commonJS({
       }
       /**
        * Returns true if the given address is a multicast address
-       * @memberof Address4
-       * @instance
        * @returns {boolean}
        */
       isMulticast() {
-        return this.isInSubnet(new _Address4("224.0.0.0/4"));
+        return this.isInSubnet(MULTICAST_V4);
+      }
+      /**
+       * Returns true if the address is in one of the [RFC 1918](https://datatracker.ietf.org/doc/html/rfc1918) private address ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`).
+       * @returns {boolean}
+       */
+      isPrivate() {
+        return PRIVATE_V4.some((subnet) => this.isInSubnet(subnet));
+      }
+      /**
+       * Returns true if the address is in the loopback range `127.0.0.0/8` ([RFC 1122](https://datatracker.ietf.org/doc/html/rfc1122)).
+       * @returns {boolean}
+       */
+      isLoopback() {
+        return this.isInSubnet(LOOPBACK_V4);
+      }
+      /**
+       * Returns true if the address is in the link-local range `169.254.0.0/16` ([RFC 3927](https://datatracker.ietf.org/doc/html/rfc3927)).
+       * @returns {boolean}
+       */
+      isLinkLocal() {
+        return this.isInSubnet(LINK_LOCAL_V4);
+      }
+      /**
+       * Returns true if the address is the unspecified address `0.0.0.0`.
+       * @returns {boolean}
+       */
+      isUnspecified() {
+        return this.isInSubnet(UNSPECIFIED_V4);
+      }
+      /**
+       * Returns true if the address is the limited broadcast address `255.255.255.255` ([RFC 919](https://datatracker.ietf.org/doc/html/rfc919)).
+       * @returns {boolean}
+       */
+      isBroadcast() {
+        return this.isInSubnet(BROADCAST_V4);
+      }
+      /**
+       * Returns true if the address is in the carrier-grade NAT range `100.64.0.0/10` ([RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598)).
+       * @returns {boolean}
+       */
+      isCGNAT() {
+        return this.isInSubnet(CGNAT_V4);
       }
       /**
        * Returns a zero-padded base-2 string representation of the address
-       * @memberof Address4
-       * @instance
        * @returns {string}
        */
       binaryZeroPad() {
-        return this.bigInt().toString(2).padStart(constants.BITS, "0");
+        if (this._binaryZeroPad === void 0) {
+          this._binaryZeroPad = this.bigInt().toString(2).padStart(constants.BITS, "0");
+        }
+        return this._binaryZeroPad;
       }
       /**
        * Groups an IPv4 address for inclusion at the end of an IPv6 address
@@ -26011,6 +26275,17 @@ var require_ipv4 = __commonJS({
       }
     };
     exports2.Address4 = Address4;
+    var MULTICAST_V4 = new Address4("224.0.0.0/4");
+    var PRIVATE_V4 = [
+      new Address4("10.0.0.0/8"),
+      new Address4("172.16.0.0/12"),
+      new Address4("192.168.0.0/16")
+    ];
+    var LOOPBACK_V4 = new Address4("127.0.0.0/8");
+    var LINK_LOCAL_V4 = new Address4("169.254.0.0/16");
+    var UNSPECIFIED_V4 = new Address4("0.0.0.0/32");
+    var BROADCAST_V4 = new Address4("255.255.255.255/32");
+    var CGNAT_V4 = new Address4("100.64.0.0/10");
   }
 });
 
@@ -26054,7 +26329,12 @@ var require_constants5 = __commonJS({
       "::/128": "Unspecified",
       "::1/128": "Loopback",
       "ff00::/8": "Multicast",
-      "fe80::/10": "Link-local unicast"
+      "fe80::/10": "Link-local unicast",
+      "fc00::/7": "Unique local",
+      "2002::/16": "6to4",
+      "2001:db8::/32": "Documentation",
+      "64:ff9b::/96": "NAT64 (well-known)",
+      "64:ff9b:1::/48": "NAT64 (local-use)"
     };
     exports2.RE_BAD_CHARACTERS = /([^0-9a-f:/%])/gi;
     exports2.RE_BAD_ADDRESS = /([0-9a-f]{5,}|:{3,}|[^:]:$|^:[^:]|\/$)/gi;
@@ -26070,19 +26350,23 @@ var require_helpers = __commonJS({
   "node_modules/ip-address/dist/v6/helpers.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.escapeHtml = escapeHtml;
     exports2.spanAllZeroes = spanAllZeroes;
     exports2.spanAll = spanAll;
     exports2.spanLeadingZeroes = spanLeadingZeroes;
     exports2.simpleGroup = simpleGroup;
+    function escapeHtml(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
     function spanAllZeroes(s) {
-      return s.replace(/(0+)/g, '<span class="zero">$1</span>');
+      return escapeHtml(s).replace(/(0+)/g, '<span class="zero">$1</span>');
     }
     function spanAll(s, offset = 0) {
       const letters = s.split("");
-      return letters.map((n, i) => `<span class="digit value-${n} position-${i + offset}">${spanAllZeroes(n)}</span>`).join("");
+      return letters.map((n, i) => `<span class="digit value-${escapeHtml(n)} position-${i + offset}">${spanAllZeroes(n)}</span>`).join("");
     }
     function spanLeadingZeroesSimple(group) {
-      return group.replace(/^(0+)/, '<span class="zero">$1</span>');
+      return escapeHtml(group).replace(/^(0+)/, '<span class="zero">$1</span>');
     }
     function spanLeadingZeroes(address) {
       const groups = address.split(":");
@@ -26233,6 +26517,7 @@ var require_ipv6 = __commonJS({
     var regular_expressions_1 = require_regular_expressions();
     var address_error_1 = require_address_error();
     var common_1 = require_common2();
+    var isCorrect6 = common.isCorrect(constants6.BITS);
     function assert(condition) {
       if (!condition) {
         throw new Error("Assertion failed.");
@@ -26278,7 +26563,7 @@ var require_ipv6 = __commonJS({
         this.v4 = false;
         this.zone = "";
         this.isInSubnet = common.isInSubnet;
-        this.isCorrect = common.isCorrect(constants6.BITS);
+        this.isCorrect = isCorrect6;
         if (optionalGroups === void 0) {
           this.groups = constants6.GROUPS;
         } else {
@@ -26305,6 +26590,13 @@ var require_ipv6 = __commonJS({
         this.addressMinusSuffix = address;
         this.parsedAddress = this.parse(this.addressMinusSuffix);
       }
+      /**
+       * Returns true if the given string is a valid IPv6 address (with optional
+       * CIDR subnet and zone identifier), false otherwise. Host bits in the
+       * subnet portion are allowed (e.g. `2001:db8::1/32` is valid); for strict
+       * network-address validation compare `correctForm()` to
+       * `startAddress().correctForm()`, or use `networkForm()`.
+       */
       static isValid(address) {
         try {
           new _Address6(address);
@@ -26314,9 +26606,8 @@ var require_ipv6 = __commonJS({
         }
       }
       /**
-       * Convert a BigInt to a v6 address object
-       * @memberof Address6
-       * @static
+       * Convert a BigInt to a v6 address object. The value must be in the
+       * range `[0, 2**128 - 1]`; otherwise `AddressError` is thrown.
        * @param {bigint} bigInt - a BigInt to convert
        * @returns {Address6}
        * @example
@@ -26325,19 +26616,21 @@ var require_ipv6 = __commonJS({
        * address.correctForm(); // '::e8:d4a5:1000'
        */
       static fromBigInt(bigInt) {
+        if (bigInt < 0n || bigInt > (1n << BigInt(constants6.BITS)) - 1n) {
+          throw new address_error_1.AddressError("IPv6 BigInt must be in the range 0 to 2**128 - 1");
+        }
         const hex = bigInt.toString(16).padStart(32, "0");
         const groups = [];
-        let i;
-        for (i = 0; i < constants6.GROUPS; i++) {
+        for (let i = 0; i < constants6.GROUPS; i++) {
           groups.push(hex.slice(i * 4, (i + 1) * 4));
         }
         return new _Address6(groups.join(":"));
       }
       /**
-       * Convert a URL (with optional port number) to an address object
-       * @memberof Address6
-       * @static
-       * @param {string} url - a URL with optional port number
+       * Parse a URL (with optional bracketed host and port) into an address and
+       * port. Returns either `{ address, port }` on success or
+       * `{ error, address: null, port: null }` if the URL could not be parsed.
+       * Ports are returned as numbers (or `null` if absent or out of range).
        * @example
        * var addressAndPort = Address6.fromURL('http://[ffff::]:8080/foo/');
        * addressAndPort.address.correctForm(); // 'ffff::'
@@ -26386,9 +26679,88 @@ var require_ipv6 = __commonJS({
         };
       }
       /**
+       * Construct an `Address6` from an address and a hex subnet mask given as
+       * separate strings (e.g. as returned by Node's `os.networkInterfaces()`).
+       * Throws `AddressError` if the mask is non-contiguous (e.g.
+       * `ffff::ffff`).
+       * @example
+       * var address = Address6.fromAddressAndMask('fe80::1', 'ffff:ffff:ffff:ffff::');
+       * address.subnetMask; // 64
+       */
+      static fromAddressAndMask(address, mask) {
+        const bits = common.prefixLengthFromMask(new _Address6(mask).bigInt(), constants6.BITS);
+        return new _Address6(`${address}/${bits}`);
+      }
+      /**
+       * Construct an `Address6` from an address and a Cisco-style wildcard mask
+       * given as separate strings (e.g. `::ffff:ffff:ffff:ffff` for a `/64`).
+       * The wildcard mask is the bitwise inverse of the subnet mask. Throws
+       * `AddressError` if the mask is non-contiguous.
+       * @example
+       * var address = Address6.fromAddressAndWildcardMask('fe80::1', '::ffff:ffff:ffff:ffff');
+       * address.subnetMask; // 64
+       */
+      static fromAddressAndWildcardMask(address, wildcardMask) {
+        const wildcard = new _Address6(wildcardMask).bigInt();
+        const allOnes = (BigInt(1) << BigInt(constants6.BITS)) - BigInt(1);
+        const mask = wildcard ^ allOnes;
+        const bits = common.prefixLengthFromMask(mask, constants6.BITS);
+        return new _Address6(`${address}/${bits}`);
+      }
+      /**
+       * Construct an `Address6` from a wildcard pattern with trailing `*`
+       * groups. The number of trailing wildcards determines the prefix
+       * length: each `*` represents 16 bits. `::` is expanded to zero groups
+       * (not wildcards) before evaluating trailing wildcards.
+       *
+       * Only trailing whole-group wildcards are supported. Partial-group
+       * wildcards (e.g. `2001:db8::0*`) and interior wildcards (e.g.
+       * `*::1`) throw `AddressError`.
+       * @example
+       * Address6.fromWildcard('2001:db8:*:*:*:*:*:*').subnet;  // '/32'
+       * Address6.fromWildcard('2001:db8::*').subnet;           // '/112'
+       * Address6.fromWildcard('*:*:*:*:*:*:*:*').subnet;       // '/0'
+       */
+      static fromWildcard(input) {
+        if (input.includes("%") || input.includes("/")) {
+          throw new address_error_1.AddressError("Wildcard pattern must not include a zone or CIDR suffix");
+        }
+        const halves = input.split("::");
+        if (halves.length > 2) {
+          throw new address_error_1.AddressError("Wildcard pattern cannot contain more than one '::'");
+        }
+        let groups;
+        if (halves.length === 2) {
+          const left = halves[0] === "" ? [] : halves[0].split(":");
+          const right = halves[1] === "" ? [] : halves[1].split(":");
+          const remaining = constants6.GROUPS - left.length - right.length;
+          if (remaining < 1) {
+            throw new address_error_1.AddressError("Wildcard pattern with '::' has too many groups");
+          }
+          groups = [...left, ...new Array(remaining).fill("0"), ...right];
+        } else {
+          groups = input.split(":");
+        }
+        if (groups.length !== constants6.GROUPS) {
+          throw new address_error_1.AddressError("Wildcard pattern must have 8 groups");
+        }
+        let firstWildcard = -1;
+        for (let i = 0; i < groups.length; i++) {
+          if (groups[i] === "*") {
+            if (firstWildcard === -1) {
+              firstWildcard = i;
+            }
+          } else if (firstWildcard !== -1) {
+            throw new address_error_1.AddressError("Wildcard `*` must only appear in trailing groups (e.g. `2001:db8:*:*:*:*:*:*`)");
+          }
+        }
+        const trailing = firstWildcard === -1 ? 0 : groups.length - firstWildcard;
+        const replaced = groups.map((g) => g === "*" ? "0" : g);
+        const subnetBits = constants6.BITS - trailing * 16;
+        return new _Address6(`${replaced.join(":")}/${subnetBits}`);
+      }
+      /**
        * Create an IPv6-mapped address given an IPv4 address
-       * @memberof Address6
-       * @static
        * @param {string} address - An IPv4 address string
        * @returns {Address6}
        * @example
@@ -26403,8 +26775,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return an address from ip6.arpa form
-       * @memberof Address6
-       * @static
        * @param {string} arpaFormAddress - an 'ip6.arpa' form address
        * @returns {Adress6}
        * @example
@@ -26427,8 +26797,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return the Microsoft UNC transcription of the address
-       * @memberof Address6
-       * @instance
        * @returns {String} the Microsoft UNC transcription of the address
        */
       microsoftTranscription() {
@@ -26436,8 +26804,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return the first n bits of the address, defaulting to the subnet mask
-       * @memberof Address6
-       * @instance
        * @param {number} [mask=subnet] - the number of bits to mask
        * @returns {String} the first n bits of the address as a string
        */
@@ -26446,8 +26812,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return the number of possible subnets of a given size in the address
-       * @memberof Address6
-       * @instance
        * @param {number} [subnetSize=128] - the subnet size
        * @returns {String}
        */
@@ -26463,8 +26827,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Helper function getting start address.
-       * @memberof Address6
-       * @instance
        * @returns {bigint}
        */
       _startAddress() {
@@ -26473,8 +26835,6 @@ var require_ipv6 = __commonJS({
       /**
        * The first address in the range given by this address' subnet
        * Often referred to as the Network Address.
-       * @memberof Address6
-       * @instance
        * @returns {Address6}
        */
       startAddress() {
@@ -26483,8 +26843,6 @@ var require_ipv6 = __commonJS({
       /**
        * The first host address in the range given by this address's subnet ie
        * the first address after the Network Address
-       * @memberof Address6
-       * @instance
        * @returns {Address6}
        */
       startAddressExclusive() {
@@ -26493,8 +26851,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Helper function getting end address.
-       * @memberof Address6
-       * @instance
        * @returns {bigint}
        */
       _endAddress() {
@@ -26503,8 +26859,6 @@ var require_ipv6 = __commonJS({
       /**
        * The last address in the range given by this address' subnet
        * Often referred to as the Broadcast
-       * @memberof Address6
-       * @instance
        * @returns {Address6}
        */
       endAddress() {
@@ -26513,8 +26867,6 @@ var require_ipv6 = __commonJS({
       /**
        * The last host address in the range given by this address's subnet ie
        * the last address prior to the Broadcast Address
-       * @memberof Address6
-       * @instance
        * @returns {Address6}
        */
       endAddressExclusive() {
@@ -26522,36 +26874,69 @@ var require_ipv6 = __commonJS({
         return _Address6.fromBigInt(this._endAddress() - adjust);
       }
       /**
-       * Return the scope of the address
-       * @memberof Address6
-       * @instance
+       * The hex form of the subnet mask, e.g. `ffff:ffff:ffff:ffff::` for a
+       * `/64`. Returns an `Address6`; call `.correctForm()` for the string.
+       * @returns {Address6}
+       */
+      subnetMaskAddress() {
+        return _Address6.fromBigInt(BigInt(`0b${"1".repeat(this.subnetMask)}${"0".repeat(constants6.BITS - this.subnetMask)}`));
+      }
+      /**
+       * The Cisco-style wildcard mask, e.g. `::ffff:ffff:ffff:ffff` for a
+       * `/64`. This is the bitwise inverse of `subnetMaskAddress()`. Returns
+       * an `Address6`; call `.correctForm()` for the string.
+       * @returns {Address6}
+       */
+      wildcardMask() {
+        return _Address6.fromBigInt(BigInt(`0b${"0".repeat(this.subnetMask)}${"1".repeat(constants6.BITS - this.subnetMask)}`));
+      }
+      /**
+       * The network address in CIDR string form, e.g. `2001:db8::/32` for
+       * `2001:db8::1/32`. For an address with no explicit subnet the prefix
+       * is `/128`, e.g. `networkForm()` on `2001:db8::1` returns
+       * `2001:db8::1/128`.
+       * @returns {string}
+       */
+      networkForm() {
+        return `${this.startAddress().correctForm()}/${this.subnetMask}`;
+      }
+      /**
+       * Return the scope of the address. The 4-bit scope field
+       * ([RFC 4291 §2.7](https://datatracker.ietf.org/doc/html/rfc4291#section-2.7))
+       * is only defined for multicast addresses; for unicast addresses the scope
+       * is derived from the address type per
+       * [RFC 4007 §6](https://datatracker.ietf.org/doc/html/rfc4007#section-6).
        * @returns {String}
        */
       getScope() {
-        let scope = constants6.SCOPES[parseInt(this.getBits(12, 16).toString(10), 10)];
-        if (this.getType() === "Global unicast" && scope !== "Link local") {
-          scope = "Global";
+        const type = this.getType();
+        if (type === "Multicast" || type.startsWith("Multicast ")) {
+          const scope = constants6.SCOPES[parseInt(this.getBits(12, 16).toString(10), 10)];
+          return scope || "Unknown";
         }
-        return scope || "Unknown";
+        if (type === "Link-local unicast" || type === "Loopback") {
+          return "Link local";
+        }
+        if (type === "Unspecified") {
+          return "Unknown";
+        }
+        return "Global";
       }
       /**
        * Return the type of the address
-       * @memberof Address6
-       * @instance
        * @returns {String}
        */
       getType() {
-        for (const subnet of Object.keys(constants6.TYPES)) {
-          if (this.isInSubnet(new _Address6(subnet))) {
-            return constants6.TYPES[subnet];
+        for (let i = 0; i < TYPE_SUBNETS.length; i++) {
+          const entry = TYPE_SUBNETS[i];
+          if (this.isInSubnet(entry[0])) {
+            return entry[1];
           }
         }
         return "Global unicast";
       }
       /**
        * Return the bits in the given range as a BigInt
-       * @memberof Address6
-       * @instance
        * @returns {bigint}
        */
       getBits(start, end) {
@@ -26559,8 +26944,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return the bits in the given range as a base-2 string
-       * @memberof Address6
-       * @instance
        * @returns {String}
        */
       getBitsBase2(start, end) {
@@ -26568,8 +26951,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return the bits in the given range as a base-16 string
-       * @memberof Address6
-       * @instance
        * @returns {String}
        */
       getBitsBase16(start, end) {
@@ -26581,8 +26962,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return the bits that are set past the subnet mask length
-       * @memberof Address6
-       * @instance
        * @returns {String}
        */
       getBitsPastSubnet() {
@@ -26590,10 +26969,8 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return the reversed ip6.arpa form of the address
-       * @memberof Address6
        * @param {Object} options
        * @param {boolean} options.omitSuffix - omit the "ip6.arpa" suffix
-       * @instance
        * @returns {String}
        */
       reverseForm(options) {
@@ -26614,10 +26991,10 @@ var require_ipv6 = __commonJS({
         return "ip6.arpa.";
       }
       /**
-       * Return the correct form of the address
-       * @memberof Address6
-       * @instance
-       * @returns {String}
+       * Returns the address in correct form, per
+       * [RFC 5952](https://datatracker.ietf.org/doc/html/rfc5952): leading zeros
+       * stripped, the longest run of zero groups collapsed to `::`, and hex digits
+       * lowercased (e.g. `2001:db8::1`). This is the recommended form for display.
        */
       correctForm() {
         let i;
@@ -26659,8 +27036,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return a zero-padded base-2 string representation of the address
-       * @memberof Address6
-       * @instance
        * @returns {String}
        * @example
        * var address = new Address6('2001:4860:4001:803::1011');
@@ -26669,10 +27044,22 @@ var require_ipv6 = __commonJS({
        * //  0000000000000000000000000000000000000000000000000001000000010001'
        */
       binaryZeroPad() {
-        return this.bigInt().toString(2).padStart(constants6.BITS, "0");
+        if (this._binaryZeroPad === void 0) {
+          this._binaryZeroPad = this.bigInt().toString(2).padStart(constants6.BITS, "0");
+        }
+        return this._binaryZeroPad;
       }
+      /**
+       * Parses a v4-in-v6 string (e.g. `::ffff:192.168.0.1`) by extracting the
+       * trailing IPv4 address into `this.address4` / `this.parsedAddress4` and
+       * returning the address with the v4 portion converted to two v6 groups.
+       * Used internally by `parse()`.
+       */
       // TODO: Improve the semantics of this helper function
       parse4in6(address) {
+        if (address.indexOf(".") === -1) {
+          return address;
+        }
         const groups = address.split(":");
         const lastGroup = groups.slice(-1)[0];
         const address4 = lastGroup.match(constants4.RE_ADDRESS);
@@ -26681,7 +27068,10 @@ var require_ipv6 = __commonJS({
           this.address4 = new ipv4_1.Address4(this.parsedAddress4);
           for (let i = 0; i < this.address4.groups; i++) {
             if (/^0[0-9]+/.test(this.address4.parsedAddress[i])) {
-              throw new address_error_1.AddressError("IPv4 addresses can't have leading zeroes.", address.replace(constants4.RE_ADDRESS, this.address4.parsedAddress.map(spanLeadingZeroes4).join(".")));
+              const highlighted = this.address4.parsedAddress.map(spanLeadingZeroes4).join(".");
+              const prefix = groups.slice(0, -1).map(helpers.escapeHtml).join(":");
+              const separator = groups.length > 1 ? ":" : "";
+              throw new address_error_1.AddressError("IPv4 addresses can't have leading zeroes.", `${prefix}${separator}${highlighted}`);
             }
           }
           this.v4 = true;
@@ -26690,6 +27080,13 @@ var require_ipv6 = __commonJS({
         }
         return address;
       }
+      /**
+       * Parses an IPv6 address string into its 8 hexadecimal groups (expanding
+       * any `::` elision and any trailing v4-in-v6 portion) and stores the result
+       * on `this.parsedAddress`. Called automatically by the constructor; you
+       * typically don't need to call it directly. Throws `AddressError` if the
+       * input is malformed.
+       */
       // TODO: Make private?
       parse(address) {
         address = this.parse4in6(address);
@@ -26737,18 +27134,16 @@ var require_ipv6 = __commonJS({
         return groups;
       }
       /**
-       * Return the canonical form of the address
-       * @memberof Address6
-       * @instance
-       * @returns {String}
+       * Returns the canonical (fully expanded) form of the address: all 8 groups,
+       * each padded to 4 hex digits, with no `::` collapsing
+       * (e.g. `2001:0db8:0000:0000:0000:0000:0000:0001`). Useful for sorting and
+       * byte-exact comparison.
        */
       canonicalForm() {
         return this.parsedAddress.map(paddedHex).join(":");
       }
       /**
        * Return the decimal form of the address
-       * @memberof Address6
-       * @instance
        * @returns {String}
        */
       decimal() {
@@ -26756,8 +27151,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return the address as a BigInt
-       * @memberof Address6
-       * @instance
        * @returns {bigint}
        */
       bigInt() {
@@ -26765,8 +27158,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return the last two groups of this address as an IPv4 address string
-       * @memberof Address6
-       * @instance
        * @returns {Address4}
        * @example
        * var address = new Address6('2001:4860:4001::1825:bf11');
@@ -26774,12 +27165,10 @@ var require_ipv6 = __commonJS({
        */
       to4() {
         const binary = this.binaryZeroPad().split("");
-        return ipv4_1.Address4.fromHex(BigInt(`0b${binary.slice(96, 128).join("")}`).toString(16));
+        return ipv4_1.Address4.fromHex(BigInt(`0b${binary.slice(96, 128).join("")}`).toString(16).padStart(8, "0"));
       }
       /**
        * Return the v4-in-v6 form of the address
-       * @memberof Address6
-       * @instance
        * @returns {String}
        */
       to4in6() {
@@ -26793,10 +27182,10 @@ var require_ipv6 = __commonJS({
         return correct + infix + address4.address;
       }
       /**
-       * Return an object containing the Teredo properties of the address
-       * @memberof Address6
-       * @instance
-       * @returns {Object}
+       * Decodes the Teredo tunneling fields embedded in this address. Returns the
+       * Teredo prefix, server IPv4, client IPv4, raw flag bits, cone-NAT flag,
+       * UDP port, and Microsoft-format flag breakdown (reserved, universal/local,
+       * group/individual, nonce). Only meaningful for addresses in `2001::/32`.
        */
       inspectTeredo() {
         const prefix = this.getBitsBase16(0, 32);
@@ -26804,7 +27193,7 @@ var require_ipv6 = __commonJS({
         const udpPort = (bitsForUdpPort ^ BigInt("0xffff")).toString();
         const server4 = ipv4_1.Address4.fromHex(this.getBitsBase16(32, 64));
         const bitsForClient4 = this.getBits(96, 128);
-        const client4 = ipv4_1.Address4.fromHex((bitsForClient4 ^ BigInt("0xffffffff")).toString(16));
+        const client4 = ipv4_1.Address4.fromHex((bitsForClient4 ^ BigInt("0xffffffff")).toString(16).padStart(8, "0"));
         const flagsBase2 = this.getBitsBase2(64, 80);
         const coneNat = (0, common_1.testBit)(flagsBase2, 15);
         const reserved = (0, common_1.testBit)(flagsBase2, 14);
@@ -26827,10 +27216,9 @@ var require_ipv6 = __commonJS({
         };
       }
       /**
-       * Return an object containing the 6to4 properties of the address
-       * @memberof Address6
-       * @instance
-       * @returns {Object}
+       * Decodes the 6to4 tunneling fields embedded in this address. Returns the
+       * 6to4 prefix and the embedded IPv4 gateway address. Only meaningful for
+       * addresses in `2002::/16`.
        */
       inspect6to4() {
         const prefix = this.getBitsBase16(0, 16);
@@ -26842,8 +27230,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Return a v6 6to4 address from a v6 v4inv6 address
-       * @memberof Address6
-       * @instance
        * @returns {Address6}
        */
       to6to4() {
@@ -26860,9 +27246,73 @@ var require_ipv6 = __commonJS({
         return new _Address6(addr6to4);
       }
       /**
-       * Return a byte array
-       * @memberof Address6
-       * @instance
+       * Embed an IPv4 address into a NAT64 IPv6 address using the encoding
+       * defined by [RFC 6052](https://datatracker.ietf.org/doc/html/rfc6052).
+       * The default prefix is the well-known prefix `64:ff9b::/96`. The prefix
+       * length must be one of 32, 40, 48, 56, 64, or 96; for prefixes shorter
+       * than /64 the IPv4 octets are split around the reserved bits 64–71.
+       * @example
+       * Address6.fromAddress4Nat64('192.0.2.33').correctForm(); // '64:ff9b::c000:221'
+       * Address6.fromAddress4Nat64('192.0.2.33', '2001:db8::/32').correctForm(); // '2001:db8:c000:221::'
+       */
+      static fromAddress4Nat64(address, prefix = "64:ff9b::/96") {
+        const v4 = new ipv4_1.Address4(address);
+        const prefix6 = new _Address6(prefix);
+        const pl = prefix6.subnetMask;
+        if (pl !== 32 && pl !== 40 && pl !== 48 && pl !== 56 && pl !== 64 && pl !== 96) {
+          throw new address_error_1.AddressError("NAT64 prefix length must be 32, 40, 48, 56, 64, or 96");
+        }
+        const prefixBits = prefix6.binaryZeroPad();
+        const v4Bits = v4.binaryZeroPad();
+        let bits;
+        if (pl === 96) {
+          bits = prefixBits.slice(0, 96) + v4Bits;
+        } else {
+          const beforeU = 64 - pl;
+          bits = prefixBits.slice(0, pl) + v4Bits.slice(0, beforeU) + "00000000" + v4Bits.slice(beforeU) + "0".repeat(128 - 72 - (32 - beforeU));
+        }
+        const hex = BigInt(`0b${bits}`).toString(16).padStart(32, "0");
+        const groups = [];
+        for (let i = 0; i < 8; i++) {
+          groups.push(hex.slice(i * 4, (i + 1) * 4));
+        }
+        return new _Address6(groups.join(":"));
+      }
+      /**
+       * Extract the embedded IPv4 address from a NAT64 IPv6 address using the
+       * encoding defined by [RFC 6052](https://datatracker.ietf.org/doc/html/rfc6052).
+       * The default prefix is the well-known prefix `64:ff9b::/96`. Returns
+       * `null` if this address is not contained within the given prefix.
+       * @example
+       * new Address6('64:ff9b::c000:221').toAddress4Nat64()!.correctForm(); // '192.0.2.33'
+       */
+      toAddress4Nat64(prefix = "64:ff9b::/96") {
+        const prefix6 = new _Address6(prefix);
+        const pl = prefix6.subnetMask;
+        if (pl !== 32 && pl !== 40 && pl !== 48 && pl !== 56 && pl !== 64 && pl !== 96) {
+          throw new address_error_1.AddressError("NAT64 prefix length must be 32, 40, 48, 56, 64, or 96");
+        }
+        if (!this.isInSubnet(prefix6)) {
+          return null;
+        }
+        const bits = this.binaryZeroPad();
+        let v4Bits;
+        if (pl === 96) {
+          v4Bits = bits.slice(96, 128);
+        } else {
+          const beforeU = 64 - pl;
+          v4Bits = bits.slice(pl, pl + beforeU) + bits.slice(72, 72 + (32 - beforeU));
+        }
+        const octets = [];
+        for (let i = 0; i < 4; i++) {
+          octets.push(parseInt(v4Bits.slice(i * 8, (i + 1) * 8), 2).toString());
+        }
+        return new ipv4_1.Address4(octets.join("."));
+      }
+      /**
+       * Return a byte array.
+       *
+       * To get a Node.js `Buffer`, wrap the result: `Buffer.from(address.toByteArray())`.
        * @returns {Array}
        */
       toByteArray() {
@@ -26876,27 +27326,27 @@ var require_ipv6 = __commonJS({
         return bytes;
       }
       /**
-       * Return an unsigned byte array
-       * @memberof Address6
-       * @instance
+       * Return an unsigned byte array.
+       *
+       * To get a Node.js `Buffer`, wrap the result: `Buffer.from(address.toUnsignedByteArray())`.
        * @returns {Array}
        */
       toUnsignedByteArray() {
         return this.toByteArray().map(unsignByte);
       }
       /**
-       * Convert a byte array to an Address6 object
-       * @memberof Address6
-       * @static
+       * Convert a byte array to an Address6 object.
+       *
+       * To convert from a Node.js `Buffer`, spread it: `Address6.fromByteArray([...buf])`.
        * @returns {Address6}
        */
       static fromByteArray(bytes) {
         return this.fromUnsignedByteArray(bytes.map(unsignByte));
       }
       /**
-       * Convert an unsigned byte array to an Address6 object
-       * @memberof Address6
-       * @static
+       * Convert an unsigned byte array to an Address6 object.
+       *
+       * To convert from a Node.js `Buffer`, spread it: `Address6.fromUnsignedByteArray([...buf])`.
        * @returns {Address6}
        */
       static fromUnsignedByteArray(bytes) {
@@ -26911,8 +27361,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Returns true if the address is in the canonical form, false otherwise
-       * @memberof Address6
-       * @instance
        * @returns {boolean}
        */
       isCanonical() {
@@ -26920,8 +27368,6 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Returns true if the address is a link local address, false otherwise
-       * @memberof Address6
-       * @instance
        * @returns {boolean}
        */
       isLinkLocal() {
@@ -26932,53 +27378,81 @@ var require_ipv6 = __commonJS({
       }
       /**
        * Returns true if the address is a multicast address, false otherwise
-       * @memberof Address6
-       * @instance
        * @returns {boolean}
        */
       isMulticast() {
-        return this.getType() === "Multicast";
+        const type = this.getType();
+        return type === "Multicast" || type.startsWith("Multicast ");
       }
       /**
-       * Returns true if the address is a v4-in-v6 address, false otherwise
-       * @memberof Address6
-       * @instance
+       * Returns true if the address was written in v4-in-v6 dotted-quad notation
+       * (e.g. `::ffff:127.0.0.1`), false otherwise. This is a notation-level flag
+       * and does not reflect whether the address bits lie in the IPv4-mapped
+       * (`::ffff:0:0/96`) subnet — for that, see {@link isMapped4}.
        * @returns {boolean}
        */
       is4() {
         return this.v4;
       }
       /**
+       * Returns true if the address is an IPv4-mapped IPv6 address in
+       * `::ffff:0:0/96` ([RFC 4291 §2.5.5.2](https://datatracker.ietf.org/doc/html/rfc4291#section-2.5.5.2)),
+       * false otherwise. Unlike {@link is4}, this checks the underlying address
+       * bits rather than the textual notation, so `::ffff:127.0.0.1` and
+       * `::ffff:7f00:1` both return true.
+       * @returns {boolean}
+       */
+      isMapped4() {
+        return this.isInSubnet(IPV4_MAPPED_SUBNET);
+      }
+      /**
        * Returns true if the address is a Teredo address, false otherwise
-       * @memberof Address6
-       * @instance
        * @returns {boolean}
        */
       isTeredo() {
-        return this.isInSubnet(new _Address6("2001::/32"));
+        return this.isInSubnet(TEREDO_SUBNET);
       }
       /**
        * Returns true if the address is a 6to4 address, false otherwise
-       * @memberof Address6
-       * @instance
        * @returns {boolean}
        */
       is6to4() {
-        return this.isInSubnet(new _Address6("2002::/16"));
+        return this.isInSubnet(SIX_TO_FOUR_SUBNET);
       }
       /**
        * Returns true if the address is a loopback address, false otherwise
-       * @memberof Address6
-       * @instance
        * @returns {boolean}
        */
       isLoopback() {
         return this.getType() === "Loopback";
       }
+      /**
+       * Returns true if the address is a Unique Local Address in `fc00::/7` ([RFC 4193](https://datatracker.ietf.org/doc/html/rfc4193)). ULAs are the IPv6 equivalent of IPv4 [RFC 1918](https://datatracker.ietf.org/doc/html/rfc1918) private addresses.
+       * @returns {boolean}
+       */
+      isULA() {
+        return this.isInSubnet(ULA_SUBNET);
+      }
+      /**
+       * Returns true if the address is the unspecified address `::`.
+       * @returns {boolean}
+       */
+      isUnspecified() {
+        return this.getType() === "Unspecified";
+      }
+      /**
+       * Returns true if the address is in the documentation prefix `2001:db8::/32` ([RFC 3849](https://datatracker.ietf.org/doc/html/rfc3849)).
+       * @returns {boolean}
+       */
+      isDocumentation() {
+        return this.isInSubnet(DOCUMENTATION_SUBNET);
+      }
       // #endregion
       // #region HTML
       /**
-       * @returns {String} the address in link form with a default port of 80
+       * Returns the address as an HTTP URL with the host bracketed, e.g.
+       * `http://[2001:db8::1]/`. If `optionalPort` is provided it is appended,
+       * e.g. `http://[2001:db8::1]:8080/`.
        */
       href(optionalPort) {
         if (optionalPort === void 0) {
@@ -26989,7 +27463,12 @@ var require_ipv6 = __commonJS({
         return `http://[${this.correctForm()}]${optionalPort}/`;
       }
       /**
-       * @returns {String} a link suitable for conveying the address via a URL hash
+       * Returns an HTML `<a>` element whose `href` encodes the address in a URL
+       * hash fragment (default prefix `/#address=`). Useful for linking between
+       * pages of an address-inspector UI.
+       * @param options.className - CSS class for the rendered `<a>` element
+       * @param options.prefix - hash prefix prepended to the address (default `/#address=`)
+       * @param options.v4 - when true, render the address in v4-in-v6 form
        */
       link(options) {
         if (!options) {
@@ -27009,10 +27488,13 @@ var require_ipv6 = __commonJS({
           formFunction = this.to4in6;
         }
         const form = formFunction.call(this);
+        const safeHref = helpers.escapeHtml(`${options.prefix}${form}`);
+        const safeForm = helpers.escapeHtml(form);
         if (options.className) {
-          return `<a href="${options.prefix}${form}" class="${options.className}">${form}</a>`;
+          const safeClass = helpers.escapeHtml(options.className);
+          return `<a href="${safeHref}" class="${safeClass}">${safeForm}</a>`;
         }
-        return `<a href="${options.prefix}${form}">${form}</a>`;
+        return `<a href="${safeHref}">${safeForm}</a>`;
       }
       /**
        * Groups an address
@@ -27020,12 +27502,12 @@ var require_ipv6 = __commonJS({
        */
       group() {
         if (this.elidedGroups === 0) {
-          return helpers.simpleGroup(this.address).join(":");
+          return helpers.simpleGroup(this.addressMinusSuffix).join(":");
         }
         assert(typeof this.elidedGroups === "number");
         assert(typeof this.elisionBegin === "number");
         const output = [];
-        const [left, right] = this.address.split("::");
+        const [left, right] = this.addressMinusSuffix.split("::");
         if (left.length) {
           output.push(...helpers.simpleGroup(left));
         } else {
@@ -27053,8 +27535,6 @@ var require_ipv6 = __commonJS({
       /**
        * Generate a regular expression string that can be used to find or validate
        * all variations of this address
-       * @memberof Address6
-       * @instance
        * @param {boolean} substringSearch
        * @returns {string}
        */
@@ -27093,8 +27573,6 @@ var require_ipv6 = __commonJS({
       /**
        * Generate a regular expression that can be used to find or validate all
        * variations of this address.
-       * @memberof Address6
-       * @instance
        * @param {boolean} substringSearch
        * @returns {RegExp}
        */
@@ -27103,6 +27581,15 @@ var require_ipv6 = __commonJS({
       }
     };
     exports2.Address6 = Address6;
+    var TYPE_SUBNETS = Object.keys(constants6.TYPES).map((subnet) => [
+      new Address6(subnet),
+      constants6.TYPES[subnet]
+    ]);
+    var TEREDO_SUBNET = new Address6("2001::/32");
+    var SIX_TO_FOUR_SUBNET = new Address6("2002::/16");
+    var ULA_SUBNET = new Address6("fc00::/7");
+    var DOCUMENTATION_SUBNET = new Address6("2001:db8::/32");
+    var IPV4_MAPPED_SUBNET = new Address6("::ffff:0:0/96");
   }
 });
 
@@ -27315,7 +27802,7 @@ var require_receivebuffer = __commonJS({
 var require_socksclient = __commonJS({
   "node_modules/socks/build/client/socksclient.js"(exports2) {
     "use strict";
-    var __awaiter29 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+    var __awaiter31 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
       function adopt(value) {
         return value instanceof P ? value : new P(function(resolve) {
           resolve(value);
@@ -27414,7 +27901,7 @@ var require_socksclient = __commonJS({
        * @returns { Promise }
        */
       static createConnectionChain(options, callback) {
-        return new Promise((resolve, reject) => __awaiter29(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => __awaiter31(this, void 0, void 0, function* () {
           try {
             (0, helpers_1.validateSocksClientChainOptions)(options);
           } catch (err) {
@@ -27792,24 +28279,24 @@ var require_socksclient = __commonJS({
         this.setState(constants_1.SocksClientState.SentAuthentication);
       }
       sendSocks5CustomAuthentication() {
-        return __awaiter29(this, void 0, void 0, function* () {
+        return __awaiter31(this, void 0, void 0, function* () {
           this.nextRequiredPacketBufferSize = this.options.proxy.custom_auth_response_size;
           this.socket.write(yield this.options.proxy.custom_auth_request_handler());
           this.setState(constants_1.SocksClientState.SentAuthentication);
         });
       }
       handleSocks5CustomAuthHandshakeResponse(data) {
-        return __awaiter29(this, void 0, void 0, function* () {
+        return __awaiter31(this, void 0, void 0, function* () {
           return yield this.options.proxy.custom_auth_response_handler(data);
         });
       }
       handleSocks5AuthenticationNoAuthHandshakeResponse(data) {
-        return __awaiter29(this, void 0, void 0, function* () {
+        return __awaiter31(this, void 0, void 0, function* () {
           return data[1] === 0;
         });
       }
       handleSocks5AuthenticationUserPassHandshakeResponse(data) {
-        return __awaiter29(this, void 0, void 0, function* () {
+        return __awaiter31(this, void 0, void 0, function* () {
           return data[1] === 0;
         });
       }
@@ -27818,7 +28305,7 @@ var require_socksclient = __commonJS({
        * @param data
        */
       handleInitialSocks5AuthenticationHandshakeResponse() {
-        return __awaiter29(this, void 0, void 0, function* () {
+        return __awaiter31(this, void 0, void 0, function* () {
           this.setState(constants_1.SocksClientState.ReceivedAuthenticationResponse);
           let authResult = false;
           if (this.socks5ChosenAuthType === constants_1.Socks5Auth.NoAuth) {
@@ -28262,7 +28749,7 @@ var require_tls = __commonJS({
     var buildStream = (client, opts) => {
       opts.port = opts.port || 8883;
       opts.host = opts.hostname || opts.host || "localhost";
-      if (net_1.default.isIP(opts.host) === 0) {
+      if (net_1.default.isIP(opts.host) === 0 && !opts.servername) {
         opts.servername = opts.host;
       }
       opts.rejectUnauthorized = opts.rejectUnauthorized !== false;
@@ -28534,6 +29021,15 @@ var require_connect = __commonJS({
     }
     var debug = (0, debug_1.default)("mqttjs");
     var protocols = null;
+    function getDefaultWebSocketProtocol() {
+      if (typeof location !== "undefined") {
+        return location.protocol === "https:" ? "wss" : "ws";
+      }
+      if (typeof document !== "undefined") {
+        return new URL(document.URL).protocol === "https:" ? "wss" : "ws";
+      }
+      return "ws";
+    }
     function parseAuthOptions(opts) {
       let matches;
       if (opts.auth) {
@@ -28557,6 +29053,7 @@ var require_connect = __commonJS({
       if (brokerUrl && typeof brokerUrl === "string") {
         const parsedUrl = url_1.default.parse(brokerUrl, true);
         const parsedOptions = {};
+        const isRelativeWebSocketUrl = !parsedUrl.protocol && !parsedUrl.hostname && parsedUrl.path?.startsWith("/") && (is_browser_1.default || opts.forceNativeWebSocket);
         if (parsedUrl.port != null) {
           parsedOptions.port = Number(parsedUrl.port);
         }
@@ -28566,10 +29063,10 @@ var require_connect = __commonJS({
         parsedOptions.protocol = parsedUrl.protocol;
         parsedOptions.path = parsedUrl.path;
         opts = { ...parsedOptions, ...opts };
-        if (!opts.protocol) {
+        if (!opts.protocol && !isRelativeWebSocketUrl) {
           throw new Error("Missing protocol");
         }
-        opts.protocol = opts.protocol.replace(/:$/, "");
+        opts.protocol = (opts.protocol || getDefaultWebSocketProtocol()).replace(/:$/, "");
       }
       opts.unixSocket = opts.unixSocket || opts.protocol?.includes("+unix");
       if (opts.unixSocket) {
@@ -28776,6 +29273,7 @@ var require_mqtt2 = __commonJS({
     exports2.Client = client_1.default;
     __exportStar(require_client(), exports2);
     __exportStar(require_shared(), exports2);
+    __exportStar(require_validations(), exports2);
     var ack_1 = require_ack();
     Object.defineProperty(exports2, "ReasonCodes", { enumerable: true, get: function() {
       return ack_1.ReasonCodes;
@@ -29006,9 +29504,10 @@ var LoggerService = class _LoggerService {
   constructor() {
     this._blockedServices = [];
     this._logLevel = LogLevel.Debug;
-    if (window.loglevel !== void 0 && window.loglevel !== null)
-      this._logLevel = window.loglevel;
-    window["logger"] = this;
+    const g = globalThis;
+    if (g.loglevel !== void 0 && g.loglevel !== null)
+      this._logLevel = g.loglevel;
+    g.logger = this;
   }
   EnableStackTrace() {
     _LoggerService.DoesThrowStackTrace = true;
@@ -29109,7 +29608,7 @@ var LoggerService = class _LoggerService {
     if (contextClassType != null)
       if (message === null || message === void 0)
         console.debug(`${this.GetTimeStamp()}[DEBUG] ${contextClassType}`);
-      else if (_LoggerService.DoesThrowStackTrace || window["stacktrace"] === true)
+      else if (_LoggerService.DoesThrowStackTrace || globalThis["stacktrace"] === true)
         console.debug(`${this.GetTimeStamp()}[DEBUG] [${contextClassType}] ${message} 
 stack:
 ${new Error().stack}}`);
@@ -29164,6 +29663,11 @@ var DependencyContainer = class _DependencyContainer {
   constructor() {
     this._services = /* @__PURE__ */ new Map();
     this._serviceRegistrationEvent = new TypedEvent();
+    this._pendingResolutions = /* @__PURE__ */ new Map();
+    this._nextResolutionId = 1;
+  }
+  static get Timers() {
+    return globalThis;
   }
   static get Instance() {
     const g = globalThis;
@@ -29174,32 +29678,50 @@ var DependencyContainer = class _DependencyContainer {
     if (typeof window !== "undefined" && !window.LavvaDI)
       window.appservices = inst;
     this.Log = new LoggerService();
-    this.Log.Warning("Initializing DependencyContainer");
+    this.Log.Warning(_DependencyContainer.ServiceName, "Initializing DependencyContainer");
     inst.RegisterService(this.Log);
     this.IsInitialized = true;
     return inst;
   }
   RegisterService(srv) {
-    this._services.set(srv.GetServiceName(), srv);
+    var _a;
+    const serviceName = srv.GetServiceName();
+    if (this._services.has(serviceName)) {
+      (_a = _DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Warning(_DependencyContainer.ServiceName, `Service "${serviceName}" is being re-registered and the previous instance will be overwritten.`);
+    }
+    this._services.set(serviceName, srv);
     this._serviceRegistrationEvent.Invoke(srv);
   }
   GetService(name) {
     return this._services.get(name);
   }
   GetServiceAsync(name, token) {
+    var _a, _b;
     if (this._services.has(name)) {
+      (_a = _DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_DependencyContainer.ServiceName, `Resolved service "${name}" immediately.`);
       return Promise.resolve(this._services.get(name));
     }
+    const resolution = this.CreatePendingResolution(name);
+    this._pendingResolutions.set(resolution.Id, resolution);
+    (_b = _DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_DependencyContainer.ServiceName, `Waiting for service "${name}" (request #${resolution.Id}). Registered services: ${this.GetRegisteredServiceNamesForLogs()}.`);
     return new Promise((resolve, reject) => {
       const h = (s) => {
-        if (s.GetServiceName() === name) {
+        var _a2;
+        if (s.GetServiceName() === name && this.TryCompleteResolution(resolution.Id)) {
           this._serviceRegistrationEvent.Unsubscribe(h);
           token === null || token === void 0 ? void 0 : token.CancellationEvent.Unsubscribe(onCancel);
+          const waitedMs = Date.now() - resolution.StartedAt;
+          (_a2 = _DependencyContainer.Log) === null || _a2 === void 0 ? void 0 : _a2.Info(_DependencyContainer.ServiceName, `Resolved service "${name}" after ${waitedMs}ms (request #${resolution.Id}).`);
           resolve(s);
         }
       };
       const onCancel = () => {
+        var _a2;
         this._serviceRegistrationEvent.Unsubscribe(h);
+        if (!this.TryCompleteResolution(resolution.Id))
+          return;
+        const waitedMs = Date.now() - resolution.StartedAt;
+        (_a2 = _DependencyContainer.Log) === null || _a2 === void 0 ? void 0 : _a2.Warning(_DependencyContainer.ServiceName, `Cancelled waiting for service "${name}" after ${waitedMs}ms (request #${resolution.Id}).`);
         reject(new Error("cancelled"));
       };
       token === null || token === void 0 ? void 0 : token.CancellationEvent.Subscribe(onCancel);
@@ -29207,25 +29729,55 @@ var DependencyContainer = class _DependencyContainer {
     });
   }
   GetServiceWithTimeoutAsync(name, timeout) {
+    var _a, _b;
     if (this._services.has(name)) {
+      (_a = _DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_DependencyContainer.ServiceName, `Resolved service "${name}" immediately.`);
       return Promise.resolve(this._services.get(name));
     }
+    const resolution = this.CreatePendingResolution(name);
+    this._pendingResolutions.set(resolution.Id, resolution);
+    (_b = _DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_DependencyContainer.ServiceName, `Waiting for service "${name}" with timeout ${timeout}ms (request #${resolution.Id}). Registered services: ${this.GetRegisteredServiceNamesForLogs()}.`);
     return new Promise((resolve, reject) => {
       const h = (s) => {
-        if (s.GetServiceName() === name) {
-          window.clearTimeout(tid);
+        var _a2;
+        if (s.GetServiceName() === name && this.TryCompleteResolution(resolution.Id)) {
+          _DependencyContainer.Timers.clearTimeout(tid);
           this._serviceRegistrationEvent.Unsubscribe(h);
+          const waitedMs = Date.now() - resolution.StartedAt;
+          (_a2 = _DependencyContainer.Log) === null || _a2 === void 0 ? void 0 : _a2.Info(_DependencyContainer.ServiceName, `Resolved service "${name}" after ${waitedMs}ms (request #${resolution.Id}).`);
           resolve(s);
         }
       };
-      const tid = window.setTimeout(() => {
+      const tid = _DependencyContainer.Timers.setTimeout(() => {
+        var _a2;
         this._serviceRegistrationEvent.Unsubscribe(h);
+        if (!this.TryCompleteResolution(resolution.Id))
+          return;
+        const waitedMs = Date.now() - resolution.StartedAt;
+        (_a2 = _DependencyContainer.Log) === null || _a2 === void 0 ? void 0 : _a2.Warning(_DependencyContainer.ServiceName, `Timeout waiting for service "${name}" after ${waitedMs}ms (request #${resolution.Id}). Registered services: ${this.GetRegisteredServiceNamesForLogs()}.`);
         reject(new Error(`timeout waiting for "${name}"`));
       }, timeout);
       this._serviceRegistrationEvent.Subscribe(h);
     });
   }
+  CreatePendingResolution(name) {
+    return {
+      Id: this._nextResolutionId++,
+      ServiceName: name,
+      StartedAt: Date.now()
+    };
+  }
+  TryCompleteResolution(id) {
+    return this._pendingResolutions.delete(id);
+  }
+  GetRegisteredServiceNamesForLogs() {
+    const names = [...this._services.keys()].sort();
+    if (names.length === 0)
+      return "<none>";
+    return names.join(", ");
+  }
 };
+DependencyContainer.ServiceName = "DependencyContainer";
 DependencyContainer.IsInitialized = false;
 
 // node_modules/lavva.exalushome/build/js/Services/LocalStorageService.js
@@ -29504,6 +30056,19 @@ var ConnectionState;
   ConnectionState2[ConnectionState2["Reconnecting"] = 6] = "Reconnecting";
   ConnectionState2[ConnectionState2["ConnectedAndAuthorized"] = 7] = "ConnectedAndAuthorized";
 })(ConnectionState || (ConnectionState = {}));
+var BrokerInfo = class {
+  constructor(BrokerUrl, BrokerControllerUrl, Env = BrokerEnvironment.Production) {
+    this.BrokerUrl = BrokerUrl;
+    this.BrokerControllerUrl = BrokerControllerUrl;
+    this.Env = Env;
+  }
+};
+var BrokerEnvironment;
+(function(BrokerEnvironment2) {
+  BrokerEnvironment2[BrokerEnvironment2["Production"] = 0] = "Production";
+  BrokerEnvironment2[BrokerEnvironment2["Development"] = 1] = "Development";
+  BrokerEnvironment2[BrokerEnvironment2["Local"] = 2] = "Local";
+})(BrokerEnvironment || (BrokerEnvironment = {}));
 var StreamError = class extends Error {
   constructor(message) {
     super(message);
@@ -29718,8 +30283,8 @@ var PicturesService = class _PicturesService {
     return _PicturesService.ServiceName;
   }
   AddPictureAsync(picture) {
-    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
+      var _a, _b;
       try {
         if (picture.Base64Image.length * (3 / 4) >= 512e3) {
           this._logger.Error(_PicturesService.ServiceName, `Cannot add picture - Base64Imgae size exceeded.`);
@@ -29782,8 +30347,8 @@ var PicturesService = class _PicturesService {
     });
   }
   EditPictureAsync(picture) {
-    var _a, _b, _c, _d;
     return __awaiter(this, void 0, void 0, function* () {
+      var _a, _b, _c, _d;
       try {
         if (picture.Guid == "" || picture.Guid == null) {
           this._logger.Error(_PicturesService.ServiceName, `Cannot edit picture - guid is empty.`);
@@ -29849,8 +30414,8 @@ var PicturesService = class _PicturesService {
     });
   }
   DeletePictureAsync(picture) {
-    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
+      var _a, _b;
       try {
         if (picture.Guid == "" || picture.Guid == null) {
           this._logger.Error(_PicturesService.ServiceName, `Cannot delete picture - guid is empty.`);
@@ -29871,8 +30436,8 @@ var PicturesService = class _PicturesService {
     });
   }
   GetPicturesInfoAsync() {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetPictureInfoRequest(), 8e3, false);
         if (result == null || result.Status == null) {
@@ -29914,8 +30479,8 @@ var PicturesService = class _PicturesService {
     });
   }
   GetPictureAsync(pictureGuid) {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetPictureRequest(pictureGuid), 8e3, false);
         if (result == null || result.Status == null) {
@@ -29957,8 +30522,8 @@ var PicturesService = class _PicturesService {
     });
   }
   GetPicturesListAsync() {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetPictureListRequest(), 8e3, false);
         if (result == null || result.Status == null) {
@@ -30097,7 +30662,7 @@ var WebApiCacheService = class _WebApiCacheService {
     return _WebApiCacheService.ServiceName;
   }
   GetResourceName(data) {
-    return `${data.Resource}_${data.Method}`;
+    return `${data.Resource}${data.Method}`;
   }
   Cache(data) {
     var _a;
@@ -30111,7 +30676,9 @@ var WebApiCacheService = class _WebApiCacheService {
     let tmp = (_a = _WebApiCacheService._localStorageService) === null || _a === void 0 ? void 0 : _a.Read(this.GetServiceName(), this.GetResourceName(data));
     if (tmp != null)
       this._log.Debug(_WebApiCacheService.ServiceName, `Got request response from cache: ${data.Resource} ${data.Method}`);
-    return tmp;
+    if (tmp == null)
+      return null;
+    return Object.assign(Object.assign({}, tmp), { TransactionId: data.TransactionId });
   }
   ClearCache() {
     var _a;
@@ -30188,8 +30755,8 @@ var UsersService = class _UsersService {
     return _UsersService.ServiceName;
   }
   GetUsersAsync() {
-    var _a, _b;
     return __awaiter2(this, void 0, void 0, function* () {
+      var _a, _b;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetUsersListRequest(), 2e4, false);
       if (result === null || result === void 0)
         return Promise.resolve([]);
@@ -30222,8 +30789,8 @@ var UsersService = class _UsersService {
     });
   }
   GetUserAsync(id) {
-    var _a, _b;
     return __awaiter2(this, void 0, void 0, function* () {
+      var _a, _b;
       if (id === "")
         return Promise.resolve(null);
       else if (id == null)
@@ -30250,8 +30817,8 @@ var UsersService = class _UsersService {
     });
   }
   CreateUserAsync(user, password) {
-    var _a;
     return __awaiter2(this, void 0, void 0, function* () {
+      var _a;
       if (user.Guid != null && user.Guid != "")
         return new ResponseResult(Status.WrongData, "GuidMustBeEmpty");
       const userRequest = new UserDataFrame();
@@ -30272,8 +30839,8 @@ var UsersService = class _UsersService {
     });
   }
   UpdateUserAsync(user) {
-    var _a;
     return __awaiter2(this, void 0, void 0, function* () {
+      var _a;
       if (user.Guid == null || user.Guid == "")
         return new ResponseResult(Status.WrongData, "GuidCannotBeEmpty");
       const userRequest = new UserDataFrame();
@@ -30294,8 +30861,8 @@ var UsersService = class _UsersService {
     });
   }
   ChangePasswordAsync(user, password) {
-    var _a;
     return __awaiter2(this, void 0, void 0, function* () {
+      var _a;
       if (user.Guid == null || user.Guid == "")
         return new ResponseResult(Status.WrongData, "GuidCannotBeEmpty");
       const currentUser = yield this.GetUserAsync(user.Guid);
@@ -30315,19 +30882,24 @@ var UsersService = class _UsersService {
     });
   }
   DeleteUserAsync(id) {
-    var _a, _b;
     return __awaiter2(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       if (id === "")
         return Status.WrongData;
       else if (id == null)
         id = "";
-      const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new DeleteUserRequest(id), 2e4, false);
-      Api.Get(WebApiCacheService.ServiceName).ClearCache();
-      if (result == null || result.Status == null)
+      try {
+        const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new DeleteUserRequest(id), 2e4, false);
+        Api.Get(WebApiCacheService.ServiceName).ClearCache();
+        if (result == null || result.Status == null)
+          return Status.FatalError;
+        if (result.Status != Status.OK)
+          (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_UsersService.ServiceName, `Failed to delete user, error: ${result.Status}`);
+        return result.Status;
+      } catch (error) {
+        (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Error(_UsersService.ServiceName, `Failed to delete user: ${error}`);
         return Status.FatalError;
-      if (result.Status != Status.OK)
-        (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_UsersService.ServiceName, `Failed to delete user, error: ${result.Status}`);
-      return result.Status;
+      }
     });
   }
   GetUserProfilePictureAsync(user) {
@@ -30342,7 +30914,7 @@ var UsersService = class _UsersService {
         const profilePicture = yield this._pictureService.GetPictureAsync(pictureToGet.Guid);
         Api.Get(WebApiCacheService.ServiceName).ClearCache();
         if (profilePicture.Type != null)
-          return picturesInfo;
+          return profilePicture;
         else
           return profilePicture;
       } else {
@@ -30583,8 +31155,8 @@ var SessionService = class _SessionService {
     return typeof value === "number" && LoginError[value] !== void 0;
   }
   RestoreSessionAsync() {
-    var _a, _b, _c;
     return __awaiter3(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_SessionService.ServiceName, `Creating RestoreSessionAsync ${this._email} ${this._password}`);
       if (this._user === void 0 || this._user === null || !this._isLoggedIn)
         return false;
@@ -30623,8 +31195,8 @@ var SessionService = class _SessionService {
     return this._user;
   }
   UserLogOutAsync() {
-    var _a, _b;
     return __awaiter3(this, void 0, void 0, function* () {
+      var _a, _b;
       let logoutRequest = new DataFrame();
       logoutRequest.Resource = "/users/user/logout";
       logoutRequest.Method = Method.Put;
@@ -30635,16 +31207,18 @@ var SessionService = class _SessionService {
         this._onUserLoggedOutEvent.Invoke(this._user);
         (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_SessionService.ServiceName, "User has been logged out.");
         this._user = null;
+        Api.Get(WebApiCacheService.ServiceName).ClearCache();
       } else
         (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_SessionService.ServiceName, "Failed to logout user!");
     });
   }
   AuthorizeAppAsync(authToken) {
-    var _a, _b, _c, _d;
     return __awaiter3(this, void 0, void 0, function* () {
+      var _a, _b, _c, _d, _e;
       let connection = Api.Get(ExalusConnectionService.ServiceName);
       const result = yield connection.SendAndWaitForResponseAsync(new AuthorizeAppRequest(authToken), 2e4, false);
       if (result.Status == Status.OK && result.Data != null) {
+        const shouldClearCache = !this._isLoggedIn || ((_a = this._user) === null || _a === void 0 ? void 0 : _a.Guid) !== result.Data.Guid;
         this._authToken = authToken;
         let user = new User();
         this._user = user;
@@ -30666,38 +31240,42 @@ var SessionService = class _SessionService {
           yield conf.CheckIfConfigurationTimeHasChangedAsync(new Date(result.Data.ConfigurationTime));
         } else
           yield conf.CheckIfConfigurationHasChangedAsync();
+        if (shouldClearCache)
+          Api.Get(WebApiCacheService.ServiceName).ClearCache();
         if (!this._alreadySubsribedToNetworkEvents) {
           this._alreadySubsribedToNetworkEvents = true;
           Api.Get(ExalusConnectionService.ServiceName).SubscribeTo("/info/users/user/loggedOut", (data) => __awaiter3(this, void 0, void 0, function* () {
-            var _e, _f;
-            (_e = DependencyContainer.Log) === null || _e === void 0 ? void 0 : _e.Debug(_SessionService.ServiceName, `User logged out: ${JSON.stringify(data.Data)}`);
+            var _a2, _b2;
+            (_a2 = DependencyContainer.Log) === null || _a2 === void 0 ? void 0 : _a2.Debug(_SessionService.ServiceName, `User logged out: ${JSON.stringify(data.Data)}`);
             this._isLoggedIn = false;
-            (_f = this._onUserLoggedOutEvent) === null || _f === void 0 ? void 0 : _f.Invoke(this._user);
+            (_b2 = this._onUserLoggedOutEvent) === null || _b2 === void 0 ? void 0 : _b2.Invoke(this._user);
             this._user = null;
+            Api.Get(WebApiCacheService.ServiceName).ClearCache();
           }));
         }
-        (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_SessionService.ServiceName, `Did logging in succeded?: ${result.Status == Status.OK}`);
+        (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_SessionService.ServiceName, `Did logging in succeded?: ${result.Status == Status.OK}`);
         this._isLoggedIn = true;
         this._onUserLoggedInEvent.Invoke(this._user);
         return user;
       } else if (result.Status === Status.OperationNotPermitted) {
-        (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_SessionService.ServiceName, `App login response: ${result.Data}`);
+        (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Debug(_SessionService.ServiceName, `App login response: ${result.Data}`);
         return LoginError.AuthDisabled;
       } else if (result.Status === Status.ResourceDoesNotExists) {
-        (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Debug(_SessionService.ServiceName, `App login response: ${result.Data}`);
+        (_d = DependencyContainer.Log) === null || _d === void 0 ? void 0 : _d.Debug(_SessionService.ServiceName, `App login response: ${result.Data}`);
         return LoginError.MethodNotSupported;
       } else {
-        (_d = DependencyContainer.Log) === null || _d === void 0 ? void 0 : _d.Debug(_SessionService.ServiceName, `App login response: ${result.Data}`);
+        (_e = DependencyContainer.Log) === null || _e === void 0 ? void 0 : _e.Debug(_SessionService.ServiceName, `App login response: ${result.Data}`);
         return LoginError.WrongAuthData;
       }
     });
   }
   UserLogInAsync(email, password) {
-    var _a, _b;
     return __awaiter3(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       let connection = Api.Get(ExalusConnectionService.ServiceName);
       const result = yield connection.SendAndWaitForResponseAsync(new LoginUserRequest(email, password), 2e4, false);
       if (result.Status == Status.OK && result.Data != null) {
+        const shouldClearCache = !this._isLoggedIn || ((_a = this._user) === null || _a === void 0 ? void 0 : _a.Guid) !== result.Data.Guid;
         this._email = email;
         this._password = password;
         let user = new User();
@@ -30719,22 +31297,25 @@ var SessionService = class _SessionService {
           yield conf.CheckIfConfigurationTimeHasChangedAsync(new Date(result.Data.ConfigurationTime));
         } else
           yield conf.CheckIfConfigurationHasChangedAsync();
+        if (shouldClearCache)
+          Api.Get(WebApiCacheService.ServiceName).ClearCache();
         if (!this._alreadySubsribedToNetworkEvents) {
           this._alreadySubsribedToNetworkEvents = true;
           Api.Get(ExalusConnectionService.ServiceName).SubscribeTo("/info/users/user/loggedOut", (data) => __awaiter3(this, void 0, void 0, function* () {
-            var _c, _d;
-            (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Debug(_SessionService.ServiceName, `User logged out: ${JSON.stringify(data.Data)}`);
+            var _a2, _b2;
+            (_a2 = DependencyContainer.Log) === null || _a2 === void 0 ? void 0 : _a2.Debug(_SessionService.ServiceName, `User logged out: ${JSON.stringify(data.Data)}`);
             this._isLoggedIn = false;
-            (_d = this._onUserLoggedOutEvent) === null || _d === void 0 ? void 0 : _d.Invoke(this._user);
+            (_b2 = this._onUserLoggedOutEvent) === null || _b2 === void 0 ? void 0 : _b2.Invoke(this._user);
             this._user = null;
+            Api.Get(WebApiCacheService.ServiceName).ClearCache();
           }));
         }
-        (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_SessionService.ServiceName, `Did logging in succeded?: ${result.Status == Status.OK}`);
+        (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_SessionService.ServiceName, `Did logging in succeded?: ${result.Status == Status.OK}`);
         this._isLoggedIn = true;
         this._onUserLoggedInEvent.Invoke(this._user);
         return user;
       } else {
-        (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_SessionService.ServiceName, `User login response: ${result.Data}`);
+        (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Debug(_SessionService.ServiceName, `User login response: ${result.Data}`);
         return LoginError.WrongAuthData;
       }
     });
@@ -30852,15 +31433,18 @@ var ControllerExtensionsService = class _ControllerExtensionsService {
   GetServiceName() {
     return _ControllerExtensionsService.ServiceName;
   }
-  GetExtensionsInfoAsync(extensionGuid, forceUpdate = false) {
-    var _a;
-    return __awaiter4(this, void 0, void 0, function* () {
+  GetExtensionsInfoAsync(extensionGuid_1) {
+    return __awaiter4(this, arguments, void 0, function* (extensionGuid, forceUpdate = false) {
+      var _a;
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_ControllerExtensionsService.ServiceName, `Getting ExtensionsInfo, data loaded from cache: ${!forceUpdate}`);
       let lock = yield this._semaphore.AcquireAsync();
-      if (!this._isExtensionInfoInitialized || forceUpdate) {
-        yield this.GetExtensionInfoFromControllerAsync();
+      try {
+        if (!this._isExtensionInfoInitialized || forceUpdate) {
+          yield this.GetExtensionInfoFromControllerAsync();
+        }
+      } finally {
+        lock.Release();
       }
-      lock.Release();
       if ([...this._extensionInfoCache.values()].length == 0) {
         return [];
       }
@@ -30873,9 +31457,9 @@ var ControllerExtensionsService = class _ControllerExtensionsService {
         return [...this._extensionInfoCache.values()];
     });
   }
-  GetProtocolInfoAsync(protocolGuid, forceUpdate = false, retrying = false) {
-    var _a;
-    return __awaiter4(this, void 0, void 0, function* () {
+  GetProtocolInfoAsync(protocolGuid_1) {
+    return __awaiter4(this, arguments, void 0, function* (protocolGuid, forceUpdate = false, retrying = false) {
+      var _a;
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_ControllerExtensionsService.ServiceName, `Getting ProtocolInfo, data loaded from cache: ${!forceUpdate}`);
       if (forceUpdate)
         yield this.GetProtocolExtensionInfoFromControllerAsync();
@@ -30896,13 +31480,14 @@ var ControllerExtensionsService = class _ControllerExtensionsService {
   GetExtensionInfoFromControllerAsync() {
     return __awaiter4(this, void 0, void 0, function* () {
       const request = new ExtensionInfoRequest();
-      const result = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(request, 16e3, true);
+      const result = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(request, 16e3, false);
       if (result == null || result.Status == null)
         throw new CannotGetExtensions(`Cannot get ExtensionsInfo from controller, controller response does not contain data!`);
       if (result.Status != Status.OK)
         throw new CannotGetExtensions(`Cannot get ExtensionsInfo from controller! Response status: ${result.Status}`);
       if (result.Data == null)
         throw new CannotGetExtensions(`Cannot get ExtensionsInfo from controller, controller response does not contain data!`);
+      this._extensionInfoCache.clear();
       result.Data.forEach((res) => {
         this._extensionInfoCache.set(res.ExtensionGuid, res);
       });
@@ -30911,16 +31496,17 @@ var ControllerExtensionsService = class _ControllerExtensionsService {
     });
   }
   GetProtocolExtensionInfoFromControllerAsync() {
-    var _a;
     return __awaiter4(this, void 0, void 0, function* () {
+      var _a;
       const request = new ProtocolInfoRequest();
-      const result = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(request, 16e3, true);
+      const result = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(request, 16e3, false);
       if (result == null || result.Status == null)
         throw new CannotGetExtensions(`Cannot get ProtocolInfo from controller, controller response does not contain data!`);
       switch (result.Status) {
         case Status.OK:
           if (result.Data == null)
             throw new CannotGetExtensions(`Cannot get ProtocolInfo from controller, controller response does not contain data!`);
+          this._protocolInfoCache.clear();
           result.Data.forEach((res) => {
             this._protocolInfoCache.set(res.PublicGuid, res);
           });
@@ -31036,8 +31622,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     return containerMajor > requiredContainerMajor || containerMajor === requiredContainerMajor && containerMinor >= requiredContainerMinor;
   }
   ImportControllerConfigurationAsync(file) {
-    var _a, _b, _c;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       let conf = yield file.text();
       let chunks = this.SplitStringBySize(conf);
       let req = new ImportControllerConfigurationRequest("");
@@ -31074,8 +31660,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     return result;
   }
   GetControllerSystemTimeAsync() {
-    var _a, _b;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a, _b;
       try {
         let result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetControllerTimeRequest(), 8e3, false);
         if (result == null || result.Status == null)
@@ -31092,8 +31678,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     });
   }
   SetControllerSystemTimeAsync(date) {
-    var _a, _b;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a, _b;
       try {
         let result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new SetControllerTimeRequest(date.toISOString()), 8e3, false);
         if (result == null || result.Status == null)
@@ -31106,8 +31692,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     });
   }
   StartNtpTimeSynchronizationAsync() {
-    var _a, _b;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a, _b;
       try {
         let result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new SetNtpControllerTimeRequest(), 8e3, false);
         if (result == null || result.Status == null)
@@ -31120,8 +31706,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     });
   }
   FactoryResetAsync(func) {
-    var _a, _b;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a, _b;
       try {
         Api.Get(WebApiCacheService.ServiceName).ClearCache();
         let result = (_b = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new DoFactoryResetRequest(), 2e3, false)) === null || _b === void 0 ? void 0 : _b.Status;
@@ -31145,8 +31731,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     });
   }
   RollbackLastUpdateAsync(func) {
-    var _a, _b;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a, _b;
       try {
         Api.Get(WebApiCacheService.ServiceName).ClearCache();
         let result = (_b = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new RestorePreviousVersionRequest(), 2e3, false)) === null || _b === void 0 ? void 0 : _b.Status;
@@ -31170,8 +31756,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     });
   }
   RestartControllerAsync(func) {
-    var _a, _b;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a, _b;
       try {
         Api.Get(WebApiCacheService.ServiceName).ClearCache();
         let result = (_b = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new RestartControllerRequest(), 2e3, false)) === null || _b === void 0 ? void 0 : _b.Status;
@@ -31220,16 +31806,16 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     (_a = this._localStorage) === null || _a === void 0 ? void 0 : _a.Save(this.GetServiceName(), "last_configuration_time", time.toString());
   }
   EnterConfigurationModeAsync() {
-    var _a;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a;
       this._appEnteredConfigurationMode = true;
       Api.Get(WebApiCacheService.ServiceName).ClearCache();
       yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new EntryConfigurationModeRequest(), 2e4, false);
     });
   }
   ExitConfigurationModeAsync() {
-    var _a;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a;
       this._appEnteredConfigurationMode = true;
       Api.Get(WebApiCacheService.ServiceName).ClearCache();
       yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new ExitConfigurationModeRequest(), 2e4, false);
@@ -31249,8 +31835,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     return this._onConfigurationTimeCheckedEvent;
   }
   GetLastConfigurationChangeTimeAsync() {
-    var _a;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new LastChangeTimeRequest(), 2e4, false);
       if (result == null || (result === null || result === void 0 ? void 0 : result.Status) != Status.OK)
         throw new Error("Failed to get last configuration change time");
@@ -31259,8 +31845,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     });
   }
   CheckIfConfigurationHasChangedAsync() {
-    var _a, _b, _c, _d;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a, _b, _c, _d;
       const result = yield this.GetLastConfigurationChangeTimeAsync();
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Info(_ControllerConfigurationService.ServiceName, `Checking if configuration time has changed. Current: ${result.toString()}, Last known: ${this.GetLastKnownConfigurationChangeTime().toString()}`);
       if (this.GetLastKnownConfigurationChangeTime().toString() != result.toString()) {
@@ -31281,8 +31867,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     });
   }
   CheckIfConfigurationTimeHasChangedAsync(currentConfigurationTime) {
-    var _a, _b, _c, _d;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a, _b, _c, _d;
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Info(_ControllerConfigurationService.ServiceName, `Checking if configuration time has changed. Current: ${currentConfigurationTime.toString()}, Last known: ${this.GetLastKnownConfigurationChangeTime().toString()}`);
       if (this.GetLastKnownConfigurationChangeTime().toString() != currentConfigurationTime.toString()) {
         this.SaveLastConfigurationChangeTime(currentConfigurationTime);
@@ -31315,8 +31901,8 @@ var ControllerConfigurationService = class _ControllerConfigurationService {
     });
   }
   ExportControllerConfigurationAsync() {
-    var _a;
     return __awaiter5(this, void 0, void 0, function* () {
+      var _a;
       let data = [];
       let err = null;
       yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndHandleResponseAsync(new ExportControllerConfigurationRequest(), 3e4, (result) => {
@@ -31502,6 +32088,7 @@ var AppStateService = class _AppStateService {
     this._isConnectedAndAuthorized = false;
     this._syncLock = new AsyncLock();
     this._isInFouces = true;
+    this._lastVisibilityState = null;
     this._canHibernate = true;
     this._session = null;
     this._connection = null;
@@ -31516,29 +32103,43 @@ var AppStateService = class _AppStateService {
     this._onAppStateChanged = new TypedEvent();
     this.MonitorAppState();
     this._onAppStateChanged.Subscribe((state) => this._currentAppState = state);
+    this._lastVisibilityState = this.IsHidden();
     if (navigator.userAgent.match(/Safari/i) != null && !navigator.mediaDevices) {
-      window.addEventListener("onblur", () => {
+      const onBlur = () => {
         if (!this._isInFouces)
           return;
         this._isInFouces = false;
         this.Suspend();
-      });
-      window.addEventListener("onfocus", () => {
+      };
+      const onFocus = () => {
         if (this._isInFouces)
           return;
         this._isInFouces = true;
         this.ReturnFromSuspension();
-      });
+      };
+      window.addEventListener("blur", onBlur);
+      window.addEventListener("onblur", onBlur);
+      window.addEventListener("focus", onFocus);
+      window.addEventListener("onfocus", onFocus);
     } else {
-      window.addEventListener("visibilitychange", () => __awaiter6(this, void 0, void 0, function* () {
+      const onVisibilityChanged = () => __awaiter6(this, void 0, void 0, function* () {
         yield this._syncLock.WaitForLockAsync();
         this._syncLock.Lock();
-        if (this.IsHidden())
-          this.Suspend();
-        else
-          this.ReturnFromSuspension();
-        this._syncLock.Unlock();
-      }));
+        try {
+          const isHidden = this.IsHidden();
+          if (this._lastVisibilityState === isHidden)
+            return;
+          this._lastVisibilityState = isHidden;
+          if (isHidden)
+            this.Suspend();
+          else
+            this.ReturnFromSuspension();
+        } finally {
+          this._syncLock.Unlock();
+        }
+      });
+      document.addEventListener("visibilitychange", onVisibilityChanged);
+      window.addEventListener("visibilitychange", onVisibilityChanged);
     }
     window.addEventListener("popstate", (event) => {
       var _a, _b, _c, _d;
@@ -31775,6 +32376,8 @@ var ExalusConnectionService = class _ExalusConnectionService {
       "packets-broker1.tr7.pl",
       "packets-broker2.tr7.pl"
     ];
+    this._connectedServerAddressResult = null;
+    this._connectedServerAddressWaiters = [];
     this._isAuthorized = false;
     this._lastReceivedPacket = Date.now();
     this._everConnected = false;
@@ -31838,6 +32441,8 @@ var ExalusConnectionService = class _ExalusConnectionService {
           if (yield this.RestoreConnectionAsync())
             (_a = this._session) === null || _a === void 0 ? void 0 : _a.RestoreSessionAsync();
           break;
+        case AppState.Connected:
+          this.resolveConnectedBrokerInfo(this._serversBrokerAddress, this._address);
       }
     }));
   }
@@ -31858,6 +32463,30 @@ var ExalusConnectionService = class _ExalusConnectionService {
   }
   SetDefaultPacketsBrokerAddress(a) {
     this._address = a;
+  }
+  GetConnectedBrokerInfoAsync() {
+    return __awaiter7(this, arguments, void 0, function* (timeoutMs = 8e3) {
+      if (this._connectedServerAddressResult !== null) {
+        return this._connectedServerAddressResult;
+      }
+      return new Promise((resolve, reject) => {
+        let timeoutId;
+        const waiter = (brokerInfo) => {
+          if (timeoutId !== void 0)
+            window.clearTimeout(timeoutId);
+          resolve(brokerInfo);
+        };
+        this._connectedServerAddressWaiters.push(waiter);
+        if (timeoutMs === null)
+          return;
+        timeoutId = window.setTimeout(() => {
+          const idx = this._connectedServerAddressWaiters.indexOf(waiter);
+          if (idx >= 0)
+            this._connectedServerAddressWaiters.splice(idx, 1);
+          reject(new Error("GetConnectedBrokerInfoAsync timed out"));
+        }, timeoutMs);
+      });
+    });
   }
   EnablePacketsLogging() {
     window["packets"] = true;
@@ -31941,6 +32570,7 @@ var ExalusConnectionService = class _ExalusConnectionService {
   }
   ConnectAndAuthorizeAsync(info) {
     return __awaiter7(this, void 0, void 0, function* () {
+      this.resetConnectedServerAddressResolution();
       this._serialId = info.serialNumber;
       this._PIN = info.pin;
       Api.WorksInContextOf = this._serialId;
@@ -31963,6 +32593,20 @@ var ExalusConnectionService = class _ExalusConnectionService {
       }
       return ConnectionResult.FailedToConnect;
     });
+  }
+  resetConnectedServerAddressResolution() {
+    this._connectedServerAddressResult = null;
+  }
+  resolveConnectedBrokerInfo(brokerAddress, controllerAddress) {
+    const isDev = this._serversBrokerAddress.includes("dev-broker.tr7.pl") && !this._packetsBrokerServers.any((s) => {
+      var _a;
+      return s.includes((_a = this._currentAddress) !== null && _a !== void 0 ? _a : "");
+    });
+    this._connectedServerAddressResult = new BrokerInfo(brokerAddress, controllerAddress, isDev ? BrokerEnvironment.Development : BrokerEnvironment.Production);
+    while (this._connectedServerAddressWaiters.length > 0) {
+      const waiter = this._connectedServerAddressWaiters.shift();
+      waiter === null || waiter === void 0 ? void 0 : waiter(this._connectedServerAddressResult);
+    }
   }
   AuthorizeAsync(info) {
     return __awaiter7(this, void 0, void 0, function* () {
@@ -32001,26 +32645,29 @@ var ExalusConnectionService = class _ExalusConnectionService {
     return ((_a = this._connection) === null || _a === void 0 ? void 0 : _a.state) === signalR.HubConnectionState.Connected;
   }
   DisconnectAsync() {
-    var _a;
     return __awaiter7(this, void 0, void 0, function* () {
+      var _a;
       this._disconnectedOnPurpose = true;
       this._log.Debug(_ExalusConnectionService.ServiceName, "Disconnecting...");
       yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.stop();
       this.cleanup();
     });
   }
-  SendAsync(dataFrame, logTx = false) {
-    var _a, _b;
-    return __awaiter7(this, void 0, void 0, function* () {
+  SendAsync(dataFrame_1) {
+    return __awaiter7(this, arguments, void 0, function* (dataFrame, logTx = false) {
+      var _a, _b;
       if (!this.IsConnected())
         throw new Error("Not connected");
+      const sendCore = () => __awaiter7(this, void 0, void 0, function* () {
+        yield this._connection.invoke("SendTo", this._serialId, dataFrame);
+      });
       const dump = window["packets"] === true;
       if (dump || logTx) {
         this._log.Debug(_ExalusConnectionService.ServiceName, `\u21E2 ${dataFrame.Resource} ${dataFrame.Method} ${dataFrame.TransactionId}` + (dump ? `
 ${JSON.stringify(dataFrame, null, 2)}` : ""));
       }
       try {
-        yield this._connection.invoke("SendTo", this._serialId, dataFrame);
+        yield sendCore();
         return true;
       } catch (err) {
         const msg = String((_a = err === null || err === void 0 ? void 0 : err.message) !== null && _a !== void 0 ? _a : err).toLowerCase();
@@ -32041,6 +32688,14 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
               yield this.reauthorizeIfPossible();
             }
           }
+          if (this.IsConnected() && this._isAuthorized) {
+            try {
+              yield sendCore();
+              return true;
+            } catch (retryError) {
+              err = retryError;
+            }
+          }
         }
         this._log.Error(_ExalusConnectionService.ServiceName, String(err));
         return false;
@@ -32048,8 +32703,8 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
     });
   }
   RestoreConnectionAsync() {
-    var _a, _b;
     return __awaiter7(this, void 0, void 0, function* () {
+      var _a, _b;
       if (this._disconnectedOnPurpose)
         return false;
       const auth = this.GetAuthorizationInfo();
@@ -32077,9 +32732,9 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
       return false;
     });
   }
-  SendAndWaitForResponseAsync(dataFrame, timeout, useCache, logTransmission = true) {
-    var _a, _b, _c;
-    return __awaiter7(this, void 0, void 0, function* () {
+  SendAndWaitForResponseAsync(dataFrame_1, timeout_1, useCache_1) {
+    return __awaiter7(this, arguments, void 0, function* (dataFrame, timeout, useCache, logTransmission = true, retryOnUnauthorized = true) {
+      var _a, _b, _c;
       if (dataFrame.Method === Method.Get && useCache) {
         if (!(yield (_a = this._controllerConfiguration) === null || _a === void 0 ? void 0 : _a.DidCofigurationChangeAsync())) {
           const cached = (_b = this._cache) === null || _b === void 0 ? void 0 : _b.GetCache(dataFrame);
@@ -32101,7 +32756,7 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
           reject(new signalR.TimeoutError("Response timeout"));
         }, timeout);
         const onRx = (frame) => {
-          var _a2, _b2;
+          var _a2;
           if (frame.TransactionId !== dataFrame.TransactionId)
             return;
           window.clearTimeout(timeoutId);
@@ -32109,8 +32764,16 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
           this._pendingRequests.delete(dataFrame.TransactionId);
           if (dataFrame.Method === Method.Get && useCache && frame.Status !== Status.UserIsNotLoggedIn)
             (_a2 = this._cache) === null || _a2 === void 0 ? void 0 : _a2.Cache(frame);
-          if (!useCache && frame.Status === Status.UserIsNotLoggedIn) {
-            void ((_b2 = this._session) === null || _b2 === void 0 ? void 0 : _b2.RestoreSessionAsync().then(() => resolve(this.SendAndWaitForResponseAsync(dataFrame, timeout, useCache, logTransmission))));
+          if (retryOnUnauthorized && frame.Status === Status.UserIsNotLoggedIn) {
+            void (() => __awaiter7(this, void 0, void 0, function* () {
+              var _a3;
+              try {
+                yield (_a3 = this._session) === null || _a3 === void 0 ? void 0 : _a3.RestoreSessionAsync();
+                resolve(yield this.SendAndWaitForResponseAsync(dataFrame, timeout, useCache, logTransmission, false));
+              } catch (error) {
+                reject(error);
+              }
+            }))();
             return;
           }
           resolve(frame);
@@ -32130,9 +32793,9 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
       }));
     });
   }
-  SendAndHandleResponseAsync(dataFrame, timeout, dataHandler, logTransmission = true) {
-    var _a;
-    return __awaiter7(this, void 0, void 0, function* () {
+  SendAndHandleResponseAsync(dataFrame_1, timeout_1, dataHandler_1) {
+    return __awaiter7(this, arguments, void 0, function* (dataFrame, timeout, dataHandler, logTransmission = true) {
+      var _a;
       if (!this.IsConnected())
         throw new Error("Connection is not established");
       if (dataFrame.Resource !== "/users/user/login")
@@ -32182,9 +32845,9 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
       }));
     });
   }
-  SendAndHandleStreamAsync(dataFrame, streamHandler, logTransmission = true) {
-    var _a;
-    return __awaiter7(this, void 0, void 0, function* () {
+  SendAndHandleStreamAsync(dataFrame_1, streamHandler_1) {
+    return __awaiter7(this, arguments, void 0, function* (dataFrame, streamHandler, logTransmission = true) {
+      var _a;
       if (!this.IsConnected())
         throw new Error("Connection is not established");
       if (dataFrame.Resource !== "/users/user/login")
@@ -32253,9 +32916,9 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
     return this._connectTask;
   }
   // Wait until connection reaches any of the target states (or timeout)
-  waitForState(targets, timeoutMs = 1e4) {
-    var _a;
-    return __awaiter7(this, void 0, void 0, function* () {
+  waitForState(targets_1) {
+    return __awaiter7(this, arguments, void 0, function* (targets, timeoutMs = 1e4) {
+      var _a;
       const start = Date.now();
       while (true) {
         const st = (_a = this._connection) === null || _a === void 0 ? void 0 : _a.state;
@@ -32268,8 +32931,8 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
     });
   }
   connectCore() {
-    var _a, _b;
     return __awaiter7(this, void 0, void 0, function* () {
+      var _a, _b;
       if (!this._address)
         return ConnectionResult.ControllerIsNotConnected;
       if (this._connection && this._currentAddress !== this._address) {
@@ -32456,8 +33119,8 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
     });
   }
   validateConnectionToController() {
-    var _a;
     return __awaiter7(this, void 0, void 0, function* () {
+      var _a;
       if (this.IsConnected()) {
         const frame = new DataFrame();
         frame.Resource = "/system/ping";
@@ -33798,8 +34461,8 @@ var Device = class _Device {
     this._protocolGuid = value;
   }
   ChangeDeviceNameAsync(name) {
-    var _a;
     return __awaiter8(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(new DeviceChannelConfigurationRequest(this, name), 2e4, false);
         switch (result.Status) {
@@ -34022,8 +34685,8 @@ var DeviceChannel = class _DeviceChannel {
     return this.ChangeConfigurationAsync(conf);
   }
   ChangeConfigurationAsync(configuration) {
-    var _a, _b;
     return __awaiter9(this, void 0, void 0, function* () {
+      var _a, _b;
       try {
         const result = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(new DeviceChannelConfigurationRequest2(configuration), 2e4, false);
         (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Error("Device", `EXIT CONFIGURATION MODE WILL BE FIRED! ChangeConfigurationAsync()`);
@@ -34507,8 +35170,8 @@ var ManuallyPairedDevicesService = class _ManuallyPairedDevicesService {
     });
   }
   AddManuallyPairedDeviceAsync(device) {
-    var _a;
     return __awaiter10(this, void 0, void 0, function* () {
+      var _a;
       const protocols = [...this._manualDeviceProtocolServices.values()];
       const service = protocols.find((serv) => serv.ProtocolExtensionGuid == device.ProtocolExtensionGuid);
       if (service != null)
@@ -34574,52 +35237,64 @@ var RemoteStorageService = class _RemoteStorageService {
   }
   SaveAsync(resourceGuid, isGlobalForAllUsers, data) {
     return __awaiter11(this, void 0, void 0, function* () {
-      let req = new SaveConfigRequestFrame(resourceGuid, isGlobalForAllUsers, data);
-      let result = yield this._connection.SendAndWaitForResponseAsync(req, 35e3, false);
-      switch (result.Status) {
-        case Status.OK:
-          const dat = new RemoteStorageDataEntryResponse();
-          dat.ResourceGuid = resourceGuid;
-          dat.Data = JSON.stringify(data);
-          dat.IsGlobal = isGlobalForAllUsers;
-          this._localDb.Save(_RemoteStorageService.ServiceName, this.GetLocalDbName(resourceGuid, isGlobalForAllUsers), dat);
-          break;
+      try {
+        let req = new SaveConfigRequestFrame(resourceGuid, isGlobalForAllUsers, data);
+        let result = yield this._connection.SendAndWaitForResponseAsync(req, 35e3, false);
+        switch (result.Status) {
+          case Status.OK:
+            const dat = new RemoteStorageDataEntryResponse();
+            dat.ResourceGuid = resourceGuid;
+            dat.Data = JSON.stringify(data);
+            dat.IsGlobal = isGlobalForAllUsers;
+            this._localDb.Save(_RemoteStorageService.ServiceName, this.GetLocalDbName(resourceGuid, isGlobalForAllUsers), dat);
+            break;
+        }
+        return result.Status;
+      } catch (_a) {
+        return Status.FatalError;
       }
-      return result.Status;
     });
   }
   ReadAsync(resourceGuid, isGlobalForAllUsers, skipLocalChache) {
     return __awaiter11(this, void 0, void 0, function* () {
-      let req = new ConfigRequestFrame(resourceGuid, isGlobalForAllUsers);
-      if (!skipLocalChache) {
-        const res = this._localDb.Read(_RemoteStorageService.ServiceName, this.GetLocalDbName(resourceGuid, isGlobalForAllUsers));
-        if (res != null) {
-          const d = res;
-          const r = new RemoteStorageDataEntry();
-          r.Data = JSON.parse(d.Data);
-          r.IsGlobal = d.IsGlobal;
-          r.ResourceGuid = d.ResourceGuid;
-          return r;
+      try {
+        let req = new ConfigRequestFrame(resourceGuid, isGlobalForAllUsers);
+        if (!skipLocalChache) {
+          const res = this._localDb.Read(_RemoteStorageService.ServiceName, this.GetLocalDbName(resourceGuid, isGlobalForAllUsers));
+          if (res != null) {
+            const d = res;
+            const r = new RemoteStorageDataEntry();
+            r.Data = JSON.parse(d.Data);
+            r.IsGlobal = d.IsGlobal;
+            r.ResourceGuid = d.ResourceGuid;
+            return r;
+          }
         }
-      }
-      let result = yield this._connection.SendAndWaitForResponseAsync(req, 35e3, false);
-      switch (result.Status) {
-        case Status.OK:
-          const ret = new RemoteStorageDataEntry();
-          ret.ResourceGuid = result.ResourceGuid;
-          ret.Data = JSON.parse(result.Data);
-          ret.IsGlobal = result.IsGlobal;
-          return ret;
-        default:
-          return result.Status;
+        let result = yield this._connection.SendAndWaitForResponseAsync(req, 35e3, false);
+        switch (result.Status) {
+          case Status.OK:
+            const ret = new RemoteStorageDataEntry();
+            ret.ResourceGuid = result.ResourceGuid;
+            ret.Data = JSON.parse(result.Data);
+            ret.IsGlobal = result.IsGlobal;
+            return ret;
+          default:
+            return result.Status;
+        }
+      } catch (_a) {
+        return Status.FatalError;
       }
     });
   }
   RemoveAsync(resourceGuid, isGlobalForAllUsers) {
     return __awaiter11(this, void 0, void 0, function* () {
-      let req = new RemoveConfigRequestFrame(resourceGuid, isGlobalForAllUsers);
-      let result = yield this._connection.SendAndWaitForResponseAsync(req, 35e3, false);
-      return result.Status;
+      try {
+        let req = new RemoveConfigRequestFrame(resourceGuid, isGlobalForAllUsers);
+        let result = yield this._connection.SendAndWaitForResponseAsync(req, 35e3, false);
+        return result.Status;
+      } catch (_a) {
+        return Status.FatalError;
+      }
     });
   }
   GetServiceName() {
@@ -34745,12 +35420,12 @@ var GeolocationService = class _GeolocationService {
       }));
     });
   }
-  SetControllerGeolocationAsync(location) {
-    var _a, _b, _c;
+  SetControllerGeolocationAsync(location2) {
     return __awaiter12(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       let req = new SetCoordinatesRequest();
-      req.Data.Latitude = location.Latitude;
-      req.Data.Longitude = location.Longitude;
+      req.Data.Latitude = location2.Latitude;
+      req.Data.Longitude = location2.Longitude;
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Warning(_GeolocationService.ServiceName, `SetControllerGeolocationAsync() ${JSON.stringify(req)}`);
       let response = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(req, 15e3, false);
       (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Warning(_GeolocationService.ServiceName, `${JSON.stringify(response)}`);
@@ -34758,6 +35433,9 @@ var GeolocationService = class _GeolocationService {
       Api.Get(ControllerConfigurationService.ServiceName).ExitConfigurationModeAsync();
       switch (response === null || response === void 0 ? void 0 : response.Status) {
         case Status.OK:
+          const cache = Api.Get(WebApiCacheService.ServiceName);
+          cache.Remove(new IsGeolocationSetRequest());
+          cache.Remove(new GetSetCoordinatesRequest());
           return new ResponseResult(SetGeolocationResponseCode.OK, "");
         case Status.NoPermissionToPerformThisOperation:
         case Status.NoPermissionsToCallGivenResource:
@@ -34770,8 +35448,8 @@ var GeolocationService = class _GeolocationService {
     });
   }
   GetControlllerGeolocationAsync() {
-    var _a, _b;
     return __awaiter12(this, void 0, void 0, function* () {
+      var _a, _b;
       let req = new GetSetCoordinatesRequest();
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Warning(_GeolocationService.ServiceName, `GetControlllerGeolocationAsync(): ${JSON.stringify(req)}`);
       let response = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(req, 15e3, true);
@@ -34914,8 +35592,8 @@ var UpdatesProvider = class _UpdatesProvider {
     this._services.set(service.GetUpdateProviderName(), service);
   }
   GetUpdatesProviderAsync(serviceName) {
-    var _a;
     return __awaiter13(this, void 0, void 0, function* () {
+      var _a;
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_UpdatesProvider.ServiceName, `Getting update provider [${serviceName}] by GetUpdateProviderAsync<T>()`);
       const service = this._services.get(serviceName);
       if (service == null)
@@ -34924,8 +35602,8 @@ var UpdatesProvider = class _UpdatesProvider {
     });
   }
   GetUpdatesProvidersAsync(updateProviderType) {
-    var _a;
     return __awaiter13(this, void 0, void 0, function* () {
+      var _a;
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_UpdatesProvider.ServiceName, `Getting update providers with type ${updateProviderType} by GetUpdateProvidersAsync<T>()`);
       let services = [];
       services = [...this._services.values()].filter((provider) => provider.ProviderType == updateProviderType);
@@ -34935,8 +35613,8 @@ var UpdatesProvider = class _UpdatesProvider {
     });
   }
   GetUpdatesProvidersByProtocolAsync(protocolGuid, updateProviderType, apiVersion) {
-    var _a;
     return __awaiter13(this, void 0, void 0, function* () {
+      var _a;
       const regGuid = new RegExp("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$");
       if (regGuid.test(protocolGuid)) {
         (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_UpdatesProvider.ServiceName, `Getting update providers with protocol guid: [${protocolGuid}] by GetUpdateProvidersByProtocolAsync<T>()`);
@@ -34953,8 +35631,8 @@ var UpdatesProvider = class _UpdatesProvider {
     });
   }
   GetUpdatesProvidersByExtensionAsync(extensionGuid, updateProviderType, apiVersion) {
-    var _a;
     return __awaiter13(this, void 0, void 0, function* () {
+      var _a;
       const regGuid = new RegExp("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$");
       if (regGuid.test(extensionGuid)) {
         (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_UpdatesProvider.ServiceName, `Getting update providers with extension guid: [${extensionGuid}] by GetUpdateProvidersByExtensionAsync<T>()`);
@@ -34970,21 +35648,22 @@ var UpdatesProvider = class _UpdatesProvider {
         throw new UpdatesProviderNotFound("Cannot get update providers! Bad parameters.");
     });
   }
-  GetSoftwareRuntimeInfoAsync(reloadCachedData = false) {
-    return __awaiter13(this, void 0, void 0, function* () {
+  GetSoftwareRuntimeInfoAsync() {
+    return __awaiter13(this, arguments, void 0, function* (reloadCachedData = false) {
       var lock = yield this._semaphore.AcquireAsync();
-      if (!this._isRuntimeInfoInitialized || reloadCachedData) {
-        yield this.GetRuntimeControllerInfoAsync();
-        lock.Release();
+      try {
+        if (!this._isRuntimeInfoInitialized || reloadCachedData) {
+          yield this.GetRuntimeControllerInfoAsync();
+        }
         return this._runtimeInfo;
+      } finally {
+        lock.Release();
       }
-      lock.Release();
-      return this._runtimeInfo;
     });
   }
   GetRuntimeControllerInfoAsync() {
-    var _a;
     return __awaiter13(this, void 0, void 0, function* () {
+      var _a;
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_UpdatesProvider.ServiceName, `Getting runtime version info from controller.`);
       try {
         const result = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(new GetControllerRuntimeInfoRequest(), 16e3, false);
@@ -35004,8 +35683,8 @@ var UpdatesProvider = class _UpdatesProvider {
       }
     });
   }
-  GetHardwareInfoAsync(reloadCachedData = false) {
-    return __awaiter13(this, void 0, void 0, function* () {
+  GetHardwareInfoAsync() {
+    return __awaiter13(this, arguments, void 0, function* (reloadCachedData = false) {
       if (!this._isHardwareInfoInitialized || reloadCachedData) {
         yield this.GetHardwareControllerInfoAsync();
         return this._hardwareInfo;
@@ -35014,8 +35693,8 @@ var UpdatesProvider = class _UpdatesProvider {
     });
   }
   GetHardwareControllerInfoAsync() {
-    var _a;
     return __awaiter13(this, void 0, void 0, function* () {
+      var _a;
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_UpdatesProvider.ServiceName, `Getting hardware info from controller.`);
       const result = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(new GetControllerHardwareInfoRequest(), 8e3, false);
       if (result == null || result.Status == null)
@@ -35025,7 +35704,7 @@ var UpdatesProvider = class _UpdatesProvider {
       if (result.Data == null)
         throw new CannotGetRuntimeInfo(`Cannot get hardware info, controller responded with status OK but response does not contains data.`, CannotGetRuntimeErrorCode.NoDataInResponse);
       this._hardwareInfo = result.Data;
-      this._isRuntimeInfoInitialized = true;
+      this._isHardwareInfoInitialized = true;
     });
   }
 };
@@ -35568,14 +36247,11 @@ var SequenceBuilder = class _SequenceBuilder {
     this._tmp.HandledType = HandledType.AstronomicalClockWithOffset;
     this._tmp.LeftArgumentType = ArgumentTypeNum2.ArgumentAsAstronomicalClockWithOffset;
     this._tmp.AtMeetCondition = atMeetCondition;
-    if (atMeetCondition && (comparasion != null && comparasion != ConditionsTypes.Equal)) {
-      throw new BadParametersScenesBuilderException("AtmeetCondition supports only comparation type 'Equal'.");
-    }
     if (arg.Offset < -3600 || arg.Offset > 3600)
       throw new BadParametersScenesBuilderException("Offset must be in range between -3600 and 3600 seconds.");
     if (atMeetCondition)
       this._tmp.ConditionType = ConditionsTypes.Equal;
-    else if (comparasion != null)
+    else if (!atMeetCondition && comparasion != null)
       this._tmp.ConditionType = comparasion;
     else
       throw new BadParametersScenesBuilderException("Comparasion type must be provided if atMeetCondition is false!");
@@ -36476,7 +37152,8 @@ ${JSON.stringify(sequence.Tasks)}`);
       nextArg.HandledType = copyDaysOfWeekArg.HandledType;
       nextArg.AtMeetCondition = false;
     }
-    if (errors.includes(ValidationErrors.OptimizeAtInDayOfWeekArgument)) {
+    const remainingErrors = this.ValidateScene().Errors;
+    if (remainingErrors.includes(ValidationErrors.OptimizeAtInDayOfWeekArgument)) {
       const findTimeArgWithDayOfWeekChild = (sequence) => {
         var _a, _b;
         if (sequence.LeftArgumentType == ArgumentTypeNum2.ArgumentAsTime) {
@@ -36491,7 +37168,7 @@ ${JSON.stringify(sequence.Tasks)}`);
       };
       const timeArg = findTimeArgWithDayOfWeekChild(this._result);
       if (timeArg == null)
-        throw new Error("Something wrong! Cannot find 'time' argument! Cannot fix!");
+        return this.Commit();
       timeArg.RightArgument.AtMeetCondition = false;
     }
     return this.Commit();
@@ -36686,8 +37363,8 @@ var ScenesService = class _ScenesService {
     return _ScenesService.ServiceName;
   }
   GetSequencesListAsync() {
-    var _a, _b;
     return __awaiter15(this, void 0, void 0, function* () {
+      var _a, _b;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetSequencesListRequest(), 12e3, false);
       (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(`GetSequencesListAsync result:
  ${JSON.stringify(result)}}`);
@@ -36701,8 +37378,8 @@ var ScenesService = class _ScenesService {
     });
   }
   GetSequenceAsync(sequence) {
-    var _a;
     return __awaiter15(this, void 0, void 0, function* () {
+      var _a;
       let sequenceGuid = "";
       if (typeof sequence == "string") {
         sequenceGuid = sequence;
@@ -36742,8 +37419,8 @@ var ScenesService = class _ScenesService {
     return new SequenceBuilder(newSequenceName, newSequenceIcon);
   }
   CreateSequenceAsync(sequence) {
-    var _a, _b, _c, _d;
     return __awaiter15(this, void 0, void 0, function* () {
+      var _a, _b, _c, _d;
       try {
         yield this._configurationService.EnterConfigurationModeAsync();
         (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(`Creating sequence ${sequence.Name} json: 
@@ -36763,8 +37440,8 @@ ${JSON.stringify(sequence)}`);
     });
   }
   CheckIfSequenceIsUsedInAnotherSequenceAsync(sequence) {
-    var _a;
     return __awaiter15(this, void 0, void 0, function* () {
+      var _a;
       try {
         let sequenceGuid = "";
         if (typeof sequence == "string") {
@@ -36792,8 +37469,8 @@ ${JSON.stringify(sequence)}`);
     });
   }
   DeleteSequenceAsync(sequence) {
-    var _a;
     return __awaiter15(this, void 0, void 0, function* () {
+      var _a;
       try {
         let sequenceGuid = "";
         if (typeof sequence == "string") {
@@ -36815,8 +37492,8 @@ ${JSON.stringify(sequence)}`);
     });
   }
   EditSequenceAsync(sequence) {
-    var _a, _b;
     return __awaiter15(this, void 0, void 0, function* () {
+      var _a, _b;
       try {
         const request = {
           Guid: sequence.Guid,
@@ -36842,35 +37519,45 @@ ${JSON.stringify(sequence)}`);
     });
   }
   EnableSequenceAsync(sequence) {
-    var _a;
     return __awaiter15(this, void 0, void 0, function* () {
-      let sequenceGuid = "";
-      if (typeof sequence == "string") {
-        sequenceGuid = sequence;
-      } else {
-        sequenceGuid = sequence.Guid;
+      var _a;
+      try {
+        let sequenceGuid = "";
+        if (typeof sequence == "string") {
+          sequenceGuid = sequence;
+        } else {
+          sequenceGuid = sequence.Guid;
+        }
+        const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new EnableSequenceRequest(sequenceGuid), 12e3, false);
+        if (result == null || result.Status == null)
+          return Status.Error;
+        return result.Status;
+      } catch (error) {
+        return Status.FatalError;
+      } finally {
+        yield this._configurationService.ExitConfigurationModeAsync();
       }
-      const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new EnableSequenceRequest(sequenceGuid), 12e3, false);
-      yield this._configurationService.ExitConfigurationModeAsync();
-      if (result == null || result.Status == null)
-        return Status.Error;
-      return result.Status;
     });
   }
   DisableSequenceAsync(sequence) {
-    var _a;
     return __awaiter15(this, void 0, void 0, function* () {
-      let sequenceGuid = "";
-      if (typeof sequence == "string") {
-        sequenceGuid = sequence;
-      } else {
-        sequenceGuid = sequence.Guid;
+      var _a;
+      try {
+        let sequenceGuid = "";
+        if (typeof sequence == "string") {
+          sequenceGuid = sequence;
+        } else {
+          sequenceGuid = sequence.Guid;
+        }
+        const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new DisableSequenceRequest(sequenceGuid), 12e3, false);
+        if (result == null || result.Status == null)
+          return Status.Error;
+        return result.Status;
+      } catch (error) {
+        return Status.FatalError;
+      } finally {
+        yield this._configurationService.ExitConfigurationModeAsync();
       }
-      const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new DisableSequenceRequest(sequenceGuid), 12e3, false);
-      yield this._configurationService.ExitConfigurationModeAsync();
-      if (result == null || result.Status == null)
-        return Status.Error;
-      return result.Status;
     });
   }
   RunSequenceAsync(sequence) {
@@ -36926,15 +37613,15 @@ ${JSON.stringify(sequence)}`);
     return res > 1 ? 1 : res;
   }
   SunCalculatorAsync() {
-    var _a;
     return __awaiter15(this, void 0, void 0, function* () {
+      var _a;
       const srv = Api.Get(GeolocationService.ServiceName);
       const cords = new Coordinates();
       let recalculationDone = false;
       cords.Latitude = 49.9958888026741;
       cords.Longitude = 18.9172596008914;
       try {
-        if (yield srv.IsControllerGeolocationSetAsync()) {
+        if ((yield srv.IsControllerGeolocationSetAsync()) === true) {
           const controlerCords = yield srv.GetControlllerGeolocationAsync();
           if (controlerCords instanceof CoordinatesWithSourceInfo) {
             cords.Latitude = controlerCords.Latitude;
@@ -37657,7 +38344,9 @@ ${JSON.stringify(sequence)}`);
           (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(`[TASKS] received task LockExecution object: ${JSON.stringify(tsk)}`);
           task.Task.LockExecution = {
             LockStartHour: new TimeSpanParam(tsk.LockStartHour),
+            // (tsk as any).LockStartHour as TimeSpanParam, //
             LockEndHour: new TimeSpanParam(tsk.LockEndHour),
+            // (tsk as any).LockEndHour as TimeSpanParam, //
             LockType: tsk.LockType,
             ResetLockScenesGuids: tsk.ResetLockScenesGuids
           };
@@ -37836,12 +38525,12 @@ var DevicesService = class _DevicesService {
       return this.PutDeviceStateOnList(args.Device, args.State);
     }));
     (_a = this._session) === null || _a === void 0 ? void 0 : _a.OnUserLoggedInEvent().Subscribe((user) => __awaiter16(this, void 0, void 0, function* () {
-      var _b, _c;
+      var _a2, _b;
       try {
-        (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_DevicesService.ServiceName, `User logged in: ${user.Guid} syncing devices...`);
+        (_a2 = DependencyContainer.Log) === null || _a2 === void 0 ? void 0 : _a2.Debug(_DevicesService.ServiceName, `User logged in: ${user.Guid} syncing devices...`);
         yield this.ResyncDevicesAsync();
       } catch (ex) {
-        (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Error(_DevicesService.ServiceName, `Failed to sync devices and states: ${ex}`);
+        (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_DevicesService.ServiceName, `Failed to sync devices and states: ${ex}`);
       }
     }));
     this._connection.SubscribeTo("/info/devices/tasks", (frame) => {
@@ -37959,8 +38648,8 @@ var DevicesService = class _DevicesService {
     });
   }
   ResyncDevicesAsync() {
-    var _a;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a;
       const lock = yield this._syncSemaphore.AcquireAsync();
       try {
         this._synchronized = false;
@@ -38056,8 +38745,8 @@ var DevicesService = class _DevicesService {
     return containerMajor > requiredContainerMajor || containerMajor === requiredContainerMajor && containerMinor >= requiredContainerMinor;
   }
   CheckIfDeviceUsedInScenesAsync(dev) {
-    var _a, _b, _c, _d, _e, _f;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a, _b, _c, _d, _e, _f;
       try {
         let device;
         if (typeof dev == "string") {
@@ -38126,8 +38815,8 @@ var DevicesService = class _DevicesService {
     return this._devices.firstOrDefault((device) => device.Channels.any((channel) => channel.ChannelId == channelId)).Channels.firstOrDefault((channel) => channel.ChannelId == channelId);
   }
   EnableFastStatesSyncAsync() {
-    var _a;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a;
       const res = Api.Get(RemoteStorageService.ServiceName).SaveAsync("FastDevicesSync", false, true);
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Error(_DevicesService.ServiceName, `EXIT CONFIGURATION MODE WILL BE FIRED! EnableFastStatesSyncAsync()`);
       yield Api.Get(ControllerConfigurationService.ServiceName).ExitConfigurationModeAsync();
@@ -38135,8 +38824,8 @@ var DevicesService = class _DevicesService {
     });
   }
   DisableFastStatesSyncAsync() {
-    var _a;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a;
       const res = Api.Get(RemoteStorageService.ServiceName).SaveAsync("FastDevicesSync", false, false);
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Error(_DevicesService.ServiceName, `EXIT CONFIGURATION MODE WILL BE FIRED! DisableFastStatesSyncAsync()`);
       yield Api.Get(ControllerConfigurationService.ServiceName).ExitConfigurationModeAsync();
@@ -38168,8 +38857,8 @@ var DevicesService = class _DevicesService {
     });
   }
   AddManuallyPairedDevice(device) {
-    var _a;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a;
       let res = yield Api.Get(ManuallyPairedDevicesService.ServiceName).AddManuallyPairedDeviceAsync(device);
       (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Error(_DevicesService.ServiceName, `EXIT CONFIGURATION MODE WILL BE FIRED! AddManuallyPairedDevice()`);
       yield Api.Get(ControllerConfigurationService.ServiceName).ExitConfigurationModeAsync();
@@ -38213,8 +38902,8 @@ var DevicesService = class _DevicesService {
     }
   }
   GetCurrentlyRunningTaksAsync() {
-    var _a;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetRunningDevicesTasksRequest(), 15e3, false);
       if ((result === null || result === void 0 ? void 0 : result.Status) == Status.OK && result.Data != null) {
         this.ParseDeviceTaskInfo(result.Data);
@@ -38364,11 +39053,11 @@ var DevicesService = class _DevicesService {
   GetServiceName() {
     return _DevicesService.ServiceName;
   }
-  SyncDevicesStatesAsync(forceSlow = false) {
-    var _a, _b;
-    return __awaiter16(this, void 0, void 0, function* () {
+  SyncDevicesStatesAsync() {
+    return __awaiter16(this, arguments, void 0, function* (forceSlow = false) {
+      var _a, _b;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetDevicesStatesRequest(), 15e3, false);
-      if ((yield this.IsFastStatesSyncEnabledAsync()) && !forceSlow)
+      if ((yield this.IsFastStatesSyncEnabledAsync()) === true && !forceSlow)
         return (result === null || result === void 0 ? void 0 : result.Status) == Status.OK;
       else {
         let syncStatesRequest = new SyncDevicesStatesRequest();
@@ -38499,9 +39188,9 @@ var DevicesService = class _DevicesService {
     });
     return devices;
   }
-  GetPairedDevicesAsync(withScenes = false) {
-    var _a, _b, _c;
-    return __awaiter16(this, void 0, void 0, function* () {
+  GetPairedDevicesAsync() {
+    return __awaiter16(this, arguments, void 0, function* (withScenes = false) {
+      var _a, _b, _c;
       let conf = yield (_a = this._controllerConfiguration) === null || _a === void 0 ? void 0 : _a.DidCofigurationChangeAsync();
       if (this._synchronized && !conf) {
         if (withScenes)
@@ -38524,15 +39213,15 @@ var DevicesService = class _DevicesService {
       }
     });
   }
-  GetDevicesAsync(withScenes = false) {
-    return __awaiter16(this, void 0, void 0, function* () {
+  GetDevicesAsync() {
+    return __awaiter16(this, arguments, void 0, function* (withScenes = false) {
       yield this.WaitForSynchronizationAsync();
       return this.GetPairedDevicesAsync(withScenes);
     });
   }
   GetFoundDevicesAsync() {
-    var _a, _b;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a, _b;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetFoundDevicesRequest(), 15e3, false);
       if (result == null)
         return [];
@@ -38548,21 +39237,21 @@ var DevicesService = class _DevicesService {
     return this._devices.find((a) => a.Guid === guid);
   }
   FindDevicesAsync() {
-    var _a;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a;
       Api.Get(WebApiCacheService.ServiceName).ClearCache();
       yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new SearchForDevicesRequest(), 35e3, false);
     });
   }
   StopSearchingForDevices() {
-    var _a;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a;
       yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new StopSearchingForDevicesRequest(), 2e4, false);
     });
   }
   RegisterDeviceAsync(device) {
-    var _a, _b, _c;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       try {
         const req = new DevicePairRequest();
         req.Data = device.Guid;
@@ -38582,22 +39271,27 @@ var DevicesService = class _DevicesService {
       }
     });
   }
-  RemoveDeviceAsync(device, force = false) {
-    var _a, _b;
-    return __awaiter16(this, void 0, void 0, function* () {
-      let req = new DeviceUnpairRequest();
-      if (force)
-        req = new ForceDeviceUnpairRequest();
-      req.Data = device.Guid;
-      const res = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(req, 35e3, false);
-      (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_DevicesService.ServiceName, `EXIT CONFIGURATION MODE WILL BE FIRED! RemoveDeviceAsync()`);
-      Api.Get(ControllerConfigurationService.ServiceName).ExitConfigurationModeAsync();
-      if ((res === null || res === void 0 ? void 0 : res.Status) == Status.OK) {
-        this._devices = this._devices.where((a) => a.Guid != device.Guid).toArray();
-        this._onDeviceRemovedEvent.Invoke(device);
-        return DeviceTaskExecutionResult.Executed;
-      } else
-        return DeviceTaskExecutionResult.Failed;
+  RemoveDeviceAsync(device_1) {
+    return __awaiter16(this, arguments, void 0, function* (device, force = false) {
+      var _a, _b, _c;
+      try {
+        let req = new DeviceUnpairRequest();
+        if (force)
+          req = new ForceDeviceUnpairRequest();
+        req.Data = device.Guid;
+        const res = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(req, 35e3, false);
+        (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_DevicesService.ServiceName, `EXIT CONFIGURATION MODE WILL BE FIRED! RemoveDeviceAsync()`);
+        Api.Get(ControllerConfigurationService.ServiceName).ExitConfigurationModeAsync();
+        if ((res === null || res === void 0 ? void 0 : res.Status) == Status.OK) {
+          this._devices = this._devices.where((a) => a.Guid != device.Guid).toArray();
+          this._onDeviceRemovedEvent.Invoke(device);
+          return DeviceTaskExecutionResult.Executed;
+        } else
+          return DeviceTaskExecutionResult.Failed;
+      } catch (ex) {
+        (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Error(_DevicesService.ServiceName, `Failed to unpair device: ${ex}`);
+        return DeviceTaskExecutionResult.ControllerResponseTimeout;
+      }
     });
   }
   MapDeviceTaskToDeviceTaskInfo(device, task) {
@@ -38707,8 +39401,8 @@ var DevicesService = class _DevicesService {
     return t;
   }
   ExecuteDeviceTaskAsync(device, task) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a, _b, _c, _d, _e, _f, _g, _h;
       try {
         (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_DevicesService.ServiceName, `Preparing device task execution, device: ${device.Guid} task: ${task.TaskType} channel: ${task.Channel}`);
         let t = this.MapDeviceTaskToDeviceTaskInfo(device, task);
@@ -38756,8 +39450,8 @@ ${ex}`);
     });
   }
   ExecuteDevicesTasksAsync(tasks) {
-    var _a, _b, _c, _d;
     return __awaiter16(this, void 0, void 0, function* () {
+      var _a, _b, _c, _d;
       let results = [];
       let tasksPair = [];
       let devices = [];
@@ -38778,7 +39472,8 @@ ${ex}`);
           let res = DeviceTaskExecutionResult.Unknown;
           switch (element.Status) {
             case Status.OK:
-              return DeviceTaskExecutionResult.Executed;
+              res = DeviceTaskExecutionResult.Executed;
+              break;
             case Status.FatalError:
               (_a2 = DependencyContainer.Log) === null || _a2 === void 0 ? void 0 : _a2.Error(_DevicesService.ServiceName, `Fatal error occured when tried to execute task on device. Error code: ${element.Data}`);
               res = DeviceTaskExecutionResult.Failed;
@@ -38809,6 +39504,7 @@ ${ex}`);
               info.Device = device;
               info.Task = task;
               info.Channel = task.Channel;
+              info.Result = res;
               results.push(info);
               break;
             } else
@@ -46245,8 +46941,8 @@ var ChannelsGroup = class _ChannelsGroup {
     if (_ChannelsGroup._devicesService == null)
       _ChannelsGroup._devicesService = Api.Get(DevicesService.ServiceName);
   }
-  GetDevicesChannelsInGroupAsync(withScenes = false) {
-    return __awaiter17(this, void 0, void 0, function* () {
+  GetDevicesChannelsInGroupAsync() {
+    return __awaiter17(this, arguments, void 0, function* (withScenes = false) {
       let channels = [];
       let sortedChannels = [];
       const devs = yield _ChannelsGroup._devicesService.GetDevicesAsync(withScenes);
@@ -46356,8 +47052,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     }));
   }
   ResyncGroupsAsync() {
-    var _a;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a;
       const lock = yield this._syncSemaphore.AcquireAsync();
       try {
         this._synchronized = false;
@@ -46388,8 +47084,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     });
   }
   SetObjectsInGroupAndOrderAsync(group, objects) {
-    var _a, _b;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b;
       let channelsIds = [];
       let objectsIds = [];
       for (let obj of objects) {
@@ -46452,8 +47148,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     }
   }
   ChangeGroupsOrderAsync(orderedGroups) {
-    var _a, _b;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b;
       const orderedObjectsGuid = orderedGroups.select((a) => a.Guid).toArray();
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new ChangeGroupsOrderRequest(orderedObjectsGuid), 15e3, false);
       (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_ChannelsGroupsService.ServiceName, `EXIT CONFIGURATION MODE WILL BE FIRED! ChangeGroupsOrderAsync()`);
@@ -46470,8 +47166,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     });
   }
   ChangeObjectsPositionsInGroupAsync(group, channels) {
-    var _a, _b, _c;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       const objs = channels.select((a) => a.ChannelId).toArray();
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new MoveObjectsInGroupRequest(group.Guid, objs), 15e3, false);
       (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_ChannelsGroupsService.ServiceName, `EXIT CONFIGURATION MODE WILL BE FIRED! ChangeObjectsPositionsInGroupAsync()`);
@@ -46492,8 +47188,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     return this._objectsGroupingSupported;
   }
   MoveGroupPositionAsync(group, newPosition) {
-    var _a, _b, _c;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new MoveGroupRequest(group.Guid, newPosition), 15e3, false);
       (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_ChannelsGroupsService.ServiceName, `EXIT CONFIGURATION MODE WILL BE FIRED! MoveGroupPositionAsync()`);
       this._configurationService.ExitConfigurationModeAsync();
@@ -46508,8 +47204,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     });
   }
   MoveObjectInGroupPositionAsync(group, channel, newPosition) {
-    var _a, _b, _c;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       const objectId = `${channel.GetDevice().Guid}_${channel.Number}`;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new MoveObjectInGroupRequest(group.Guid, objectId, newPosition), 15e3, false);
       (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_ChannelsGroupsService.ServiceName, `EXIT CONFIGURATION MODE WILL BE FIRED! MoveObjectInGroupPositionAsync()`);
@@ -46525,9 +47221,9 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
       }
     });
   }
-  AddDeviceChannelToGroupByGuidAsync(channel, groupGuid, skipDataUpdate = false) {
-    var _a, _b, _c, _d;
-    return __awaiter18(this, void 0, void 0, function* () {
+  AddDeviceChannelToGroupByGuidAsync(channel_1, groupGuid_1) {
+    return __awaiter18(this, arguments, void 0, function* (channel, groupGuid, skipDataUpdate = false) {
+      var _a, _b, _c, _d;
       const req = new AddDeviceChannelToGroupRequest();
       req.Data.Channel = channel.Number;
       let device = channel.GetDevice();
@@ -46556,9 +47252,9 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
       return Status.Error;
     });
   }
-  RemoveDeviceChannelFromGroupByGuidAsync(channel, groupGuid, skipDataUpdate = false) {
-    var _a, _b, _c;
-    return __awaiter18(this, void 0, void 0, function* () {
+  RemoveDeviceChannelFromGroupByGuidAsync(channel_1, groupGuid_1) {
+    return __awaiter18(this, arguments, void 0, function* (channel, groupGuid, skipDataUpdate = false) {
+      var _a, _b, _c;
       const req = new RemoveDeviceChannelToGroupRequest();
       let device = channel.GetDevice();
       if (device == null)
@@ -46586,8 +47282,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     });
   }
   UpsertGroupWithDevicesChannelsAsync(group, deviceChannels) {
-    var _a, _b, _c;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       if (this._groups.all((g) => g.Guid != group.Guid)) {
         let result = yield this.AddNewGroupWithIconAsync(group.Name, group.IconName);
         if (result instanceof ChannelsGroup)
@@ -46625,8 +47321,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     });
   }
   UpdateGroupWithDevicesChannelsAsync(groupGuid, deviceChannels) {
-    var _a, _b, _c, _d;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b, _c, _d;
       for (let channel of deviceChannels.where((a) => a.ChannelGroups.all((b) => b !== groupGuid))) {
         let status = yield this.AddDeviceChannelToGroupByGuidAsync(channel, groupGuid, true);
         if (status !== Status.OK) {
@@ -46658,8 +47354,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     });
   }
   ChangeGroupNameByGuidAsync(groupGuid, name) {
-    var _a, _b;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b;
       let req = new AddUpdateChannelsGroupsRequest();
       let gr = new ApiGroupObject();
       let tmp = this._groups.first((a) => a.Guid === groupGuid);
@@ -46694,8 +47390,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     return this.ChangeGroupNameAndIconByGuidAsync(group.Guid, name, iconName);
   }
   ChangeGroupNameAndIconByGuidAsync(groupGuid, name, iconName) {
-    var _a, _b;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b;
       let req = new AddUpdateChannelsGroupsRequest();
       let gr = new ApiGroupObject();
       let tmp = this._groups.first((a) => a.Guid === groupGuid);
@@ -46728,8 +47424,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     });
   }
   ChangeGroupIconNameByGuidAsync(groupGuid, iconName) {
-    var _a, _b;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b;
       let req = new AddUpdateChannelsGroupsRequest();
       let gr = new ApiGroupObject();
       let tmp = this._groups.first((a) => a.Guid === groupGuid);
@@ -46770,14 +47466,14 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     return this.ChangeGroupNameByGuidAsync(group.Guid, name);
   }
   ChangeGroupIconNameAsync(group, iconName) {
-    return this.ChangeGroupNameByGuidAsync(group.Guid, iconName);
+    return this.ChangeGroupIconNameByGuidAsync(group.Guid, iconName);
   }
   RemoveGroupAsync(group) {
     return this.RemoveGroupByGuidAsync(group.Guid);
   }
   RemoveGroupByGuidAsync(groupGuid) {
-    var _a;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a;
       let req = new RemoveGroupRequest();
       req.Data = groupGuid;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(req, 15e3, false);
@@ -46788,9 +47484,9 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
       return Status.Error;
     });
   }
-  GetGroupsAsync(useCache = true) {
-    var _a, _b;
-    return __awaiter18(this, void 0, void 0, function* () {
+  GetGroupsAsync() {
+    return __awaiter18(this, arguments, void 0, function* (useCache = true) {
+      var _a, _b;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetGroupsRequest(), 15e3, useCache);
       let groups = [];
       switch (result === null || result === void 0 ? void 0 : result.Status) {
@@ -46826,7 +47522,7 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
           this._groups = groups;
           return groups;
         default:
-          return this.GetGroupsAsync(useCache);
+          throw new Error(`Failed to get groups, API responded with status ${result === null || result === void 0 ? void 0 : result.Status} data: ${result === null || result === void 0 ? void 0 : result.Data}`);
       }
     });
   }
@@ -46837,8 +47533,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     return this.RemoveDeviceChannelFromGroupByGuidAsync(channel, group.Guid, skipDataUpdate);
   }
   AddNewGroupAsync(name) {
-    var _a, _b, _c;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       let req = new AddUpdateChannelsGroupsRequest();
       let gr = new ApiGroupObject();
       gr.Name = name;
@@ -46868,8 +47564,8 @@ var ChannelsGroupsService = class _ChannelsGroupsService {
     });
   }
   AddNewGroupWithIconAsync(name, iconName) {
-    var _a, _b, _c;
     return __awaiter18(this, void 0, void 0, function* () {
+      var _a, _b, _c;
       let req = new AddUpdateChannelsGroupsRequest();
       let gr = new ApiGroupObject();
       gr.Name = name;
@@ -47388,8 +48084,8 @@ var UpdatesService = class _UpdatesService {
     return _UpdatesService.ServiceName;
   }
   CheckDeviceVersionAsync(dev) {
-    var _a;
     return __awaiter19(this, void 0, void 0, function* () {
+      var _a;
       let device;
       if (typeof dev == "string") {
         const result = yield Api.Get(DevicesService.ServiceName).GetDevice(dev);
@@ -47409,8 +48105,8 @@ var UpdatesService = class _UpdatesService {
     });
   }
   CheckDeviceUpdateAsync(dev) {
-    var _a;
     return __awaiter19(this, void 0, void 0, function* () {
+      var _a;
       let device;
       if (typeof dev == "string") {
         const result2 = yield Api.Get(DevicesService.ServiceName).GetDevice(dev);
@@ -47453,7 +48149,7 @@ var UpdatesService = class _UpdatesService {
         const updateInfo = yield provider.CheckUpdateBulkAsync(reloadCache);
         if (updateInfo instanceof ResponseResult)
           return updateInfo;
-        updateInfo.map((d) => __awaiter19(this, void 0, void 0, function* () {
+        for (const d of updateInfo) {
           const update = new DeviceUpdate();
           update.CurrentResourceVersion = d.CurrentResourceVersion;
           update.NewResourceVersion = d.Update.Version;
@@ -47470,14 +48166,14 @@ var UpdatesService = class _UpdatesService {
           update.ProtocolGuid = provider.ProtocolGuid;
           update.UpdateResourceGuid = d.Update.ResourceGuid;
           result.push(update);
-        }));
+        }
       }
       return result;
     });
   }
-  InstallDeviceUpdateAsync(dev, updateProgress, updateAction, force = false) {
-    var _a;
-    return __awaiter19(this, void 0, void 0, function* () {
+  InstallDeviceUpdateAsync(dev_1, updateProgress_1, updateAction_1) {
+    return __awaiter19(this, arguments, void 0, function* (dev, updateProgress, updateAction, force = false) {
+      var _a;
       let device;
       if (typeof dev == "string") {
         const result = yield Api.Get(DevicesService.ServiceName).GetDevice(dev);
@@ -47587,16 +48283,16 @@ var UpdatesService = class _UpdatesService {
         var _a;
         const user = Api.Get(SessionService.ServiceName).User;
         if (user == null)
-          return new ResponseResult(UpdateErrorCode.UpdateActionsNotSupported, "No user data found, cannot check pending update progress.");
+          return resolve(new ResponseResult(UpdateErrorCode.UpdateActionsNotSupported, "No user data found, cannot check pending update progress."));
         if (user.SoftwareVersion == "" || user.SoftwareVersion == null)
-          return new ResponseResult(UpdateErrorCode.CannotGetCurrentControllerVersion, "No software version data found, cannot check pending update progress.");
+          return resolve(new ResponseResult(UpdateErrorCode.CannotGetCurrentControllerVersion, "No software version data found, cannot check pending update progress."));
         const [major, build] = user.SoftwareVersion.split(".");
         if (parseFloat(major) < this._oldUpdateVersion || parseFloat(major) == this._oldUpdateVersion && parseFloat(build) <= this._oldUpdateBuild)
-          return new ResponseResult(UpdateErrorCode.UnsupportedApiVersion, "Not supported API version, cannot check pending update progress.");
+          return resolve(new ResponseResult(UpdateErrorCode.UnsupportedApiVersion, "Not supported API version, cannot check pending update progress."));
         const pendingUpdateResult = yield this._connection.SendAndWaitForResponseAsync(new PendingUpdatesRequest(), 1e4, false);
         let isAnyUpdatePending = pendingUpdateResult.Status == Status.OK;
         if (!isAnyUpdatePending)
-          return new ResponseResult(UpdateErrorCode.CannotGetUpdates, "No pending updates found.");
+          return resolve(new ResponseResult(UpdateErrorCode.CannotGetUpdates, "No pending updates found."));
         let downloadOnly = (_a = pendingUpdateResult.Data) === null || _a === void 0 ? void 0 : _a.DownloadOnly;
         let endPercentage = 100;
         const totalTime = this._updateOfflineStageTime * 60 * 1e3;
@@ -48231,8 +48927,8 @@ var UpdatesService = class _UpdatesService {
     });
   }
   UpdateControllerUsingScriptAsync(update, updateProgress) {
-    var _a, _b, _c, _d, _e, _f;
     return __awaiter19(this, void 0, void 0, function* () {
+      var _a, _b, _c, _d, _e, _f;
       switch (update.UpdateType) {
         case UpdateTypes.Container:
         case UpdateTypes.ContainerSoftware:
@@ -48335,7 +49031,7 @@ var UpdatesService = class _UpdatesService {
             const onePercentInTime = howLongToUpgrade / 100;
             const willEndAt = startTime + howLongToUpgrade;
             const updatePromise = new Promise((resolve, reject) => __awaiter19(this, void 0, void 0, function* () {
-              var _g;
+              var _a2;
               try {
                 const OnReturnedFromSuspensionHandler = () => {
                   this._appStateService.OnReturnedFromSuspension().Unsubscribe(OnReturnedFromSuspensionHandler);
@@ -48384,7 +49080,7 @@ var UpdatesService = class _UpdatesService {
                   }
                   i++;
                 }, onePercentInTime);
-                const result = yield (_g = this._connection) === null || _g === void 0 ? void 0 : _g.SendAndWaitForResponseAsync(new InstallRequest(update.DownloadUri), this._updateRequestTimeout, false);
+                const result = yield (_a2 = this._connection) === null || _a2 === void 0 ? void 0 : _a2.SendAndWaitForResponseAsync(new InstallRequest(update.DownloadUri), this._updateRequestTimeout, false);
                 if (result.Status != Status.OK) {
                   clearInterval(intervalId);
                   progressInfo.Percentage = 0;
@@ -48451,7 +49147,7 @@ var UpdatesService = class _UpdatesService {
                       const onePercentInTime = howLongToUpgrade / 95;
                       const willEndAt = startTime + howLongToUpgrade;
                       const updatePromise = new Promise((resolve, reject) => __awaiter19(this, void 0, void 0, function* () {
-                        var _h;
+                        var _a2;
                         try {
                           const OnReturnedFromSuspensionHandler = () => {
                             this._appStateService.OnReturnedFromSuspension().Unsubscribe(OnReturnedFromSuspensionHandler);
@@ -48501,7 +49197,7 @@ var UpdatesService = class _UpdatesService {
                             }
                             i++;
                           }, onePercentInTime);
-                          (_h = this._connection) === null || _h === void 0 ? void 0 : _h.SendAndWaitForResponseAsync(new ExecuteCommandRequest(`/runtime/tmp/update.sh`), 12e3, false);
+                          (_a2 = this._connection) === null || _a2 === void 0 ? void 0 : _a2.SendAndWaitForResponseAsync(new ExecuteCommandRequest(`/runtime/tmp/update.sh`), 12e3, false);
                         } catch (error) {
                           resolve(new ResponseResult(UpdateErrorCode.CannotProcessUpdate, `Update failed with error. ${error}`));
                         }
@@ -49316,9 +50012,9 @@ var StatesHistoryService = class _StatesHistoryService {
     });
     downloadStringAsCsv(lines.join("\n"), `EnergyHistory_${device.Name}_${channel}.csv`);
   }
-  GetStatesByTimeRangeAsync(dev, channel, responseType, timeRange, time, limit, offset, orderByDesc = false) {
-    var _a;
-    return __awaiter20(this, void 0, void 0, function* () {
+  GetStatesByTimeRangeAsync(dev_1, channel_1, responseType_1, timeRange_1, time_1, limit_1, offset_1) {
+    return __awaiter20(this, arguments, void 0, function* (dev, channel, responseType, timeRange, time, limit, offset, orderByDesc = false) {
+      var _a;
       try {
         if (!(yield this.DoesSupportPreciseTimeFramesAsync()))
           return new ResponseResult(StateHistoryErrorCode.FunctionalityNotSupported, `State history data in time range is not supported with this version of controller software, update software to get this functionality.`);
@@ -49403,9 +50099,9 @@ var StatesHistoryService = class _StatesHistoryService {
       return Number(ver[0]) > 6 || Number(ver[0]) === 6 && Number(ver[1]) >= 101;
     });
   }
-  GetStatesByIntervalAsync(dev, channel, responseType, stateFrom, limit, offset, orderByDesc = false) {
-    var _a;
-    return __awaiter20(this, void 0, void 0, function* () {
+  GetStatesByIntervalAsync(dev_1, channel_1, responseType_1, stateFrom_1, limit_1, offset_1) {
+    return __awaiter20(this, arguments, void 0, function* (dev, channel, responseType, stateFrom, limit, offset, orderByDesc = false) {
+      var _a;
       try {
         if (!(yield this.IsFunctionalitySupportedAsync()))
           return new ResponseResult(StateHistoryErrorCode.FunctionalityNotSupported, `State history data is not supported with this version of controller software, update software to get this functionality.`);
@@ -49500,8 +50196,8 @@ var StatesHistoryService = class _StatesHistoryService {
     });
   }
   GetAvailableStatesAsync() {
-    var _a;
     return __awaiter20(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetAvailableStatesRequest(), 12e3, false);
         if (result == null)
@@ -49528,8 +50224,8 @@ var StatesHistoryService = class _StatesHistoryService {
     });
   }
   GetAvailableStatesPerChannelAsync(dev, channel) {
-    var _a;
     return __awaiter20(this, void 0, void 0, function* () {
+      var _a;
       let device;
       if (typeof dev == "string") {
         const result2 = yield Api.Get(DevicesService.ServiceName).GetDevice(dev);
@@ -49763,8 +50459,8 @@ var ControllerChat = class {
     });
   }
   SendMessageAsync(message) {
-    var _a;
     return __awaiter21(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield this._connection.SendAndWaitForResponseAsync(new SendMessagesRequest(`recipient:home ${message}`), 8e3, false);
         if (result == null || result.Status == null)
@@ -49964,8 +50660,8 @@ var FamillyChat = class {
     });
   }
   SendMessageAsync(message) {
-    var _a;
     return __awaiter22(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield this._connection.SendAndWaitForResponseAsync(new SendMessagesRequest2(message), 8e3, false);
         if (result == null || result.Status == null)
@@ -50134,8 +50830,8 @@ var GptChat = class {
     });
   }
   SetChatConfigurationAsync(config) {
-    var _a;
     return __awaiter23(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield this._connection.SendAndWaitForResponseAsync(new SetConfigurationRequest(config), 8e3, false);
         if (result == null || result.Status == null)
@@ -50148,8 +50844,8 @@ var GptChat = class {
     });
   }
   SendMessageAsync(message) {
-    var _a;
     return __awaiter23(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield this._connection.SendAndWaitForResponseAsync(new SendMessagesRequest3(message), 8e3, false);
         if (result == null || result.Status == null)
@@ -50336,13 +51032,14 @@ var ConnectedAppsService = class _ConnectedAppsService {
   constructor() {
     this._connection = Api.Get(ExalusConnectionService.ServiceName);
     this._log = Api.Get(LoggerService.ServiceName);
+    this._cache = Api.Get(WebApiCacheService.ServiceName);
   }
   GetServiceName() {
     return _ConnectedAppsService.ServiceName;
   }
   IsSupportedAsync() {
     return __awaiter24(this, void 0, void 0, function* () {
-      let info = yield this._connection.SendAndWaitForResponseAsync(new CheckIfSupportedRequest(), 2e3, true);
+      let info = yield this._connection.SendAndWaitForResponseAsync(new CheckIfSupportedRequest(), 2e3, false);
       this._log.Debug(_ConnectedAppsService.ServiceName, `IsSupportedAsync: ${info === null || info === void 0 ? void 0 : info.Status} resp: ${JSON.stringify(info)}`);
       if (info == null)
         return false;
@@ -50367,6 +51064,7 @@ var ConnectedAppsService = class _ConnectedAppsService {
       let response = yield this._connection.SendAndWaitForResponseAsync(new UpsertConnectedAppRequest(app), 2e3, false);
       switch (response === null || response === void 0 ? void 0 : response.Status) {
         case Status.OK:
+          this._cache.Remove(new GetConnectedAppsRequest());
           return new ResponseResult(UpsertConnectedAppResult.Changed, "");
         case Status.WrongData:
           switch (response.Data) {
@@ -50397,7 +51095,9 @@ var ConnectedAppsService = class _ConnectedAppsService {
   }
   RemoveConnectedAppAsync(app) {
     return __awaiter24(this, void 0, void 0, function* () {
-      let response = yield this._connection.SendAndWaitForResponseAsync(new DeleteConnectedAppRequest(app.Guid), 2e3, true);
+      let response = yield this._connection.SendAndWaitForResponseAsync(new DeleteConnectedAppRequest(app.Guid), 2e3, false);
+      if ((response === null || response === void 0 ? void 0 : response.Status) === Status.OK)
+        this._cache.Remove(new GetConnectedAppsRequest());
       return response === null || response === void 0 ? void 0 : response.Status;
     });
   }
@@ -50764,8 +51464,8 @@ var FindControllerService = class _FindControllerService {
     return `ExalusTR7-${this.GetControllerHostName(this._connection.GetControllerSerialNumber())}.local`.toLowerCase();
   }
   GetControllerNetworkConfigurationAsync() {
-    var _a;
     return __awaiter26(this, void 0, void 0, function* () {
+      var _a;
       const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetNetworkConfiguration(), 2e4, false);
       if (result == null || result.Status == null || result.Data == null) {
         this._logger.Error(_FindControllerService.ServiceName, `Failed to get network configuration data - unknow error.`);
@@ -50835,6 +51535,9 @@ var __awaiter27 = function(thisArg, _arguments, P, generator) {
   });
 };
 var LocalNetworkExalusConnectionService = class _LocalNetworkExalusConnectionService {
+  SendAndHandleStreamAsync(dataFrame, streamHandler, logTransmission) {
+    return Promise.reject(new Error("Streams are not supported over local network connection."));
+  }
   constructor() {
     this._errorOccuredEvent = new TypedEvent();
     this._connectionStateChangedEvent = new TypedEvent();
@@ -50856,9 +51559,25 @@ var LocalNetworkExalusConnectionService = class _LocalNetworkExalusConnectionSer
     this._pingInterval = 5e3;
     this._pingIntervalId = null;
     this._lastReceivedPacketTime = Date.now();
+    this._disconnectedOnPurpose = false;
+    this._restoreTask = null;
+    Api.Get(AppStateService.ServiceName).OnAppStateChanged().Subscribe((newState) => __awaiter27(this, void 0, void 0, function* () {
+      var _a;
+      switch (newState) {
+        case AppState.ExitedLowPowerMode:
+        case AppState.ReturnedFromSuspension:
+          if (yield this.RestoreConnectionAsync())
+            (_a = this._session) === null || _a === void 0 ? void 0 : _a.RestoreSessionAsync();
+          break;
+      }
+    }));
   }
-  SendAndHandleStreamAsync(dataFrame, streamHandler, logTransmission) {
-    throw new Error("Method not implemented.");
+  GetConnectedBrokerInfoAsync() {
+    return __awaiter27(this, arguments, void 0, function* (timeoutMs = 8e3) {
+      var _a;
+      const controller = yield this.GetServerAddressAsync();
+      return new BrokerInfo((_a = this._address) !== null && _a !== void 0 ? _a : "", controller !== null && controller !== void 0 ? controller : "", BrokerEnvironment.Local);
+    });
   }
   Initialize() {
     if (this._initialized)
@@ -50878,8 +51597,8 @@ var LocalNetworkExalusConnectionService = class _LocalNetworkExalusConnectionSer
     });
   }
   PingControllerAsync() {
-    var _a;
     return __awaiter27(this, void 0, void 0, function* () {
+      var _a;
       if (((_a = this.socket) === null || _a === void 0 ? void 0 : _a.readyState) !== WebSocket.OPEN)
         return false;
       if (this._lastReceivedPacketTime !== null && Date.now() - this._lastReceivedPacketTime < this._pingInterval)
@@ -50906,10 +51625,8 @@ var LocalNetworkExalusConnectionService = class _LocalNetworkExalusConnectionSer
     return this._pin;
   }
   SetServersBrokerAddress(address) {
-    throw new Error("Method not implemented.");
   }
   SetDefaultPacketsBrokerAddress(address) {
-    throw new Error("Method not implemented.");
   }
   GetServerAddressAsync() {
     if (Api.IsRunningFromLocalNetwork())
@@ -50918,19 +51635,30 @@ var LocalNetworkExalusConnectionService = class _LocalNetworkExalusConnectionSer
   }
   ConnectAsync(address) {
     return new Promise((resolve, reject) => {
-      var _a;
       this.Initialize();
-      (_a = this.socket) === null || _a === void 0 ? void 0 : _a.close();
-      this.socket = new WebSocket(`ws://${address}/api`);
+      this._disconnectedOnPurpose = false;
+      this._address = address;
+      const previousSocket = this.socket;
+      const socket = new WebSocket(`ws://${address}/api`);
+      this.socket = socket;
+      if (this._pingIntervalId !== null) {
+        clearInterval(this._pingIntervalId);
+        this._pingIntervalId = null;
+      }
+      previousSocket === null || previousSocket === void 0 ? void 0 : previousSocket.close();
       this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Connecting to the WebSockets server ${address}`);
-      this.socket.onerror = (ev) => {
+      socket.onerror = (ev) => {
+        if (this.socket !== socket)
+          return;
         this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Error occured in the WebSockets server ${address} info: 
 ${JSON.stringify(ev)}`);
         this._isOpen = false;
         this._errorOccuredEvent.Invoke(["WebSockets", ev.toString()]);
         return reject(ConnectionResult.FailedToConnect);
       };
-      this.socket.onopen = (ev) => {
+      socket.onopen = (ev) => {
+        if (this.socket !== socket)
+          return;
         this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Connected to the WebSockets server ${address} info: 
 ${JSON.stringify(ev)}`);
         this._isOpen = true;
@@ -50940,13 +51668,21 @@ ${JSON.stringify(ev)}`);
         }), this._pingInterval);
         return resolve(ConnectionResult.Connected);
       };
-      this.socket.onclose = (ev) => {
+      socket.onclose = (ev) => {
+        if (this.socket !== socket)
+          return;
         this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Disconnected from the WebSockets server ${address} info: 
 ${JSON.stringify(ev)}`);
         this._isOpen = false;
+        if (this._pingIntervalId !== null) {
+          clearInterval(this._pingIntervalId);
+          this._pingIntervalId = null;
+        }
         this._connectionStateChangedEvent.Invoke(ConnectionState.Disconnected);
       };
-      this.socket.onmessage = (ev) => {
+      socket.onmessage = (ev) => {
+        if (this.socket !== socket)
+          return;
         this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Message received from the WebSockets server ${address}: ${ev.data}`);
         this._onMessageReceived.Invoke(ev.data);
         try {
@@ -50969,7 +51705,8 @@ ${JSON.stringify(ev)}`);
         this._pin = authorizationInfo.PIN;
         this._serial = authorizationInfo.SerialNumber;
         this._auth = authorizationInfo;
-        this._connectionStateChangedEvent.Invoke(ConnectionState.ConnectedAndAuthorized);
+        if (this.IsConnected())
+          this._connectionStateChangedEvent.Invoke(ConnectionState.ConnectedAndAuthorized);
         return true;
       } else
         return false;
@@ -50977,20 +51714,27 @@ ${JSON.stringify(ev)}`);
   }
   ConnectAndAuthorizeAsync(authorizationInfo) {
     return __awaiter27(this, void 0, void 0, function* () {
+      var _a;
       Api.WorksInContextOf = authorizationInfo.SerialNumber;
       this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Connecting and authorizing to the controller ${authorizationInfo.SerialNumber}`);
-      let autRes = yield this.AuthorizeAsync(authorizationInfo);
-      if (!autRes)
-        return ConnectionResult.AuthorizationFailed;
       let addr = yield this.GetServerAddressAsync();
       if (addr == null)
         return ConnectionResult.FailedToConnectToServer;
-      return yield this.ConnectAsync(addr);
+      const result = yield this.ConnectAsync(addr);
+      if (result !== ConnectionResult.Connected)
+        return result;
+      let autRes = yield this.AuthorizeAsync(authorizationInfo);
+      if (!autRes) {
+        (_a = this.socket) === null || _a === void 0 ? void 0 : _a.close();
+        return ConnectionResult.AuthorizationFailed;
+      }
+      return ConnectionResult.Connected;
     });
   }
   DisconnectAsync() {
     var _a;
     this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Disconnecting from the WebSockets server ${this._address}`);
+    this._disconnectedOnPurpose = true;
     this._connectionStateChangedEvent.Invoke(ConnectionState.Disconnecting);
     if (this._pingIntervalId !== null)
       clearInterval(this._pingIntervalId);
@@ -51026,15 +51770,17 @@ ${JSON.stringify(ev)}`);
       return Promise.resolve(false);
   }
   SendAndWaitForResponseAsync(dataFrame, timeout, useCache, logTransmission = true) {
-    return this.SendAndWaitForResponseWithRepeatAsync(dataFrame, timeout, useCache, logTransmission);
+    return this.SendAndWaitForResponseWithRepeatAsync(dataFrame, timeout, useCache, true, logTransmission);
   }
   SendAndHandleResponseAsync(dataFrame, timeout, dataHandler, logTransmission) {
-    var _a;
     return __awaiter27(this, void 0, void 0, function* () {
+      var _a;
       let timeoutId = 0;
       const startTime = Date.now();
-      if (!this.IsConnected())
-        throw new Error("Connection is not established");
+      if (!this.IsConnected()) {
+        if (!(yield this.RestoreConnectionAsync()))
+          throw new Error("Connection is not established");
+      }
       if (dataFrame.Resource !== "/users/user/login")
         yield (_a = this._session) === null || _a === void 0 ? void 0 : _a.WaitForSessionCreationAsync();
       return new Promise((resolve, reject) => __awaiter27(this, void 0, void 0, function* () {
@@ -51045,7 +51791,7 @@ ${JSON.stringify(ev)}`);
           reject(new Error(errorMessage));
         }, timeout);
         let onReceivedFrame = (receivedFrame) => __awaiter27(this, void 0, void 0, function* () {
-          var _b, _c, _d;
+          var _a2, _b, _c;
           if ((receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.TransactionId) == dataFrame.TransactionId) {
             window.clearTimeout(timeoutId);
             const difference = Date.now() - startTime;
@@ -51053,9 +51799,14 @@ ${JSON.stringify(ev)}`);
               this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Received response for: ${receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.Resource} ${receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.Method} id: ${receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.TransactionId} in ${difference}ms`);
             if ((receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.Status) === Status.UserIsNotLoggedIn) {
               this._dataReceivedEvent.Unsubscribe(onReceivedFrame);
-              ((_b = this._session) === null || _b === void 0 ? void 0 : _b.OnUserLoggedOutEvent()).Invoke((_c = this._session) === null || _c === void 0 ? void 0 : _c.User);
-              yield (_d = this._session) === null || _d === void 0 ? void 0 : _d.RestoreSessionAsync();
-              resolve(yield this.SendAndHandleResponseAsync(dataFrame, timeout, dataHandler, logTransmission));
+              ((_a2 = this._session) === null || _a2 === void 0 ? void 0 : _a2.OnUserLoggedOutEvent()).Invoke((_b = this._session) === null || _b === void 0 ? void 0 : _b.User);
+              try {
+                yield (_c = this._session) === null || _c === void 0 ? void 0 : _c.RestoreSessionAsync();
+                resolve(yield this.SendAndHandleResponseAsync(dataFrame, timeout, dataHandler, logTransmission));
+              } catch (error) {
+                reject(error);
+              }
+              return;
             }
             switch (receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.Status) {
               case Status.MultiDataResponseStart:
@@ -51087,38 +51838,45 @@ ${JSON.stringify(ev)}`);
       }));
     });
   }
-  SendAndWaitForResponseWithRepeatAsync(dataFrame, timeout, useCache, repeat2 = true, logTransmission = true) {
-    var _a, _b, _c;
-    return __awaiter27(this, void 0, void 0, function* () {
+  SendAndWaitForResponseWithRepeatAsync(dataFrame_1, timeout_1, useCache_1) {
+    return __awaiter27(this, arguments, void 0, function* (dataFrame, timeout, useCache, repeat2 = true, logTransmission = true) {
+      var _a, _b, _c;
       if (dataFrame.Method === Method.Get && useCache) {
         if (!(yield (_a = this._controllerConfiguration) === null || _a === void 0 ? void 0 : _a.DidCofigurationChangeAsync())) {
           let res = (_b = this._cache) === null || _b === void 0 ? void 0 : _b.GetCache(dataFrame);
-          if (res !== null) {
+          if (res != null) {
             return Promise.resolve(res);
           }
         }
       }
       let timeoutId = 0;
       const startTime = Date.now();
-      if (!this.IsConnected())
-        throw new Error("Connection is not established");
+      if (!this.IsConnected()) {
+        if (!(yield this.RestoreConnectionAsync()))
+          throw new Error("Connection is not established");
+      }
       if (dataFrame.Resource !== "/users/user/login")
         yield (_c = this._session) === null || _c === void 0 ? void 0 : _c.WaitForSessionCreationAsync();
       return new Promise((resolve, reject) => __awaiter27(this, void 0, void 0, function* () {
         let onReceivedFrame = (receivedFrame) => __awaiter27(this, void 0, void 0, function* () {
-          var _d, _e, _f, _g;
+          var _a2, _b2, _c2, _d;
           if ((receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.TransactionId) == dataFrame.TransactionId) {
             window.clearTimeout(timeoutId);
             this._dataReceivedEvent.Unsubscribe(onReceivedFrame);
             const difference = Date.now() - startTime;
             if (logTransmission)
               this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Received response for: ${receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.Resource} ${receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.Method} id: ${receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.TransactionId} in ${difference}ms`);
-            if (dataFrame.Method === Method.Get && useCache)
-              (_d = this._cache) === null || _d === void 0 ? void 0 : _d.Cache(receivedFrame);
-            if (!useCache && (receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.Status) === Status.UserIsNotLoggedIn && repeat2) {
-              ((_e = this._session) === null || _e === void 0 ? void 0 : _e.OnUserLoggedOutEvent()).Invoke((_f = this._session) === null || _f === void 0 ? void 0 : _f.User);
-              yield (_g = this._session) === null || _g === void 0 ? void 0 : _g.RestoreSessionAsync();
-              resolve(yield this.SendAndWaitForResponseWithRepeatAsync(dataFrame, timeout, useCache, false, logTransmission));
+            if (dataFrame.Method === Method.Get && useCache && (receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.Status) !== Status.UserIsNotLoggedIn)
+              (_a2 = this._cache) === null || _a2 === void 0 ? void 0 : _a2.Cache(receivedFrame);
+            if ((receivedFrame === null || receivedFrame === void 0 ? void 0 : receivedFrame.Status) === Status.UserIsNotLoggedIn && repeat2) {
+              ((_b2 = this._session) === null || _b2 === void 0 ? void 0 : _b2.OnUserLoggedOutEvent()).Invoke((_c2 = this._session) === null || _c2 === void 0 ? void 0 : _c2.User);
+              try {
+                yield (_d = this._session) === null || _d === void 0 ? void 0 : _d.RestoreSessionAsync();
+                resolve(yield this.SendAndWaitForResponseWithRepeatAsync(dataFrame, timeout, useCache, false, logTransmission));
+              } catch (error) {
+                reject(error);
+              }
+              return;
             }
             resolve(receivedFrame);
           }
@@ -51151,6 +51909,31 @@ ${JSON.stringify(ev)}`);
   }
   GetServiceName() {
     return _LocalNetworkExalusConnectionService.ServiceName;
+  }
+  RestoreConnectionAsync() {
+    return __awaiter27(this, void 0, void 0, function* () {
+      if (this._disconnectedOnPurpose)
+        return false;
+      if (this._restoreTask)
+        return this._restoreTask;
+      this._restoreTask = (() => __awaiter27(this, void 0, void 0, function* () {
+        const auth = this._auth;
+        if (auth == null)
+          return false;
+        if (this.IsConnected())
+          return this.AuthorizeAsync(auth);
+        const addr = yield this.GetServerAddressAsync();
+        if (addr == null)
+          return false;
+        const connectionResult = yield this.ConnectAsync(addr);
+        if (connectionResult !== ConnectionResult.Connected)
+          return false;
+        return this.AuthorizeAsync(auth);
+      }))().finally(() => {
+        this._restoreTask = null;
+      });
+      return this._restoreTask;
+    });
   }
 };
 LocalNetworkExalusConnectionService.ServiceName = "ExalusConnectionService";
@@ -51252,8 +52035,8 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     return _ControllerNotificationsService.ServiceName;
   }
   RegisterNotificationsClientAsync(registration) {
-    var _a;
     return __awaiter28(this, void 0, void 0, function* () {
+      var _a;
       try {
         const request = new RegisterNotificationsClientRequest({
           ClientName: registration.ClientName,
@@ -51290,8 +52073,8 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     });
   }
   UpdateNotificationsClientAsync(tokenGuid, registration) {
-    var _a;
     return __awaiter28(this, void 0, void 0, function* () {
+      var _a;
       try {
         const request = new UpdateNotificationsClientRequest({
           ClientName: registration.ClientName,
@@ -51334,8 +52117,8 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     });
   }
   GetRegisteredNotificationsClientsMetadataAsync(lavvaUserName) {
-    var _a;
     return __awaiter28(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new GetTokenMetadataRequest(), 8e3, false);
         if (result == null || result.Status == null) {
@@ -51364,8 +52147,8 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     });
   }
   IsNotificationsEnabledForAllUserTokensAsync(lavvaUserName) {
-    var _a;
     return __awaiter28(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new IsNotificationsEnabledForAllUsersRequest(lavvaUserName), 8e3, false);
         if (result == null || result.Status == null) {
@@ -51397,8 +52180,8 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     });
   }
   IsNotificationsEnabledAsync(tokenIdentity) {
-    var _a;
     return __awaiter28(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new IsNotificationsEnabledRequest(tokenIdentity), 8e3, false);
         if (result == null || result.Status == null) {
@@ -51429,8 +52212,8 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     });
   }
   EnableNotificationsAsync(tokenIdentity) {
-    var _a;
     return __awaiter28(this, void 0, void 0, function* () {
+      var _a;
       try {
         let tk = null;
         if (tokenIdentity != void 0 && tokenIdentity != "")
@@ -51461,8 +52244,8 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     });
   }
   EnableNotificationsForAllUserTokensAsync(lavvaUserName) {
-    var _a;
     return __awaiter28(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new EnableNotificationsForLavvaUserRequest(lavvaUserName), 8e3, false);
         if (result == null || result.Status == null) {
@@ -51491,8 +52274,8 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     });
   }
   DisableNotificationsAsync(tokenIdentity) {
-    var _a;
     return __awaiter28(this, void 0, void 0, function* () {
+      var _a;
       try {
         let tk = null;
         if (tokenIdentity != void 0 && tokenIdentity != "")
@@ -51523,8 +52306,8 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     });
   }
   DisableNotificationsForAllUserTokensAsync(lavvaUserName) {
-    var _a;
     return __awaiter28(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new DisableNotificationsForLavvaUserRequest(lavvaUserName), 8e3, false);
         if (result == null || result.Status == null) {
@@ -51553,8 +52336,8 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     });
   }
   DeleteNotificationsTokenAsync(tokenGuid) {
-    var _a;
     return __awaiter28(this, void 0, void 0, function* () {
+      var _a;
       try {
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(new DeleteNotificationsTokenRequest(tokenGuid), 8e3, false);
         if (result == null || result.Status == null) {
@@ -51773,6 +52556,212 @@ var AppLocalesService = class _AppLocalesService {
 };
 AppLocalesService.ServiceName = "AppLocalesService";
 
+// node_modules/lavva.exalushome/build/js/Services/AndroidAutoCarPlayService.js
+var __awaiter29 = function(thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function(resolve) {
+      resolve(value);
+    });
+  }
+  return new (P || (P = Promise))(function(resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+var InstallationType;
+(function(InstallationType2) {
+  InstallationType2[InstallationType2["Lavva"] = 0] = "Lavva";
+  InstallationType2[InstallationType2["Wisniowski"] = 1] = "Wisniowski";
+  InstallationType2[InstallationType2["ExalusHome"] = 2] = "ExalusHome";
+})(InstallationType || (InstallationType = {}));
+var AndroidAutoCarPlayService = class _AndroidAutoCarPlayService {
+  GetServiceName() {
+    return _AndroidAutoCarPlayService.ServiceName;
+  }
+  SetInstallation(installation) {
+    return __awaiter29(this, void 0, void 0, function* () {
+      if (installation.InstallationId === void 0 || installation.InstallationType === void 0)
+        return Promise.reject(new Error("Invalid installation info, InstallationId and InstallationType are required"));
+      if (installation.InstallationType != InstallationType.ExalusHome && installation.BrokerUrl === void 0)
+        return Promise.reject(new Error("Broker url is required for non-ExalusHome installations"));
+      Api.Get(LoggerService.ServiceName).Info(_AndroidAutoCarPlayService.ServiceName, `Setting Android Auto/CarPlay installation: ${installation.InstallationType} (${installation.InstallationId}) broker: ${installation.BrokerUrl}`);
+      if (!this.IsAndroidAutoAvailable() && !(Helpers.IsIosNative() && window.webkit.messageHandlers.carPlay != void 0)) {
+        Api.Get(LoggerService.ServiceName).Warning(_AndroidAutoCarPlayService.ServiceName, "Android Auto/CarPlay is not available on this platform!");
+        return Promise.resolve();
+      }
+      if (installation.InstallationType === InstallationType.ExalusHome) {
+        let ex = Api.Get(ExalusConnectionService.ServiceName);
+        installation.ControllerSerial = ex.GetControllerSerialNumber();
+        installation.ControllerPin = ex.GetControllerPin();
+        let serv = yield ex.GetConnectedBrokerInfoAsync(5e3);
+        switch (serv.Env) {
+          case BrokerEnvironment.Development:
+            installation.BrokerUrl = "dev-broker.tr7.pl:4431";
+            break;
+          default:
+            installation.BrokerUrl = "services-broker.tr7.pl";
+            break;
+        }
+        try {
+          let token = yield this.GetTokenFromController();
+          if (token)
+            installation.AuthToken = token;
+          else
+            Api.Get(LoggerService.ServiceName).Warning(_AndroidAutoCarPlayService.ServiceName, "Failed to get auth token from controller, Android Auto/CarPlay integration might not work properly!");
+        } catch (err) {
+          Api.Get(LoggerService.ServiceName).Error(_AndroidAutoCarPlayService.ServiceName, "Error while getting auth token from controller, Android Auto/CarPlay integration might not work properly! \n" + err);
+        }
+      }
+      if (this.IsAndroidAutoAvailable())
+        navigator.AndroidAuto.SetInstallation(installation);
+      else if (Helpers.IsIosNative() && window.webkit.messageHandlers.carPlay != void 0)
+        window.webkit.messageHandlers.carPlay.postMessage(installation);
+      else
+        return Promise.reject(new Error("Android Auto/CarPlay is not available"));
+      return Promise.resolve();
+    });
+  }
+  GetTokenFromController() {
+    return __awaiter29(this, void 0, void 0, function* () {
+      var _a;
+      if (this.IsAndroidAutoAvailable() || Helpers.IsIosNative() && window.webkit.messageHandlers.carPlay != void 0) {
+        let response = yield Api.Get(ExalusConnectionService.ServiceName).SendAndWaitForResponseAsync(new GetTokenRequest(), 12e3, false);
+        switch (response === null || response === void 0 ? void 0 : response.Status) {
+          case Status.OK:
+            return Promise.resolve(((_a = response === null || response === void 0 ? void 0 : response.Data) === null || _a === void 0 ? void 0 : _a.Token) || null);
+        }
+      }
+      return Promise.resolve(null);
+    });
+  }
+  IsAndroidAutoAvailable() {
+    return navigator.AndroidAuto !== void 0;
+  }
+  ClearInstallation() {
+    if (this.IsAndroidAutoAvailable())
+      navigator.AndroidAuto.SetInstallation(null);
+    if (Helpers.IsIosNative() && window.webkit.messageHandlers.carPlay != void 0)
+      window.webkit.messageHandlers.carPlay.postMessage(null);
+    else
+      return Promise.reject(new Error("Android Auto/CarPlay is not available"));
+    return Promise.resolve();
+  }
+};
+AndroidAutoCarPlayService.ServiceName = "AndroidAutoCarPlayService";
+var GetTokenRequest = class extends DataFrame {
+  constructor() {
+    super();
+    this.Resource = "/webapibridge/get-token";
+    this.Method = Method.Get;
+  }
+};
+
+// node_modules/lavva.exalushome/build/js/Services/HomeKitService.js
+var __awaiter30 = function(thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function(resolve) {
+      resolve(value);
+    });
+  }
+  return new (P || (P = Promise))(function(resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+var HomeKitService = class _HomeKitService {
+  constructor() {
+    this._connection = Api.Get(ExalusConnectionService.ServiceName);
+  }
+  GetServiceName() {
+    return _HomeKitService.ServiceName;
+  }
+  isHomeKitPairingStatusResponse(value) {
+    return typeof value === "object" && value !== null && "Paired" in value && typeof value.Paired === "boolean";
+  }
+  GetPairingStatusAsync() {
+    return __awaiter30(this, void 0, void 0, function* () {
+      const req = new GetPairingStatusFrame();
+      const result = yield this._connection.SendAndWaitForResponseAsync(req, 5e3, false);
+      if (result.Status !== Status.OK) {
+        return result.Status;
+      }
+      const response = new HomeKitPairingStatusResponse();
+      if (this.isHomeKitPairingStatusResponse(result.Data)) {
+        response.Paired = result.Data.Paired;
+      }
+      return response;
+    });
+  }
+  IsPairedAsync() {
+    return __awaiter30(this, void 0, void 0, function* () {
+      const res = yield this.GetPairingStatusAsync();
+      if (this.isHomeKitPairingStatusResponse(res)) {
+        return res.Paired;
+      }
+      return res;
+    });
+  }
+  ResetPairingAsync() {
+    return __awaiter30(this, void 0, void 0, function* () {
+      const req = new ResetPairingFrame();
+      const result = yield this._connection.SendAndWaitForResponseAsync(req, 5e3, false);
+      return result.Status;
+    });
+  }
+};
+HomeKitService.ServiceName = "HomeKitService";
+var HomeKitPairingStatusResponse = class {
+  constructor() {
+    this.Paired = false;
+  }
+};
+var GetPairingStatusFrame = class extends DataFrame {
+  constructor() {
+    super();
+    this.Resource = "/homekit/pairing/status";
+    this.Method = Method.Get;
+  }
+};
+var ResetPairingFrame = class extends DataFrame {
+  constructor() {
+    super();
+    this.Resource = "/homekit/pairing/reset";
+    this.Method = Method.Post;
+  }
+};
+
 // node_modules/lavva.exalushome/build/js/Api.js
 initializeLinq();
 var Api = class _Api {
@@ -51796,6 +52785,7 @@ var Api = class _Api {
       } else
         dep.RegisterService(new ExalusConnectionService());
       dep.RegisterService(new AndroidLocationService());
+      dep.RegisterService(new AndroidAutoCarPlayService());
       dep.RegisterService(new AndroidNotificationsService());
       dep.RegisterService(new RemoteStorageService());
       dep.RegisterService(new GeolocationService());
@@ -51814,6 +52804,7 @@ var Api = class _Api {
       dep.RegisterService(new ScenesService());
       dep.RegisterService(new ChatService());
       dep.RegisterService(new ControllerNotificationsService());
+      dep.RegisterService(new HomeKitService());
     } catch (ex) {
       console.error(ex);
     }
@@ -52647,9 +53638,11 @@ var StateTranslator = class {
       if (!availabilityTopic) return [];
       results.push(this.BuildAvailabilityState(state, availabilityTopic));
     } else {
-      let stateTopics = topics.get(0 /* stateTopic */);
-      if (stateTopics == null) {
-        console.warn(`[STATE_TRANSLATOR] No state topic for channel ${channelId} for ${state.TypeAsEnum}.`);
+      const topicId = this.GetTopicIdForState(state.TypeAsEnum);
+      const stateTopics = topicId == null ? void 0 : topics.get(topicId);
+      if (topicId != null && !stateTopics) {
+        console.warn(`[STATE_TRANSLATOR] No MQTT topic for channel ${channelId} for ${state.TypeAsEnum}.`);
+        return [];
       }
       switch (state.TypeAsEnum) {
         case DeviceResponseType.LightBrightness: {
@@ -52663,19 +53656,16 @@ var StateTranslator = class {
           break;
         }
         case DeviceResponseType.BlindPosition: {
-          stateTopics = topics.get(3 /* position_topic */);
           if (!stateTopics) return [];
           results.push(this.BuildBlindState(state, stateTopics));
           break;
         }
         case DeviceResponseType.GatePosition: {
-          stateTopics = topics.get(3 /* position_topic */);
           if (!stateTopics) return [];
           results.push(this.BuildGateState(state, stateTopics));
           break;
         }
         case DeviceResponseType.FacadePosition: {
-          stateTopics = topics.get(3 /* position_topic */);
           if (!stateTopics) return [];
           results.push(this.BuildFacadeState(state, stateTopics));
           break;
@@ -52724,6 +53714,26 @@ var StateTranslator = class {
       }
     }
     return results;
+  }
+  GetTopicIdForState(type) {
+    switch (type) {
+      case DeviceResponseType.BlindPosition:
+      case DeviceResponseType.GatePosition:
+      case DeviceResponseType.FacadePosition:
+        return 3 /* position_topic */;
+      case DeviceResponseType.LightBrightness:
+      case DeviceResponseType.ChannelOnOffState:
+      case DeviceResponseType.MeasuredTemperature:
+      case DeviceResponseType.HumiditySensorState:
+      case DeviceResponseType.PressureSensorState:
+      case DeviceResponseType.MeasuredBrightness:
+      case DeviceResponseType.MovementSensorState:
+      case DeviceResponseType.ReedState:
+      case DeviceResponseType.WindSpeedState:
+        return 0 /* stateTopic */;
+      default:
+        return null;
+    }
   }
   GetStatesFromCacheForChannelId(channelId) {
     const devicesApi = Api.Get(DevicesService.ServiceName);
@@ -53189,12 +54199,12 @@ var MqttTranslateService = class {
     }
     const management = this._configTranslator.CreateVirtualManagementComponents();
     allMappings.push(...management);
+    const removedComponents = ComponentRepository.RegisterAndCompareComponents(allMappings);
     for (const mapping of allMappings) {
       const configTopic = `${this._discoveryPrefix}/${mapping.devBaseTopic}/config`;
       this.PublishJson(configTopic, mapping.component, true);
       this.SubscribeForCommandsTopics(mapping);
     }
-    const removedComponents = ComponentRepository.RegisterAndCompareComponents(allMappings);
     console.info(`[MQTT] Removed ${removedComponents.length} components`);
     for (const removed of removedComponents) {
       const configTopic = `${this._discoveryPrefix}/${removed.platform}/${removed.unique_id}/config`;
@@ -53222,11 +54232,11 @@ var MqttTranslateService = class {
     }
     const mappings = await this._configTranslator.MapDeviceToHomeAssistantMqttConfig(device);
     for (const mapping of mappings) {
+      ComponentRepository.RegisterComponent(mapping);
       const configTopic = `${this._discoveryPrefix}/${mapping.devBaseTopic}/config`;
       this.PublishJson(configTopic, mapping.component, true);
       this.SubscribeForCommandsTopics(mapping);
     }
-    ComponentRepository.RegisterComponents(mappings);
   }
   UpdateDeviceState(state, device) {
     if (!this._client || !this._client.connected) {
@@ -53235,6 +54245,13 @@ var MqttTranslateService = class {
     const mappedStates = this._stateTranslator.MapDeviceStateToHomeAssistantMqttState(state, `${device.Guid}_${state.Data.Channel}`);
     for (const mapped of mappedStates) {
       this.PublishJson(mapped.devStateTopic, mapped.state, true);
+    }
+  }
+  PublishCachedDeviceStates(devices) {
+    for (const device of devices) {
+      for (const state of device.States) {
+        this.UpdateDeviceState(state, device);
+      }
     }
   }
   async ExecuteDeviceTaskAsync(task, channelId) {
@@ -53325,7 +54342,7 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
     const devicesApi = Api.Get(DevicesService.ServiceName);
     let devices = await devicesApi.GetDevicesAsync(true);
     devices.forEach((device) => {
-      device.OnDeviceStateChangedEvent().Subscribe((state) => {
+      device.OnDeviceStateRefreshedOrChangedEvent().Subscribe((state) => {
         console.debug(`[HOME_BRIDGE] ${(/* @__PURE__ */ new Date()).toLocaleString("pl-PL")} -- Device ${device.Name} state changed: `, state);
         this._mqttTranslator.UpdateDeviceState(state, device);
       });
@@ -53340,6 +54357,7 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
     });
     console.info(`[HOME_BRIDGE] Initial device configuration for ${devices.length} devices.`);
     await this._mqttTranslator.ConfigureDevicesAsync(devices);
+    this._mqttTranslator.PublishCachedDeviceStates(devices);
   }
   async ConnectToMqttBrokerAsync() {
     const cfg = await _ExalusHomeBridge._hostExchange.GetConfigAsync();

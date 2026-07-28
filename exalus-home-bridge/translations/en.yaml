@@ -1,0 +1,64 @@
+configuration:
+  controller:
+    name: Controller
+    description: Connection settings for the Exalus controller.
+    fields:
+      serial:
+        name: Controller serial number
+        description: The serial number of your Exalus controller.
+      pin:
+        name: Controller PIN
+        description: The PIN used to authorize access to the Exalus controller.
+      username:
+        name: Controller username
+        description: Username used to sign in to the Exalus controller account.
+      password:
+        name: Controller password
+        description: Password used to sign in to the Exalus controller account.
+      run_from_cloud:
+        name: Connect through Exalus Cloud
+        description: Enable this option to connect through the cloud instead of local network discovery. Use this when the controller is not reachable in your LAN.
+  mqtt:
+    name: MQTT
+    description: Connection settings for the MQTT broker.
+    fields:
+      host:
+        name: MQTT host
+        description: Hostname or IP address of your MQTT broker.
+      port:
+        name: MQTT port
+        description: TCP port used by the MQTT broker.
+      username:
+        name: MQTT username
+        description: Optional username for MQTT authentication.
+      password:
+        name: MQTT password
+        description: Optional password for MQTT authentication.
+      baseTopic:
+        name: MQTT base topic
+        description: Base topic prefix used for Home Assistant MQTT discovery and state topics.
+      ssl:
+        name: Use SSL/TLS for MQTT
+        description: Enable secure TLS connection to the MQTT broker.
+      caCertificate:
+        name: CA certificate path
+        description: Path relative to Home Assistant's ssl folder for the CA certificate used to verify the MQTT broker.
+      rejectUnauthorized:
+        name: Reject unauthorized certificates
+        description: When enabled, TLS certificates are strictly validated and untrusted certificates are rejected.
+  general:
+    name: General
+    description: General add-on settings.
+    fields:
+      logLevel:
+        name: Log level
+        description: Controls verbosity of add-on logs.
+      fileLogging:
+        name: Enable file logging
+        description: Save logs to rotating files in the share/exalus-home-bridge/logs folder.
+      logFileSizeKb:
+        name: Maximum log file size (KB)
+        description: Maximum size of a single log file before rotation.
+      logFileCount:
+        name: Number of log files
+        description: Number of rotated log files to keep.

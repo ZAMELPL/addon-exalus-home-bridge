@@ -1,6 +1,6 @@
 name: Exalus Home Bridge
 description: "Exalus bridge add-on that allows to integrate Exalus Home via MQTT"
-version: "1.0.6"
+version: "1.1.0"
 slug: exalus-home-bridge
 init: false
 arch:
@@ -9,6 +9,9 @@ arch:
 services:
   - mqtt:need
 host_network: true
+map:
+  - share:rw
+  - ssl:ro
 options:
   controller:
     run_from_cloud: false
@@ -17,8 +20,13 @@ options:
     port: 1883
     baseTopic: "homeassistant"
     ssl: false
+    caCertificate: ""
+    rejectUnauthorized: true
   general:
     logLevel: warn
+    fileLogging: false
+    logFileSizeKb: 512
+    logFileCount: 5
 schema:
   controller:
     serial: str
@@ -33,5 +41,10 @@ schema:
     password: str?
     baseTopic: str
     ssl: bool
+    caCertificate: str?
+    rejectUnauthorized: bool?
   general:
     logLevel: list(none|error|warn|info|debug)
+    fileLogging: bool?
+    logFileSizeKb: int(64,10240)?
+    logFileCount: int(1,20)?

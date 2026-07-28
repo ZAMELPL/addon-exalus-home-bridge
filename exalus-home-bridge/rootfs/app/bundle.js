@@ -28711,10 +28711,10 @@ var require_tcp = __commonJS({
           timeout: opts.socksTimeout
         });
       }
-      const { port, path: path2 } = opts;
+      const { port, path: path3 } = opts;
       const host = opts.hostname;
       debug("port %d and host %s", port, host);
-      return net_1.default.createConnection({ port, host, path: path2 });
+      return net_1.default.createConnection({ port, host, path: path3 });
     };
     exports2.default = buildStream;
   }
@@ -52853,6 +52853,34 @@ Api.Version = 1;
 
 // src/Services/MqttTranslateService/MqttTranslateService.ts
 var import_mqtt = __toESM(require_build2());
+var import_fs = require("fs");
+var import_path = require("path");
+
+// src/Services/MqttTranslateService/Types/ComponentBase.ts
+var MappedComponent = class _MappedComponent {
+  constructor(component, devBaseTopic, deviceType, topics) {
+    this.component = component;
+    this.devBaseTopic = devBaseTopic;
+    this.deviceType = deviceType;
+    this.topics = topics;
+  }
+  toJSON() {
+    return {
+      component: this.component,
+      devBaseTopic: this.devBaseTopic,
+      deviceType: this.deviceType,
+      topics: Array.from(this.topics.entries())
+    };
+  }
+  static fromJSON(serialized) {
+    return new _MappedComponent(
+      serialized.component,
+      serialized.devBaseTopic,
+      serialized.deviceType,
+      new Map(serialized.topics)
+    );
+  }
+};
 
 // src/Services/MqttTranslateService/Helpers.ts
 function HasTask(channel, taskType) {
@@ -52880,32 +52908,6 @@ function MapByteToPercent(byte) {
   if (byte >= 255) return 100;
   return Math.round(byte / 255 * 100);
 }
-
-// src/Services/MqttTranslateService/Types/ComponentBase.ts
-var MappedComponent = class _MappedComponent {
-  constructor(component, devBaseTopic, deviceType, topics) {
-    this.component = component;
-    this.devBaseTopic = devBaseTopic;
-    this.deviceType = deviceType;
-    this.topics = topics;
-  }
-  toJSON() {
-    return {
-      component: this.component,
-      devBaseTopic: this.devBaseTopic,
-      deviceType: this.deviceType,
-      topics: Array.from(this.topics.entries())
-    };
-  }
-  static fromJSON(serialized) {
-    return new _MappedComponent(
-      serialized.component,
-      serialized.devBaseTopic,
-      serialized.deviceType,
-      new Map(serialized.topics)
-    );
-  }
-};
 
 // src/Services/MqttTranslateService/ComponentRepository.ts
 var ComponentRepository = class {
@@ -53633,85 +53635,88 @@ var StateTranslator = class {
     if (!topics) return [];
     const results = [];
     console.debug("[STATE_TRANSLATOR] Mapping state", state, "for channel", channelId, "with topics", topics);
+    const availabilityTopic = topics.get(2 /* availabilityTopic */);
+    if (availabilityTopic) {
+      results.push(
+        state.TypeAsEnum == DeviceResponseType.SignalStrength ? this.BuildAvailabilityState(state, availabilityTopic) : this.BuildAvailabilityState("online", availabilityTopic)
+      );
+    }
     if (state.TypeAsEnum == DeviceResponseType.SignalStrength) {
-      const availabilityTopic = topics.get(2 /* availabilityTopic */);
-      if (!availabilityTopic) return [];
-      results.push(this.BuildAvailabilityState(state, availabilityTopic));
-    } else {
-      const topicId = this.GetTopicIdForState(state.TypeAsEnum);
-      const stateTopics = topicId == null ? void 0 : topics.get(topicId);
-      if (topicId != null && !stateTopics) {
-        console.warn(`[STATE_TRANSLATOR] No MQTT topic for channel ${channelId} for ${state.TypeAsEnum}.`);
-        return [];
+      return results;
+    }
+    const topicId = this.GetTopicIdForState(state.TypeAsEnum);
+    const stateTopics = topicId == null ? void 0 : topics.get(topicId);
+    if (topicId != null && !stateTopics) {
+      console.warn(`[STATE_TRANSLATOR] No MQTT topic for channel ${channelId} for ${state.TypeAsEnum}.`);
+      return results;
+    }
+    switch (state.TypeAsEnum) {
+      case DeviceResponseType.LightBrightness: {
+        if (!stateTopics) return [];
+        results.push(this.BuildLightBrightnessState(state, channelId, stateTopics));
+        break;
       }
-      switch (state.TypeAsEnum) {
-        case DeviceResponseType.LightBrightness: {
-          if (!stateTopics) return [];
-          results.push(this.BuildLightBrightnessState(state, channelId, stateTopics));
-          break;
-        }
-        case DeviceResponseType.ChannelOnOffState: {
-          if (!stateTopics) return [];
-          results.push(this.BuildOnOffState(state, stateTopics));
-          break;
-        }
-        case DeviceResponseType.BlindPosition: {
-          if (!stateTopics) return [];
-          results.push(this.BuildBlindState(state, stateTopics));
-          break;
-        }
-        case DeviceResponseType.GatePosition: {
-          if (!stateTopics) return [];
-          results.push(this.BuildGateState(state, stateTopics));
-          break;
-        }
-        case DeviceResponseType.FacadePosition: {
-          if (!stateTopics) return [];
-          results.push(this.BuildFacadeState(state, stateTopics));
-          break;
-        }
-        case DeviceResponseType.MeasuredTemperature: {
-          if (!stateTopics) return [];
-          results.push(this.BuildTemperatureState(state, stateTopics));
-          break;
-        }
-        case DeviceResponseType.HumiditySensorState: {
-          if (!stateTopics) return [];
-          results.push(this.BuildHumidityState(state, stateTopics));
-          break;
-        }
-        case DeviceResponseType.PressureSensorState: {
-          if (!stateTopics) return [];
-          results.push(this.BuildPressureState(state, stateTopics));
-          break;
-        }
-        case DeviceResponseType.MeasuredBrightness: {
-          if (!stateTopics) return [];
-          results.push(this.BuildLightState(state, stateTopics));
-          break;
-        }
-        case DeviceResponseType.MovementSensorState: {
-          if (!stateTopics) return [];
-          results.push(this.BuildMovementState(state, stateTopics));
-          break;
-        }
-        case DeviceResponseType.ReedState: {
-          if (!stateTopics) return [];
-          results.push(this.BuildReedState(state, stateTopics));
-          break;
-        }
-        case DeviceResponseType.MeasuredEnergy: {
-          results.push(...this.BuildEnergyState(state, channelId));
-          break;
-        }
-        case DeviceResponseType.WindSpeedState: {
-          if (!stateTopics) return [];
-          results.push(this.BuildWindSpeedState(state, stateTopics));
-          break;
-        }
-        default:
-          break;
+      case DeviceResponseType.ChannelOnOffState: {
+        if (!stateTopics) return [];
+        results.push(this.BuildOnOffState(state, stateTopics));
+        break;
       }
+      case DeviceResponseType.BlindPosition: {
+        if (!stateTopics) return [];
+        results.push(this.BuildBlindState(state, stateTopics));
+        break;
+      }
+      case DeviceResponseType.GatePosition: {
+        if (!stateTopics) return [];
+        results.push(this.BuildGateState(state, stateTopics));
+        break;
+      }
+      case DeviceResponseType.FacadePosition: {
+        if (!stateTopics) return [];
+        results.push(this.BuildFacadeState(state, stateTopics));
+        break;
+      }
+      case DeviceResponseType.MeasuredTemperature: {
+        if (!stateTopics) return [];
+        results.push(this.BuildTemperatureState(state, stateTopics));
+        break;
+      }
+      case DeviceResponseType.HumiditySensorState: {
+        if (!stateTopics) return [];
+        results.push(this.BuildHumidityState(state, stateTopics));
+        break;
+      }
+      case DeviceResponseType.PressureSensorState: {
+        if (!stateTopics) return [];
+        results.push(this.BuildPressureState(state, stateTopics));
+        break;
+      }
+      case DeviceResponseType.MeasuredBrightness: {
+        if (!stateTopics) return [];
+        results.push(this.BuildLightState(state, stateTopics));
+        break;
+      }
+      case DeviceResponseType.MovementSensorState: {
+        if (!stateTopics) return [];
+        results.push(this.BuildMovementState(state, stateTopics));
+        break;
+      }
+      case DeviceResponseType.ReedState: {
+        if (!stateTopics) return [];
+        results.push(this.BuildReedState(state, stateTopics));
+        break;
+      }
+      case DeviceResponseType.MeasuredEnergy: {
+        results.push(...this.BuildEnergyState(state, channelId));
+        break;
+      }
+      case DeviceResponseType.WindSpeedState: {
+        if (!stateTopics) return [];
+        results.push(this.BuildWindSpeedState(state, stateTopics));
+        break;
+      }
+      default:
+        break;
     }
     return results;
   }
@@ -53779,7 +53784,7 @@ var StateTranslator = class {
   }
   BuildAvailabilityState(state, availabilityTopic) {
     const retState = {
-      available: state.Data.Quality == LinkQualityEnum.NoLink || state.Data.Quality == LinkQualityEnum.Terrible ? "offline" : "online"
+      available: state === "online" || state.Data.Quality != LinkQualityEnum.NoLink && state.Data.Quality != LinkQualityEnum.Terrible ? "online" : "offline"
     };
     return { state: retState, devStateTopic: availabilityTopic };
   }
@@ -54048,9 +54053,13 @@ var MqttTranslateService = class {
     this._basePrefix = "exalus";
     // własne tematy stanów
     this.guidChannelRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}_\d+$/;
+    this._hasConnected = false;
     this._configTranslator = new ConfigurationTranslator(this._basePrefix);
     this._stateTranslator = new StateTranslator();
     this._commandTranslator = new CommandsTranslator();
+  }
+  SetConnectionRestoredHandler(handler) {
+    this._connectionRestoredHandler = handler;
   }
   async ConnectToMqttIntegrationAsync(cfg) {
     if (this._client && this._client.connected) {
@@ -54058,6 +54067,10 @@ var MqttTranslateService = class {
     }
     const protocol = cfg.ssl ? "mqtts" : "mqtt";
     const url = `${protocol}://${cfg.host}:${cfg.port}`;
+    const caCertificate = this.LoadCaCertificate(cfg);
+    console.info(
+      `[MQTT] Connecting to ${url}; usernameConfigured=${Boolean(cfg.username)}; passwordConfigured=${Boolean(cfg.password)}; caCertificateConfigured=${Boolean(cfg.caCertificate)}; rejectUnauthorized=${cfg.rejectUnauthorized}`
+    );
     const options = {
       username: cfg.username || void 0,
       password: cfg.password || void 0,
@@ -54065,6 +54078,8 @@ var MqttTranslateService = class {
       keepalive: 60,
       protocolVersion: 5,
       clean: true,
+      ca: caCertificate,
+      rejectUnauthorized: cfg.rejectUnauthorized,
       will: {
         topic: `${this._basePrefix}/bridge/status`,
         payload: "offline",
@@ -54072,16 +54087,27 @@ var MqttTranslateService = class {
         qos: 0
       }
     };
-    this._client = await import_mqtt.default.connectAsync(url, options);
+    this._client = import_mqtt.default.connect(url, options);
+    this._client.on("connect", (packet) => {
+      console.info(`[MQTT] Connected; sessionPresent=${packet.sessionPresent}; reasonCode=${packet.reasonCode ?? 0}`);
+      if (this._hasConnected && this._connectionRestoredHandler) {
+        console.info("[MQTT] Connection restored; synchronizing discovery, subscriptions, and cached states.");
+        void this._connectionRestoredHandler().catch(
+          (error) => console.error("[MQTT] Connection recovery synchronization failed:", error)
+        );
+      }
+      this._hasConnected = true;
+    });
+    this._client.on("reconnect", () => console.warn("[MQTT] Reconnecting..."));
+    this._client.on("close", () => console.warn(`[MQTT] Connection closed; connected=${this._client?.connected ?? false}`));
+    this._client.on("error", (err) => console.warn("[MQTT] Error:", err.message, err.name, err.stack));
+    this._client.on("offline", () => console.warn("[MQTT] Offline"));
+    await new Promise((resolve) => this._client.once("connect", () => resolve()));
     this._client.publish(
       `${this._basePrefix}/bridge/status`,
       "online",
       { retain: true }
     );
-    this._client.on("reconnect", () => console.info("[MQTT] Reconnecting..."));
-    this._client.on("close", () => console.info("[MQTT] Connection closed"));
-    this._client.on("error", (err) => console.warn("[MQTT] Error:", err.message, err.name, err.stack));
-    this._client.on("offline", () => console.info("[MQTT] Offline"));
     this._client.on("message", (topic, message) => {
       console.debug(`[MQTT] Message received on ${topic}:`, message.toString());
       const channelId = this.GetChannelIdFromTopic(topic);
@@ -54090,10 +54116,14 @@ var MqttTranslateService = class {
         if (topics.any((t) => t[1] == topic)) {
           try {
             const msg = JSON.parse(message.toString());
-            this.ExecuteDeviceTaskAsync(msg, channelId);
+            void this.ExecuteDeviceTaskAsync(msg, channelId).catch(
+              (error) => console.error(`[MQTT] Command execution failed for ${channelId}:`, error)
+            );
           } catch {
             const msg = message.toString();
-            this.ExecuteDeviceTaskAsync(msg, channelId);
+            void this.ExecuteDeviceTaskAsync(msg, channelId).catch(
+              (error) => console.error(`[MQTT] Command execution failed for ${channelId}:`, error)
+            );
           }
         } else {
           console.warn(`[MQTT] Received message on unknown topic for channel ${channelId}: ${topic}`);
@@ -54101,6 +54131,27 @@ var MqttTranslateService = class {
       }
     });
     console.info("[MQTT] Connected:", url);
+  }
+  LoadCaCertificate(cfg) {
+    if (!cfg.ssl || !cfg.caCertificate) return void 0;
+    try {
+      const certificatePath = this.ResolveCertificatePathFromSslFolder(cfg.caCertificate);
+      const certificate = (0, import_fs.readFileSync)(certificatePath);
+      console.info(`[MQTT] Loaded CA certificate from ${certificatePath}.`);
+      return certificate;
+    } catch (error) {
+      throw new Error(`[MQTT] Cannot read CA certificate from /ssl using '${cfg.caCertificate}': ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  ResolveCertificatePathFromSslFolder(configuredPath) {
+    const sanitized = configuredPath.trim().replace(/\\/g, "/").replace(/^\/+/, "");
+    const withoutSslPrefix = sanitized.replace(/^ssl\/+/, "");
+    const normalizedRelativePath = import_path.posix.normalize(withoutSslPrefix).replace(/^\.\//, "");
+    const safeRelativePath = normalizedRelativePath.replace(/^(\.\.\/)+/, "");
+    if (!safeRelativePath || safeRelativePath === ".") {
+      throw new Error("CA certificate path must point to a file inside /ssl.");
+    }
+    return import_path.posix.join("/ssl", safeRelativePath);
   }
   GetChannelIdFromTopic(topic) {
     const parts = topic.split("/");
@@ -54151,6 +54202,9 @@ var MqttTranslateService = class {
     this._client.subscribe(commandTopic, { qos: 0 }, (err, granted) => {
       if (err) {
         console.warn("[MQTT] Subscribe error:", err.message);
+      } else {
+        const result = granted?.map((item) => `${item.topic} (qos=${item.qos})`).join(", ") ?? "broker returned no grant details";
+        console.info(`[MQTT] Subscribed to ${commandTopic}: ${result}`);
       }
     });
   }
@@ -54247,6 +54301,14 @@ var MqttTranslateService = class {
       this.PublishJson(mapped.devStateTopic, mapped.state, true);
     }
   }
+  ReportChannelAvailability(channelId, available) {
+    const availabilityTopic = ComponentRepository.GetComponentTopics(channelId)?.get(2 /* availabilityTopic */);
+    if (!availabilityTopic) {
+      console.warn(`[MQTT] Cannot report availability for ${channelId}; availability topic is missing.`);
+      return;
+    }
+    this.PublishJson(availabilityTopic, { available }, true);
+  }
   PublishCachedDeviceStates(devices) {
     for (const device of devices) {
       for (const state of device.States) {
@@ -54256,13 +54318,23 @@ var MqttTranslateService = class {
   }
   async ExecuteDeviceTaskAsync(task, channelId) {
     const devicesApi = Api.Get(DevicesService.ServiceName);
+    console.info(`[MQTT] Executing command for ${channelId}:`, task);
     const tasks = this._commandTranslator.MapHomeAssistantMqttCommandToDeviceTasks(task, channelId);
     if (!tasks || tasks.length === 0) {
       console.warn(`[MQTT] No device tasks mapped for command on channel ${channelId}`);
       return;
     }
+    const channel = devicesApi.GetDeviceChannelByChannelId(channelId);
+    if (!channel) {
+      console.warn(`[MQTT] Command ignored; channel ${channelId} no longer exists in the controller.`);
+      return;
+    }
     for (const t of tasks) {
-      await devicesApi.GetDeviceChannelByChannelId(channelId)?.ExecuteTaskAsync(t);
+      const result = await channel.ExecuteTaskAsync(t);
+      console.info(`[MQTT] Command task sent for ${channelId}:`, t);
+      if (result == DeviceTaskExecutionResult.DeviceResponseTimeout) {
+        this.ReportChannelAvailability(channelId, "offline");
+      }
     }
   }
 };
@@ -54362,6 +54434,15 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
   async ConnectToMqttBrokerAsync() {
     const cfg = await _ExalusHomeBridge._hostExchange.GetConfigAsync();
     await this._mqttTranslator.ConnectToMqttIntegrationAsync(cfg.mqtt);
+    this._mqttTranslator.SetConnectionRestoredHandler(async () => {
+      const devicesApi = Api.Get(DevicesService.ServiceName);
+      const devices = await devicesApi.GetDevicesAsync(true);
+      console.info(`[HOME_BRIDGE] MQTT reconnect: synchronizing ${devices.length} devices.`);
+      await this._mqttTranslator.ConfigureDevicesAsync(devices);
+      this._mqttTranslator.PublishCachedDeviceStates(devices);
+      await this.ReportConnectionStateAsync();
+      console.info("[HOME_BRIDGE] MQTT reconnect synchronization completed.");
+    });
   }
   DisableHibernation() {
     const appStateService = Api.Get(AppStateService.ServiceName);
@@ -54457,7 +54538,7 @@ var ExalusHomeBridge = class _ExalusHomeBridge {
 };
 
 // src/Services/HostExchangeService/HostExchangeService.ts
-var import_fs = require("fs");
+var import_fs2 = require("fs");
 var ConfigService = class {
   constructor(configFilePath = "/data/options.json", devConfigPath) {
     this._configFilePath = configFilePath;
@@ -54466,7 +54547,7 @@ var ConfigService = class {
   async GetConfigAsync(forceReload = false) {
     if (this._cached && !forceReload) return this._cached;
     const file = await this.resolveConfigPath();
-    const rawText = await import_fs.promises.readFile(file, "utf-8");
+    const rawText = await import_fs2.promises.readFile(file, "utf-8");
     const raw = JSON.parse(rawText);
     const c = raw?.controller ?? {};
     const normalized = {
@@ -54479,8 +54560,22 @@ var ConfigService = class {
           c.runFromCloud ?? c.run_from_cloud ?? false
         )
       },
-      mqtt: raw?.mqtt,
-      general: raw?.general
+      mqtt: {
+        host: String(raw?.mqtt?.host ?? ""),
+        port: Number(raw?.mqtt?.port ?? 1883),
+        username: String(raw?.mqtt?.username ?? ""),
+        password: String(raw?.mqtt?.password ?? ""),
+        baseTopic: String(raw?.mqtt?.baseTopic ?? "exalus"),
+        ssl: Boolean(raw?.mqtt?.ssl ?? false),
+        caCertificate: String(raw?.mqtt?.caCertificate ?? raw?.mqtt?.ca_certificate ?? ""),
+        rejectUnauthorized: Boolean(raw?.mqtt?.rejectUnauthorized ?? raw?.mqtt?.reject_unauthorized ?? true)
+      },
+      general: {
+        logLevel: raw?.general?.logLevel ?? "info",
+        fileLogging: Boolean(raw?.general?.fileLogging ?? raw?.general?.file_logging ?? false),
+        logFileSizeKb: Number(raw?.general?.logFileSizeKb ?? raw?.general?.log_file_size_kb ?? 512),
+        logFileCount: Number(raw?.general?.logFileCount ?? raw?.general?.log_file_count ?? 5)
+      }
     };
     this._cached = normalized;
     return normalized;
@@ -54488,6 +54583,73 @@ var ConfigService = class {
   async resolveConfigPath() {
     if (this._devConfigPath) return this._devConfigPath;
     return this._configFilePath;
+  }
+};
+
+// src/Services/Logging/RotatingFileLogger.ts
+var import_fs3 = __toESM(require("fs"));
+var import_path2 = __toESM(require("path"));
+var RotatingFileLogger = class {
+  static {
+    this._enabled = false;
+  }
+  static {
+    this._directory = "";
+  }
+  static {
+    this._maxFileSizeBytes = 0;
+  }
+  static {
+    this._maxFiles = 0;
+  }
+  static Configure(options) {
+    this._enabled = options.enabled;
+    this._directory = options.directory;
+    this._maxFileSizeBytes = options.maxFileSizeKb * 1024;
+    this._maxFiles = options.maxFiles;
+    if (!this._enabled) return;
+    try {
+      import_fs3.default.mkdirSync(this._directory, { recursive: true });
+      this.write("info", "[LOGGING] File logging enabled. Secrets are redacted.");
+    } catch (error) {
+      this._enabled = false;
+      process.stderr.write(`[LOGGING] Cannot enable file logging: ${this.format(error)}
+`);
+    }
+  }
+  static write(level, ...values) {
+    if (!this._enabled) return;
+    try {
+      const filePath = import_path2.default.join(this._directory, "bridge.log");
+      if (import_fs3.default.existsSync(filePath) && import_fs3.default.statSync(filePath).size >= this._maxFileSizeBytes) {
+        this.rotate(filePath);
+      }
+      const timestamp = (/* @__PURE__ */ new Date()).toISOString();
+      import_fs3.default.appendFileSync(filePath, `${timestamp} [${level.toUpperCase()}] ${values.map((value) => this.format(value)).join(" ")}
+`);
+    } catch (error) {
+      process.stderr.write(`[LOGGING] Cannot write file log: ${this.format(error)}
+`);
+    }
+  }
+  static rotate(filePath) {
+    for (let index = this._maxFiles - 1; index >= 1; index--) {
+      const source = `${filePath}.${index}`;
+      const destination = `${filePath}.${index + 1}`;
+      if (import_fs3.default.existsSync(source)) import_fs3.default.renameSync(source, destination);
+    }
+    if (import_fs3.default.existsSync(filePath)) import_fs3.default.renameSync(filePath, `${filePath}.1`);
+    const expired = `${filePath}.${this._maxFiles + 1}`;
+    if (import_fs3.default.existsSync(expired)) import_fs3.default.unlinkSync(expired);
+  }
+  static format(value) {
+    if (value instanceof Error) return `${value.name}: ${value.message}
+${value.stack ?? ""}`;
+    const rendered = typeof value === "string" ? value : JSON.stringify(value, this.redact) ?? String(value);
+    return rendered.replace(/(["']?(?:password|pin|token|authorization)["']?\s*[:=]\s*["']?)([^\s,"'}]+)/gi, "$1***").replace(/(mqtts?:\/\/[^:/\s]+:)([^@/\s]+)@/gi, "$1***@");
+  }
+  static redact(key, value) {
+    return /password|pin|token|authorization/i.test(key) ? "***" : value;
   }
 };
 
@@ -54556,6 +54718,13 @@ var Startup = class _Startup {
     const raw = String(config.general?.logLevel ?? "info").trim().toLowerCase();
     const level = raw in order4 ? raw : "info";
     const threshold = order4[level];
+    const fileLoggingEnabled = config.general.fileLogging;
+    RotatingFileLogger.Configure({
+      enabled: fileLoggingEnabled,
+      directory: "/share/exalus-home-bridge/logs",
+      maxFileSizeKb: config.general.logFileSizeKb,
+      maxFiles: config.general.logFileCount
+    });
     const original = {
       debug: console.debug.bind(console),
       info: console.info.bind(console),
@@ -54563,20 +54732,34 @@ var Startup = class _Startup {
       error: console.error.bind(console),
       log: console.log.bind(console)
     };
-    const noop = () => {
-    };
     const allow = (msgLevel) => threshold !== order4.none && order4[msgLevel] >= threshold;
-    console.debug = allow("debug") ? original.debug : noop;
-    console.info = allow("info") ? original.info : noop;
-    console.warn = allow("warn") ? original.warn : noop;
-    console.error = allow("error") ? original.error : noop;
-    console.log = allow("info") ? original.log : noop;
+    console.debug = (...values) => {
+      RotatingFileLogger.write("debug", ...values);
+      if (allow("debug")) original.debug(...values);
+    };
+    console.info = (...values) => {
+      RotatingFileLogger.write("info", ...values);
+      if (allow("info")) original.info(...values);
+    };
+    console.warn = (...values) => {
+      RotatingFileLogger.write("warn", ...values);
+      if (allow("warn")) original.warn(...values);
+    };
+    console.error = (...values) => {
+      RotatingFileLogger.write("error", ...values);
+      if (allow("error")) original.error(...values);
+    };
+    console.log = (...values) => {
+      RotatingFileLogger.write("info", ...values);
+      if (allow("info")) original.log(...values);
+    };
     if (level !== "none") {
-      original.log(`[STARTUP] Log level set to: ${level}`);
+      console.info(`[STARTUP] Log level set to: ${level}; fileLogging=${fileLoggingEnabled}`);
     }
   }
   static async Initialize(configService2) {
     const config = await configService2.GetConfigAsync();
+    const fileLoggingEnabled = config.general.fileLogging;
     console.info(`[STARTUP] Initialize options: runFromCloud=${config.controller.runFromCloud}`);
     try {
       process.on("SIGTERM", this.OnShutdown);
@@ -54594,7 +54777,7 @@ var Startup = class _Startup {
       }
       Api.Init();
       console.info("[STARTUP] Api initialized");
-      Api.Get(LoggerService.ServiceName).LogLevel = order4[config.general?.logLevel || "info"];
+      Api.Get(LoggerService.ServiceName).LogLevel = fileLoggingEnabled ? order4.debug : order4[config.general.logLevel];
       ExalusHomeBridge.Init(configService2);
       console.info("[STARTUP] ExalusHomeBridge initialized");
       ComponentRepository.LoadFromStorage();
@@ -54625,11 +54808,14 @@ var Startup = class _Startup {
   }
 };
 var configService = new ConfigService();
-Startup.SetLogLevel(configService);
-Startup.StartDomEmulation();
-Startup.Initialize(configService);
-process.stdin.resume();
-console.info("App is running \u2014 process will stay alive until terminated.");
+async function bootstrap() {
+  await Startup.SetLogLevel(configService);
+  Startup.StartDomEmulation();
+  await Startup.Initialize(configService);
+  process.stdin.resume();
+  console.info("App is running - process will stay alive until terminated.");
+}
+void bootstrap();
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   Startup

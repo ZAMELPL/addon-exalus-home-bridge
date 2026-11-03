@@ -6,7 +6,11 @@ var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __commonJS = (cb, mod) => function __require() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  try {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  } catch (e) {
+    throw mod = 0, e;
+  }
 };
 var __export = (target, all4) => {
   for (var name in all4)
@@ -3339,8 +3343,8 @@ var require_primordials = __commonJS({
       SymbolAsyncIterator: Symbol.asyncIterator,
       SymbolHasInstance: Symbol.hasInstance,
       SymbolIterator: Symbol.iterator,
-      SymbolDispose: Symbol.dispose || Symbol("Symbol.dispose"),
-      SymbolAsyncDispose: Symbol.asyncDispose || Symbol("Symbol.asyncDispose"),
+      SymbolDispose: Symbol.dispose || /* @__PURE__ */ Symbol("Symbol.dispose"),
+      SymbolAsyncDispose: Symbol.asyncDispose || /* @__PURE__ */ Symbol("Symbol.asyncDispose"),
       TypedArrayPrototypeSet(self2, buf, len) {
         return self2.set(buf, len);
       },
@@ -3408,7 +3412,7 @@ var require_errors = __commonJS({
     var { format, inspect } = require_inspect();
     var { AggregateError: CustomAggregateError } = require_primordials();
     var AggregateError = globalThis.AggregateError || CustomAggregateError;
-    var kIsNodeError = Symbol("kIsNodeError");
+    var kIsNodeError = /* @__PURE__ */ Symbol("kIsNodeError");
     var kTypes = [
       "string",
       "function",
@@ -4522,7 +4526,7 @@ var require_util = __commonJS({
         return ac.signal;
       }
     };
-    module2.exports.promisify.custom = Symbol.for("nodejs.util.promisify.custom");
+    module2.exports.promisify.custom = /* @__PURE__ */ Symbol.for("nodejs.util.promisify.custom");
   }
 });
 
@@ -5794,7 +5798,7 @@ var require_buffer_list = __commonJS({
         return ret;
       }
       // Make sure the linked list only shows the minimal necessary information.
-      [Symbol.for("nodejs.util.inspect.custom")](_, options) {
+      [/* @__PURE__ */ Symbol.for("nodejs.util.inspect.custom")](_, options) {
         return inspect(this, {
           ...options,
           // Only inspect one level.
@@ -9714,7 +9718,7 @@ var require_BufferList = __commonJS({
   "node_modules/bl/BufferList.js"(exports2, module2) {
     "use strict";
     var { Buffer: Buffer2 } = require("buffer");
-    var symbol = Symbol.for("BufferList");
+    var symbol = /* @__PURE__ */ Symbol.for("BufferList");
     function BufferList(buf) {
       if (!(this instanceof BufferList)) {
         return new BufferList(buf);
@@ -13050,119 +13054,13 @@ var require_store = __commonJS({
   }
 });
 
-// node_modules/mqtt/build/lib/handlers/publish.js
-var require_publish = __commonJS({
-  "node_modules/mqtt/build/lib/handlers/publish.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    var validReasonCodes = [0, 16, 128, 131, 135, 144, 145, 151, 153];
-    var handlePublish = (client, packet, done) => {
-      client.log("handlePublish: packet %o", packet);
-      done = typeof done !== "undefined" ? done : client.noop;
-      let topic = packet.topic.toString();
-      const message = packet.payload;
-      const { qos } = packet;
-      const { messageId } = packet;
-      const { options } = client;
-      if (client.options.protocolVersion === 5) {
-        let alias;
-        if (packet.properties) {
-          alias = packet.properties.topicAlias;
-        }
-        if (typeof alias !== "undefined") {
-          if (topic.length === 0) {
-            if (alias > 0 && alias <= 65535) {
-              const gotTopic = client["topicAliasRecv"].getTopicByAlias(alias);
-              if (gotTopic) {
-                topic = gotTopic;
-                client.log("handlePublish :: topic complemented by alias. topic: %s - alias: %d", topic, alias);
-              } else {
-                client.log("handlePublish :: unregistered topic alias. alias: %d", alias);
-                client.emit("error", new Error("Received unregistered Topic Alias"));
-                return;
-              }
-            } else {
-              client.log("handlePublish :: topic alias out of range. alias: %d", alias);
-              client.emit("error", new Error("Received Topic Alias is out of range"));
-              return;
-            }
-          } else if (client["topicAliasRecv"].put(topic, alias)) {
-            client.log("handlePublish :: registered topic: %s - alias: %d", topic, alias);
-          } else {
-            client.log("handlePublish :: topic alias out of range. alias: %d", alias);
-            client.emit("error", new Error("Received Topic Alias is out of range"));
-            return;
-          }
-        }
-      }
-      client.log("handlePublish: qos %d", qos);
-      switch (qos) {
-        case 2: {
-          options.customHandleAcks(topic, message, packet, (error, code) => {
-            if (typeof error === "number") {
-              code = error;
-              error = null;
-            }
-            if (error) {
-              return client.emit("error", error);
-            }
-            if (validReasonCodes.indexOf(code) === -1) {
-              return client.emit("error", new Error("Wrong reason code for pubrec"));
-            }
-            if (code) {
-              client["_sendPacket"]({ cmd: "pubrec", messageId, reasonCode: code }, done);
-            } else {
-              client.incomingStore.put(packet, () => {
-                client["_sendPacket"]({ cmd: "pubrec", messageId }, done);
-              });
-            }
-          });
-          break;
-        }
-        case 1: {
-          options.customHandleAcks(topic, message, packet, (error, code) => {
-            if (typeof error === "number") {
-              code = error;
-              error = null;
-            }
-            if (error) {
-              return client.emit("error", error);
-            }
-            if (validReasonCodes.indexOf(code) === -1) {
-              return client.emit("error", new Error("Wrong reason code for puback"));
-            }
-            if (!code) {
-              client.emit("message", topic, message, packet);
-            }
-            client.handleMessage(packet, (err) => {
-              if (err) {
-                return done && done(err);
-              }
-              client["_sendPacket"]({ cmd: "puback", messageId, reasonCode: code }, done);
-            });
-          });
-          break;
-        }
-        case 0:
-          client.emit("message", topic, message, packet);
-          client.handleMessage(packet, done);
-          break;
-        default:
-          client.log("handlePublish: unknown QoS. Doing nothing.");
-          break;
-      }
-    };
-    exports2.default = handlePublish;
-  }
-});
-
 // node_modules/mqtt/package.json
 var require_package = __commonJS({
   "node_modules/mqtt/package.json"(exports2, module2) {
     module2.exports = {
       name: "mqtt",
       description: "A library for the MQTT protocol",
-      version: "5.15.2",
+      version: "5.16.1",
       contributors: [
         "Adam Rudd <adamvrr@gmail.com>",
         "Matteo Collina <matteo.collina@gmail.com> (https://github.com/mcollina)",
@@ -13259,7 +13157,6 @@ var require_package = __commonJS({
         "lru-cache": "^10.4.3",
         minimist: "^1.2.8",
         "mqtt-packet": "^9.0.2",
-        "number-allocator": "^1.0.14",
         "readable-stream": "^4.7.0",
         rfdc: "^1.4.1",
         socks: "^2.8.6",
@@ -13283,7 +13180,7 @@ var require_package = __commonJS({
         "@eslint/eslintrc": "^3.3.1",
         "@eslint/js": "^9.32.0",
         "@esm-bundle/chai": "^4.3.4",
-        "@release-it/conventional-changelog": "^10.0.1",
+        "@release-it/conventional-changelog": "^12.0.2",
         "@tsconfig/node20": "^20.1.6",
         "@types/chai": "^5.2.2",
         "@types/node": "^20.17.16",
@@ -13296,7 +13193,8 @@ var require_package = __commonJS({
         "aedes-cli": "^0.8.0",
         chai: "^5.2.1",
         chokidar: "^4.0.3",
-        "conventional-changelog-cli": "^5.0.0",
+        "conventional-changelog": "^8.1.3",
+        "conventional-changelog-angular": "^9.4.0",
         "end-of-stream": "^1.4.5",
         esbuild: "^0.25.8",
         "esbuild-plugin-polyfill-node": "^0.3.0",
@@ -13314,7 +13212,7 @@ var require_package = __commonJS({
         nyc: "^17.1.0",
         "pre-commit": "^1.2.2",
         prettier: "^3.6.2",
-        "release-it": "^19.0.4",
+        "release-it": "^21.0.3",
         rimraf: "^6.0.1",
         should: "^13.2.3",
         sinon: "^17.0.2",
@@ -13380,6 +13278,193 @@ var require_shared = __commonJS({
   }
 });
 
+// node_modules/mqtt/build/lib/handlers/publish.js
+var require_publish = __commonJS({
+  "node_modules/mqtt/build/lib/handlers/publish.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    var shared_1 = require_shared();
+    var validReasonCodes = [0, 16, 128, 131, 135, 144, 145, 151, 153];
+    var TOPIC_ALIAS_INVALID = 148;
+    var PROTOCOL_ERROR = 130;
+    var rejectTopicAlias = (client, message, done, pump, reasonCode = TOPIC_ALIAS_INVALID) => {
+      pump?.discardParsedPackets();
+      if (!pump || pump.isCurrent()) {
+        client["_cleanUp"](true);
+      }
+      done();
+      client.emit("error", new shared_1.ErrorWithReasonCode(message, reasonCode));
+    };
+    var failCustomAck = (client, error, done) => {
+      done();
+      client.emit("error", error);
+    };
+    var handlePublish = (client, packet, done, pump) => {
+      client.log("handlePublish: packet %o", packet);
+      done = typeof done !== "undefined" ? done : client.noop;
+      let topic = packet.topic.toString();
+      const message = packet.payload;
+      const { qos } = packet;
+      const { messageId } = packet;
+      const { options } = client;
+      if (client.options.protocolVersion === 5) {
+        let alias;
+        if (packet.properties) {
+          alias = packet.properties.topicAlias;
+        }
+        if (typeof alias !== "undefined") {
+          const topicAliasRecv = client["topicAliasRecv"];
+          if (!topicAliasRecv) {
+            client.log("handlePublish :: received unexpected topic alias. alias: %d", alias);
+            rejectTopicAlias(client, "Received a PUBLISH Topic Alias but no Topic Alias Maximum was advertised", done, pump);
+            return;
+          }
+          if (topic.length === 0) {
+            if (alias > 0 && alias <= 65535) {
+              const gotTopic = topicAliasRecv.getTopicByAlias(alias);
+              if (gotTopic) {
+                topic = gotTopic;
+                client.log("handlePublish :: topic complemented by alias. topic: %s - alias: %d", topic, alias);
+              } else {
+                client.log("handlePublish :: unregistered topic alias. alias: %d", alias);
+                rejectTopicAlias(client, "Received unregistered Topic Alias", done, pump, PROTOCOL_ERROR);
+                return;
+              }
+            } else {
+              client.log("handlePublish :: topic alias out of range. alias: %d", alias);
+              rejectTopicAlias(client, `Received Topic Alias ${alias} is outside the valid range 1-65535`, done, pump);
+              return;
+            }
+          } else if (topicAliasRecv.put(topic, alias)) {
+            client.log("handlePublish :: registered topic: %s - alias: %d", topic, alias);
+          } else {
+            client.log("handlePublish :: topic alias outside the advertised maximum. alias: %d - max: %d", alias, topicAliasRecv.max);
+            rejectTopicAlias(client, `Received Topic Alias ${alias} is outside the advertised Topic Alias Maximum range 1-${topicAliasRecv.max}`, done, pump);
+            return;
+          }
+        }
+      }
+      client.log("handlePublish: qos %d", qos);
+      switch (qos) {
+        case 2: {
+          options.customHandleAcks(topic, message, packet, (error, code) => {
+            if (typeof error === "number") {
+              code = error;
+              error = null;
+            }
+            if (error) {
+              return failCustomAck(client, error, done);
+            }
+            if (validReasonCodes.indexOf(code) === -1) {
+              return failCustomAck(client, new Error("Wrong reason code for pubrec"), done);
+            }
+            if (code) {
+              client["_sendPacket"]({ cmd: "pubrec", messageId, reasonCode: code }, done);
+            } else {
+              if (!client["_trackIncomingQoS2Publish"](messageId, done, pump)) {
+                return;
+              }
+              client.incomingStore.put(packet, () => {
+                client["_sendPacket"]({ cmd: "pubrec", messageId }, done);
+              });
+            }
+          });
+          break;
+        }
+        case 1: {
+          options.customHandleAcks(topic, message, packet, (error, code) => {
+            if (typeof error === "number") {
+              code = error;
+              error = null;
+            }
+            if (error) {
+              return failCustomAck(client, error, done);
+            }
+            if (validReasonCodes.indexOf(code) === -1) {
+              return failCustomAck(client, new Error("Wrong reason code for puback"), done);
+            }
+            if (!code) {
+              client.emit("message", topic, message, packet);
+            }
+            client.handleMessage(packet, (err) => {
+              if (err) {
+                return done && done(err);
+              }
+              client["_sendPacket"]({ cmd: "puback", messageId, reasonCode: code }, done);
+            });
+          });
+          break;
+        }
+        case 0:
+          client.emit("message", topic, message, packet);
+          client.handleMessage(packet, done);
+          break;
+        default:
+          client.log("handlePublish: unknown QoS. Doing nothing.");
+          break;
+      }
+    };
+    exports2.default = handlePublish;
+  }
+});
+
+// node_modules/mqtt/build/lib/handlers/auth.js
+var require_auth = __commonJS({
+  "node_modules/mqtt/build/lib/handlers/auth.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    var shared_1 = require_shared();
+    var PROTOCOL_ERROR = 130;
+    var rejectAuth = (client, error, pump) => {
+      client.log("handleAuth :: %s", error.message);
+      pump?.discardParsedPackets();
+      if (!pump || pump.isCurrent()) {
+        client["_cleanUp"](true);
+      }
+      client.emit("error", error);
+    };
+    var handleAuth = (client, packet, pump) => {
+      const { options } = client;
+      const version = options.protocolVersion;
+      const rc = version === 5 ? packet.reasonCode : packet.returnCode;
+      if (version !== 5) {
+        rejectAuth(client, new shared_1.ErrorWithReasonCode(`Protocol error: Auth packets are only supported in MQTT 5. Your version:${version}`, PROTOCOL_ERROR), pump);
+        return;
+      }
+      const authenticationMethod = client["_authenticationMethod"];
+      if (!authenticationMethod) {
+        rejectAuth(client, new shared_1.ErrorWithReasonCode("Protocol error: Auth packet received but enhanced authentication was not requested", PROTOCOL_ERROR), pump);
+        return;
+      }
+      if (packet.properties?.authenticationMethod !== authenticationMethod) {
+        rejectAuth(client, new shared_1.ErrorWithReasonCode(`Protocol error: Auth packet Authentication Method does not match the "${authenticationMethod}" sent in CONNECT`, PROTOCOL_ERROR), pump);
+        return;
+      }
+      client.handleAuth(packet, (err, packet2) => {
+        if (err) {
+          rejectAuth(client, err, pump);
+          return;
+        }
+        if (rc === 0) {
+          client.log("handleAuth :: authentication exchange completed successfully");
+          return;
+        }
+        if (rc === 24) {
+          if (!packet2) {
+            rejectAuth(client, new shared_1.ErrorWithReasonCode("Protocol error: No auth packet to continue the authentication exchange", PROTOCOL_ERROR), pump);
+            return;
+          }
+          client.reconnecting = false;
+          client["_sendPacket"](packet2);
+          return;
+        }
+        rejectAuth(client, new shared_1.ErrorWithReasonCode(`Protocol error: Auth packet reason code ${rc} is not one a broker may send`, PROTOCOL_ERROR), pump);
+      });
+    };
+    exports2.default = handleAuth;
+  }
+});
+
 // node_modules/mqtt/build/lib/handlers/ack.js
 var require_ack = __commonJS({
   "node_modules/mqtt/build/lib/handlers/ack.js"(exports2) {
@@ -13432,14 +13517,26 @@ var require_ack = __commonJS({
       161: "Subscription Identifiers not supported",
       162: "Wildcard Subscriptions not supported"
     };
+    var acksForPendingCmd = {
+      publish: ["puback", "pubrec", "pubcomp"],
+      pubrel: ["pubcomp"],
+      subscribe: ["suback"],
+      unsubscribe: ["unsuback"]
+    };
     var handleAck = (client, packet) => {
       const { messageId } = packet;
       const type = packet.cmd;
       let response = null;
-      const cb = client.outgoing[messageId] ? client.outgoing[messageId].cb : null;
+      const pending = client.outgoing[messageId];
+      const cb = pending ? pending.cb : null;
       let err = null;
       if (!cb) {
         client.log("_handleAck :: Server sent an ack in error. Ignoring.");
+        return;
+      }
+      if (!acksForPendingCmd[pending.cmd]?.includes(type)) {
+        client.log("_handleAck :: %s does not answer the pending %s on message id %d. Ignoring.", type, pending.cmd, messageId);
+        client.emit("error", new Error(`Protocol error: ${type} does not answer the ${pending.cmd} pending on message id ${messageId}`));
         return;
       }
       client.log("_handleAck :: packet type", type);
@@ -13514,40 +13611,6 @@ var require_ack = __commonJS({
   }
 });
 
-// node_modules/mqtt/build/lib/handlers/auth.js
-var require_auth = __commonJS({
-  "node_modules/mqtt/build/lib/handlers/auth.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    var shared_1 = require_shared();
-    var ack_1 = require_ack();
-    var handleAuth = (client, packet) => {
-      const { options } = client;
-      const version = options.protocolVersion;
-      const rc = version === 5 ? packet.reasonCode : packet.returnCode;
-      if (version !== 5) {
-        const err = new shared_1.ErrorWithReasonCode(`Protocol error: Auth packets are only supported in MQTT 5. Your version:${version}`, rc);
-        client.emit("error", err);
-        return;
-      }
-      client.handleAuth(packet, (err, packet2) => {
-        if (err) {
-          client.emit("error", err);
-          return;
-        }
-        if (rc === 24) {
-          client.reconnecting = false;
-          client["_sendPacket"](packet2);
-        } else {
-          const error = new shared_1.ErrorWithReasonCode(`Connection refused: ${ack_1.ReasonCodes[rc]}`, rc);
-          client.emit("error", error);
-        }
-      });
-    };
-    exports2.default = handleAuth;
-  }
-});
-
 // node_modules/mqtt/node_modules/lru-cache/dist/commonjs/index.js
 var require_commonjs = __commonJS({
   "node_modules/mqtt/node_modules/lru-cache/dist/commonjs/index.js"(exports2) {
@@ -13597,7 +13660,6 @@ var require_commonjs = __commonJS({
       };
     }
     var shouldWarn = (code) => !warned.has(code);
-    var TYPE = Symbol("type");
     var isPosInt = (n) => n && n === Math.floor(n) && n > 0 && isFinite(n);
     var getUintArray = (max5) => !isPosInt(max5) ? null : max5 <= Math.pow(2, 8) ? Uint8Array : max5 <= Math.pow(2, 16) ? Uint16Array : max5 <= Math.pow(2, 32) ? Uint32Array : max5 <= Number.MAX_SAFE_INTEGER ? ZeroArray : null;
     var ZeroArray = class extends Array {
@@ -14925,2743 +14987,69 @@ var require_commonjs = __commonJS({
   }
 });
 
-// node_modules/js-sdsl/dist/cjs/container/ContainerBase/index.js
-var require_ContainerBase = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/ContainerBase/index.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.ContainerIterator = exports2.Container = exports2.Base = void 0;
-    var ContainerIterator = class {
-      constructor(t = 0) {
-        this.iteratorType = t;
-      }
-      equals(t) {
-        return this.o === t.o;
-      }
-    };
-    exports2.ContainerIterator = ContainerIterator;
-    var Base = class {
-      constructor() {
-        this.i = 0;
-      }
-      get length() {
-        return this.i;
-      }
-      size() {
-        return this.i;
-      }
-      empty() {
-        return this.i === 0;
-      }
-    };
-    exports2.Base = Base;
-    var Container = class extends Base {
-    };
-    exports2.Container = Container;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/OtherContainer/Stack.js
-var require_Stack = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/OtherContainer/Stack.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _ContainerBase = require_ContainerBase();
-    var Stack = class extends _ContainerBase.Base {
-      constructor(t = []) {
-        super();
-        this.S = [];
-        const s = this;
-        t.forEach((function(t2) {
-          s.push(t2);
-        }));
-      }
-      clear() {
-        this.i = 0;
-        this.S = [];
-      }
-      push(t) {
-        this.S.push(t);
-        this.i += 1;
-        return this.i;
-      }
-      pop() {
-        if (this.i === 0) return;
-        this.i -= 1;
-        return this.S.pop();
-      }
-      top() {
-        return this.S[this.i - 1];
-      }
-    };
-    var _default = Stack;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/OtherContainer/Queue.js
-var require_Queue = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/OtherContainer/Queue.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _ContainerBase = require_ContainerBase();
-    var Queue = class extends _ContainerBase.Base {
-      constructor(t = []) {
-        super();
-        this.j = 0;
-        this.q = [];
-        const s = this;
-        t.forEach((function(t2) {
-          s.push(t2);
-        }));
-      }
-      clear() {
-        this.q = [];
-        this.i = this.j = 0;
-      }
-      push(t) {
-        const s = this.q.length;
-        if (this.j / s > 0.5 && this.j + this.i >= s && s > 4096) {
-          const s2 = this.i;
-          for (let t2 = 0; t2 < s2; ++t2) {
-            this.q[t2] = this.q[this.j + t2];
-          }
-          this.j = 0;
-          this.q[this.i] = t;
-        } else this.q[this.j + this.i] = t;
-        return ++this.i;
-      }
-      pop() {
-        if (this.i === 0) return;
-        const t = this.q[this.j++];
-        this.i -= 1;
-        return t;
-      }
-      front() {
-        if (this.i === 0) return;
-        return this.q[this.j];
-      }
-    };
-    var _default = Queue;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/OtherContainer/PriorityQueue.js
-var require_PriorityQueue = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/OtherContainer/PriorityQueue.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _ContainerBase = require_ContainerBase();
-    var PriorityQueue = class extends _ContainerBase.Base {
-      constructor(t = [], s = function(t2, s2) {
-        if (t2 > s2) return -1;
-        if (t2 < s2) return 1;
-        return 0;
-      }, i = true) {
-        super();
-        this.v = s;
-        if (Array.isArray(t)) {
-          this.C = i ? [...t] : t;
-        } else {
-          this.C = [];
-          const s2 = this;
-          t.forEach((function(t2) {
-            s2.C.push(t2);
-          }));
-        }
-        this.i = this.C.length;
-        const e = this.i >> 1;
-        for (let t2 = this.i - 1 >> 1; t2 >= 0; --t2) {
-          this.k(t2, e);
-        }
-      }
-      m(t) {
-        const s = this.C[t];
-        while (t > 0) {
-          const i = t - 1 >> 1;
-          const e = this.C[i];
-          if (this.v(e, s) <= 0) break;
-          this.C[t] = e;
-          t = i;
-        }
-        this.C[t] = s;
-      }
-      k(t, s) {
-        const i = this.C[t];
-        while (t < s) {
-          let s2 = t << 1 | 1;
-          const e = s2 + 1;
-          let h = this.C[s2];
-          if (e < this.i && this.v(h, this.C[e]) > 0) {
-            s2 = e;
-            h = this.C[e];
-          }
-          if (this.v(h, i) >= 0) break;
-          this.C[t] = h;
-          t = s2;
-        }
-        this.C[t] = i;
-      }
-      clear() {
-        this.i = 0;
-        this.C.length = 0;
-      }
-      push(t) {
-        this.C.push(t);
-        this.m(this.i);
-        this.i += 1;
-      }
-      pop() {
-        if (this.i === 0) return;
-        const t = this.C[0];
-        const s = this.C.pop();
-        this.i -= 1;
-        if (this.i) {
-          this.C[0] = s;
-          this.k(0, this.i >> 1);
-        }
-        return t;
-      }
-      top() {
-        return this.C[0];
-      }
-      find(t) {
-        return this.C.indexOf(t) >= 0;
-      }
-      remove(t) {
-        const s = this.C.indexOf(t);
-        if (s < 0) return false;
-        if (s === 0) {
-          this.pop();
-        } else if (s === this.i - 1) {
-          this.C.pop();
-          this.i -= 1;
-        } else {
-          this.C.splice(s, 1, this.C.pop());
-          this.i -= 1;
-          this.m(s);
-          this.k(s, this.i >> 1);
-        }
-        return true;
-      }
-      updateItem(t) {
-        const s = this.C.indexOf(t);
-        if (s < 0) return false;
-        this.m(s);
-        this.k(s, this.i >> 1);
-        return true;
-      }
-      toArray() {
-        return [...this.C];
-      }
-    };
-    var _default = PriorityQueue;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/SequentialContainer/Base/index.js
-var require_Base = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/SequentialContainer/Base/index.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _ContainerBase = require_ContainerBase();
-    var SequentialContainer = class extends _ContainerBase.Container {
-    };
-    var _default = SequentialContainer;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/utils/throwError.js
-var require_throwError = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/utils/throwError.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.throwIteratorAccessError = throwIteratorAccessError;
-    function throwIteratorAccessError() {
-      throw new RangeError("Iterator access denied!");
-    }
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/SequentialContainer/Base/RandomIterator.js
-var require_RandomIterator = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/SequentialContainer/Base/RandomIterator.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.RandomIterator = void 0;
-    var _ContainerBase = require_ContainerBase();
-    var _throwError = require_throwError();
-    var RandomIterator = class extends _ContainerBase.ContainerIterator {
-      constructor(t, r) {
-        super(r);
-        this.o = t;
-        if (this.iteratorType === 0) {
-          this.pre = function() {
-            if (this.o === 0) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o -= 1;
-            return this;
-          };
-          this.next = function() {
-            if (this.o === this.container.size()) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o += 1;
-            return this;
-          };
-        } else {
-          this.pre = function() {
-            if (this.o === this.container.size() - 1) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o += 1;
-            return this;
-          };
-          this.next = function() {
-            if (this.o === -1) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o -= 1;
-            return this;
-          };
-        }
-      }
-      get pointer() {
-        return this.container.getElementByPos(this.o);
-      }
-      set pointer(t) {
-        this.container.setElementByPos(this.o, t);
-      }
-    };
-    exports2.RandomIterator = RandomIterator;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/SequentialContainer/Vector.js
-var require_Vector = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/SequentialContainer/Vector.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _Base = _interopRequireDefault(require_Base());
-    var _RandomIterator = require_RandomIterator();
-    function _interopRequireDefault(t) {
-      return t && t.t ? t : {
-        default: t
-      };
-    }
-    var VectorIterator = class _VectorIterator extends _RandomIterator.RandomIterator {
-      constructor(t, r, e) {
-        super(t, e);
-        this.container = r;
-      }
-      copy() {
-        return new _VectorIterator(this.o, this.container, this.iteratorType);
-      }
-    };
-    var Vector = class extends _Base.default {
-      constructor(t = [], r = true) {
-        super();
-        if (Array.isArray(t)) {
-          this.J = r ? [...t] : t;
-          this.i = t.length;
-        } else {
-          this.J = [];
-          const r2 = this;
-          t.forEach((function(t2) {
-            r2.pushBack(t2);
-          }));
-        }
-      }
-      clear() {
-        this.i = 0;
-        this.J.length = 0;
-      }
-      begin() {
-        return new VectorIterator(0, this);
-      }
-      end() {
-        return new VectorIterator(this.i, this);
-      }
-      rBegin() {
-        return new VectorIterator(this.i - 1, this, 1);
-      }
-      rEnd() {
-        return new VectorIterator(-1, this, 1);
-      }
-      front() {
-        return this.J[0];
-      }
-      back() {
-        return this.J[this.i - 1];
-      }
-      getElementByPos(t) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        return this.J[t];
-      }
-      eraseElementByPos(t) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        this.J.splice(t, 1);
-        this.i -= 1;
-        return this.i;
-      }
-      eraseElementByValue(t) {
-        let r = 0;
-        for (let e = 0; e < this.i; ++e) {
-          if (this.J[e] !== t) {
-            this.J[r++] = this.J[e];
-          }
-        }
-        this.i = this.J.length = r;
-        return this.i;
-      }
-      eraseElementByIterator(t) {
-        const r = t.o;
-        t = t.next();
-        this.eraseElementByPos(r);
-        return t;
-      }
-      pushBack(t) {
-        this.J.push(t);
-        this.i += 1;
-        return this.i;
-      }
-      popBack() {
-        if (this.i === 0) return;
-        this.i -= 1;
-        return this.J.pop();
-      }
-      setElementByPos(t, r) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        this.J[t] = r;
-      }
-      insert(t, r, e = 1) {
-        if (t < 0 || t > this.i) {
-          throw new RangeError();
-        }
-        this.J.splice(t, 0, ...new Array(e).fill(r));
-        this.i += e;
-        return this.i;
-      }
-      find(t) {
-        for (let r = 0; r < this.i; ++r) {
-          if (this.J[r] === t) {
-            return new VectorIterator(r, this);
-          }
-        }
-        return this.end();
-      }
-      reverse() {
-        this.J.reverse();
-      }
-      unique() {
-        let t = 1;
-        for (let r = 1; r < this.i; ++r) {
-          if (this.J[r] !== this.J[r - 1]) {
-            this.J[t++] = this.J[r];
-          }
-        }
-        this.i = this.J.length = t;
-        return this.i;
-      }
-      sort(t) {
-        this.J.sort(t);
-      }
-      forEach(t) {
-        for (let r = 0; r < this.i; ++r) {
-          t(this.J[r], r, this);
-        }
-      }
-      [Symbol.iterator]() {
-        return function* () {
-          yield* this.J;
-        }.bind(this)();
-      }
-    };
-    var _default = Vector;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/SequentialContainer/LinkList.js
-var require_LinkList = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/SequentialContainer/LinkList.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _Base = _interopRequireDefault(require_Base());
-    var _ContainerBase = require_ContainerBase();
-    var _throwError = require_throwError();
-    function _interopRequireDefault(t) {
-      return t && t.t ? t : {
-        default: t
-      };
-    }
-    var LinkListIterator = class _LinkListIterator extends _ContainerBase.ContainerIterator {
-      constructor(t, i, s, r) {
-        super(r);
-        this.o = t;
-        this.h = i;
-        this.container = s;
-        if (this.iteratorType === 0) {
-          this.pre = function() {
-            if (this.o.L === this.h) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.L;
-            return this;
-          };
-          this.next = function() {
-            if (this.o === this.h) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.B;
-            return this;
-          };
-        } else {
-          this.pre = function() {
-            if (this.o.B === this.h) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.B;
-            return this;
-          };
-          this.next = function() {
-            if (this.o === this.h) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.L;
-            return this;
-          };
-        }
-      }
-      get pointer() {
-        if (this.o === this.h) {
-          (0, _throwError.throwIteratorAccessError)();
-        }
-        return this.o.l;
-      }
-      set pointer(t) {
-        if (this.o === this.h) {
-          (0, _throwError.throwIteratorAccessError)();
-        }
-        this.o.l = t;
-      }
-      copy() {
-        return new _LinkListIterator(this.o, this.h, this.container, this.iteratorType);
-      }
-    };
-    var LinkList = class extends _Base.default {
-      constructor(t = []) {
-        super();
-        this.h = {};
-        this.p = this._ = this.h.L = this.h.B = this.h;
-        const i = this;
-        t.forEach((function(t2) {
-          i.pushBack(t2);
-        }));
-      }
-      V(t) {
-        const { L: i, B: s } = t;
-        i.B = s;
-        s.L = i;
-        if (t === this.p) {
-          this.p = s;
-        }
-        if (t === this._) {
-          this._ = i;
-        }
-        this.i -= 1;
-      }
-      G(t, i) {
-        const s = i.B;
-        const r = {
-          l: t,
-          L: i,
-          B: s
-        };
-        i.B = r;
-        s.L = r;
-        if (i === this.h) {
-          this.p = r;
-        }
-        if (s === this.h) {
-          this._ = r;
-        }
-        this.i += 1;
-      }
-      clear() {
-        this.i = 0;
-        this.p = this._ = this.h.L = this.h.B = this.h;
-      }
-      begin() {
-        return new LinkListIterator(this.p, this.h, this);
-      }
-      end() {
-        return new LinkListIterator(this.h, this.h, this);
-      }
-      rBegin() {
-        return new LinkListIterator(this._, this.h, this, 1);
-      }
-      rEnd() {
-        return new LinkListIterator(this.h, this.h, this, 1);
-      }
-      front() {
-        return this.p.l;
-      }
-      back() {
-        return this._.l;
-      }
-      getElementByPos(t) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        let i = this.p;
-        while (t--) {
-          i = i.B;
-        }
-        return i.l;
-      }
-      eraseElementByPos(t) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        let i = this.p;
-        while (t--) {
-          i = i.B;
-        }
-        this.V(i);
-        return this.i;
-      }
-      eraseElementByValue(t) {
-        let i = this.p;
-        while (i !== this.h) {
-          if (i.l === t) {
-            this.V(i);
-          }
-          i = i.B;
-        }
-        return this.i;
-      }
-      eraseElementByIterator(t) {
-        const i = t.o;
-        if (i === this.h) {
-          (0, _throwError.throwIteratorAccessError)();
-        }
-        t = t.next();
-        this.V(i);
-        return t;
-      }
-      pushBack(t) {
-        this.G(t, this._);
-        return this.i;
-      }
-      popBack() {
-        if (this.i === 0) return;
-        const t = this._.l;
-        this.V(this._);
-        return t;
-      }
-      pushFront(t) {
-        this.G(t, this.h);
-        return this.i;
-      }
-      popFront() {
-        if (this.i === 0) return;
-        const t = this.p.l;
-        this.V(this.p);
-        return t;
-      }
-      setElementByPos(t, i) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        let s = this.p;
-        while (t--) {
-          s = s.B;
-        }
-        s.l = i;
-      }
-      insert(t, i, s = 1) {
-        if (t < 0 || t > this.i) {
-          throw new RangeError();
-        }
-        if (s <= 0) return this.i;
-        if (t === 0) {
-          while (s--) this.pushFront(i);
-        } else if (t === this.i) {
-          while (s--) this.pushBack(i);
-        } else {
-          let r = this.p;
-          for (let i2 = 1; i2 < t; ++i2) {
-            r = r.B;
-          }
-          const e = r.B;
-          this.i += s;
-          while (s--) {
-            r.B = {
-              l: i,
-              L: r
-            };
-            r.B.L = r;
-            r = r.B;
-          }
-          r.B = e;
-          e.L = r;
-        }
-        return this.i;
-      }
-      find(t) {
-        let i = this.p;
-        while (i !== this.h) {
-          if (i.l === t) {
-            return new LinkListIterator(i, this.h, this);
-          }
-          i = i.B;
-        }
-        return this.end();
-      }
-      reverse() {
-        if (this.i <= 1) return;
-        let t = this.p;
-        let i = this._;
-        let s = 0;
-        while (s << 1 < this.i) {
-          const r = t.l;
-          t.l = i.l;
-          i.l = r;
-          t = t.B;
-          i = i.L;
-          s += 1;
-        }
-      }
-      unique() {
-        if (this.i <= 1) {
-          return this.i;
-        }
-        let t = this.p;
-        while (t !== this.h) {
-          let i = t;
-          while (i.B !== this.h && i.l === i.B.l) {
-            i = i.B;
-            this.i -= 1;
-          }
-          t.B = i.B;
-          t.B.L = t;
-          t = t.B;
-        }
-        return this.i;
-      }
-      sort(t) {
-        if (this.i <= 1) return;
-        const i = [];
-        this.forEach((function(t2) {
-          i.push(t2);
-        }));
-        i.sort(t);
-        let s = this.p;
-        i.forEach((function(t2) {
-          s.l = t2;
-          s = s.B;
-        }));
-      }
-      merge(t) {
-        const i = this;
-        if (this.i === 0) {
-          t.forEach((function(t2) {
-            i.pushBack(t2);
-          }));
-        } else {
-          let s = this.p;
-          t.forEach((function(t2) {
-            while (s !== i.h && s.l <= t2) {
-              s = s.B;
-            }
-            i.G(t2, s.L);
-          }));
-        }
-        return this.i;
-      }
-      forEach(t) {
-        let i = this.p;
-        let s = 0;
-        while (i !== this.h) {
-          t(i.l, s++, this);
-          i = i.B;
-        }
-      }
-      [Symbol.iterator]() {
-        return function* () {
-          if (this.i === 0) return;
-          let t = this.p;
-          while (t !== this.h) {
-            yield t.l;
-            t = t.B;
-          }
-        }.bind(this)();
-      }
-    };
-    var _default = LinkList;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/SequentialContainer/Deque.js
-var require_Deque = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/SequentialContainer/Deque.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _Base = _interopRequireDefault(require_Base());
-    var _RandomIterator = require_RandomIterator();
-    function _interopRequireDefault(t) {
-      return t && t.t ? t : {
-        default: t
-      };
-    }
-    var DequeIterator = class _DequeIterator extends _RandomIterator.RandomIterator {
-      constructor(t, i, s) {
-        super(t, s);
-        this.container = i;
-      }
-      copy() {
-        return new _DequeIterator(this.o, this.container, this.iteratorType);
-      }
-    };
-    var Deque = class extends _Base.default {
-      constructor(t = [], i = 1 << 12) {
-        super();
-        this.j = 0;
-        this.D = 0;
-        this.R = 0;
-        this.N = 0;
-        this.P = 0;
-        this.A = [];
-        const s = (() => {
-          if (typeof t.length === "number") return t.length;
-          if (typeof t.size === "number") return t.size;
-          if (typeof t.size === "function") return t.size();
-          throw new TypeError("Cannot get the length or size of the container");
-        })();
-        this.F = i;
-        this.P = Math.max(Math.ceil(s / this.F), 1);
-        for (let t2 = 0; t2 < this.P; ++t2) {
-          this.A.push(new Array(this.F));
-        }
-        const h = Math.ceil(s / this.F);
-        this.j = this.R = (this.P >> 1) - (h >> 1);
-        this.D = this.N = this.F - s % this.F >> 1;
-        const e = this;
-        t.forEach((function(t2) {
-          e.pushBack(t2);
-        }));
-      }
-      T() {
-        const t = [];
-        const i = Math.max(this.P >> 1, 1);
-        for (let s = 0; s < i; ++s) {
-          t[s] = new Array(this.F);
-        }
-        for (let i2 = this.j; i2 < this.P; ++i2) {
-          t[t.length] = this.A[i2];
-        }
-        for (let i2 = 0; i2 < this.R; ++i2) {
-          t[t.length] = this.A[i2];
-        }
-        t[t.length] = [...this.A[this.R]];
-        this.j = i;
-        this.R = t.length - 1;
-        for (let s = 0; s < i; ++s) {
-          t[t.length] = new Array(this.F);
-        }
-        this.A = t;
-        this.P = t.length;
-      }
-      O(t) {
-        const i = this.D + t + 1;
-        const s = i % this.F;
-        let h = s - 1;
-        let e = this.j + (i - s) / this.F;
-        if (s === 0) e -= 1;
-        e %= this.P;
-        if (h < 0) h += this.F;
-        return {
-          curNodeBucketIndex: e,
-          curNodePointerIndex: h
-        };
-      }
-      clear() {
-        this.A = [new Array(this.F)];
-        this.P = 1;
-        this.j = this.R = this.i = 0;
-        this.D = this.N = this.F >> 1;
-      }
-      begin() {
-        return new DequeIterator(0, this);
-      }
-      end() {
-        return new DequeIterator(this.i, this);
-      }
-      rBegin() {
-        return new DequeIterator(this.i - 1, this, 1);
-      }
-      rEnd() {
-        return new DequeIterator(-1, this, 1);
-      }
-      front() {
-        if (this.i === 0) return;
-        return this.A[this.j][this.D];
-      }
-      back() {
-        if (this.i === 0) return;
-        return this.A[this.R][this.N];
-      }
-      pushBack(t) {
-        if (this.i) {
-          if (this.N < this.F - 1) {
-            this.N += 1;
-          } else if (this.R < this.P - 1) {
-            this.R += 1;
-            this.N = 0;
-          } else {
-            this.R = 0;
-            this.N = 0;
-          }
-          if (this.R === this.j && this.N === this.D) this.T();
-        }
-        this.i += 1;
-        this.A[this.R][this.N] = t;
-        return this.i;
-      }
-      popBack() {
-        if (this.i === 0) return;
-        const t = this.A[this.R][this.N];
-        if (this.i !== 1) {
-          if (this.N > 0) {
-            this.N -= 1;
-          } else if (this.R > 0) {
-            this.R -= 1;
-            this.N = this.F - 1;
-          } else {
-            this.R = this.P - 1;
-            this.N = this.F - 1;
-          }
-        }
-        this.i -= 1;
-        return t;
-      }
-      pushFront(t) {
-        if (this.i) {
-          if (this.D > 0) {
-            this.D -= 1;
-          } else if (this.j > 0) {
-            this.j -= 1;
-            this.D = this.F - 1;
-          } else {
-            this.j = this.P - 1;
-            this.D = this.F - 1;
-          }
-          if (this.j === this.R && this.D === this.N) this.T();
-        }
-        this.i += 1;
-        this.A[this.j][this.D] = t;
-        return this.i;
-      }
-      popFront() {
-        if (this.i === 0) return;
-        const t = this.A[this.j][this.D];
-        if (this.i !== 1) {
-          if (this.D < this.F - 1) {
-            this.D += 1;
-          } else if (this.j < this.P - 1) {
-            this.j += 1;
-            this.D = 0;
-          } else {
-            this.j = 0;
-            this.D = 0;
-          }
-        }
-        this.i -= 1;
-        return t;
-      }
-      getElementByPos(t) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        const { curNodeBucketIndex: i, curNodePointerIndex: s } = this.O(t);
-        return this.A[i][s];
-      }
-      setElementByPos(t, i) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        const { curNodeBucketIndex: s, curNodePointerIndex: h } = this.O(t);
-        this.A[s][h] = i;
-      }
-      insert(t, i, s = 1) {
-        if (t < 0 || t > this.i) {
-          throw new RangeError();
-        }
-        if (t === 0) {
-          while (s--) this.pushFront(i);
-        } else if (t === this.i) {
-          while (s--) this.pushBack(i);
-        } else {
-          const h = [];
-          for (let i2 = t; i2 < this.i; ++i2) {
-            h.push(this.getElementByPos(i2));
-          }
-          this.cut(t - 1);
-          for (let t2 = 0; t2 < s; ++t2) this.pushBack(i);
-          for (let t2 = 0; t2 < h.length; ++t2) this.pushBack(h[t2]);
-        }
-        return this.i;
-      }
-      cut(t) {
-        if (t < 0) {
-          this.clear();
-          return 0;
-        }
-        const { curNodeBucketIndex: i, curNodePointerIndex: s } = this.O(t);
-        this.R = i;
-        this.N = s;
-        this.i = t + 1;
-        return this.i;
-      }
-      eraseElementByPos(t) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        if (t === 0) this.popFront();
-        else if (t === this.i - 1) this.popBack();
-        else {
-          const i = [];
-          for (let s2 = t + 1; s2 < this.i; ++s2) {
-            i.push(this.getElementByPos(s2));
-          }
-          this.cut(t);
-          this.popBack();
-          const s = this;
-          i.forEach((function(t2) {
-            s.pushBack(t2);
-          }));
-        }
-        return this.i;
-      }
-      eraseElementByValue(t) {
-        if (this.i === 0) return 0;
-        const i = [];
-        for (let s2 = 0; s2 < this.i; ++s2) {
-          const h = this.getElementByPos(s2);
-          if (h !== t) i.push(h);
-        }
-        const s = i.length;
-        for (let t2 = 0; t2 < s; ++t2) this.setElementByPos(t2, i[t2]);
-        return this.cut(s - 1);
-      }
-      eraseElementByIterator(t) {
-        const i = t.o;
-        this.eraseElementByPos(i);
-        t = t.next();
-        return t;
-      }
-      find(t) {
-        for (let i = 0; i < this.i; ++i) {
-          if (this.getElementByPos(i) === t) {
-            return new DequeIterator(i, this);
-          }
-        }
-        return this.end();
-      }
-      reverse() {
-        let t = 0;
-        let i = this.i - 1;
-        while (t < i) {
-          const s = this.getElementByPos(t);
-          this.setElementByPos(t, this.getElementByPos(i));
-          this.setElementByPos(i, s);
-          t += 1;
-          i -= 1;
-        }
-      }
-      unique() {
-        if (this.i <= 1) {
-          return this.i;
-        }
-        let t = 1;
-        let i = this.getElementByPos(0);
-        for (let s = 1; s < this.i; ++s) {
-          const h = this.getElementByPos(s);
-          if (h !== i) {
-            i = h;
-            this.setElementByPos(t++, h);
-          }
-        }
-        while (this.i > t) this.popBack();
-        return this.i;
-      }
-      sort(t) {
-        const i = [];
-        for (let t2 = 0; t2 < this.i; ++t2) {
-          i.push(this.getElementByPos(t2));
-        }
-        i.sort(t);
-        for (let t2 = 0; t2 < this.i; ++t2) this.setElementByPos(t2, i[t2]);
-      }
-      shrinkToFit() {
-        if (this.i === 0) return;
-        const t = [];
-        this.forEach((function(i) {
-          t.push(i);
-        }));
-        this.P = Math.max(Math.ceil(this.i / this.F), 1);
-        this.i = this.j = this.R = this.D = this.N = 0;
-        this.A = [];
-        for (let t2 = 0; t2 < this.P; ++t2) {
-          this.A.push(new Array(this.F));
-        }
-        for (let i = 0; i < t.length; ++i) this.pushBack(t[i]);
-      }
-      forEach(t) {
-        for (let i = 0; i < this.i; ++i) {
-          t(this.getElementByPos(i), i, this);
-        }
-      }
-      [Symbol.iterator]() {
-        return function* () {
-          for (let t = 0; t < this.i; ++t) {
-            yield this.getElementByPos(t);
-          }
-        }.bind(this)();
-      }
-    };
-    var _default = Deque;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/TreeContainer/Base/TreeNode.js
-var require_TreeNode = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/TreeContainer/Base/TreeNode.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.TreeNodeEnableIndex = exports2.TreeNode = void 0;
-    var TreeNode = class {
-      constructor(e, t) {
-        this.ee = 1;
-        this.u = void 0;
-        this.l = void 0;
-        this.U = void 0;
-        this.W = void 0;
-        this.tt = void 0;
-        this.u = e;
-        this.l = t;
-      }
-      L() {
-        let e = this;
-        if (e.ee === 1 && e.tt.tt === e) {
-          e = e.W;
-        } else if (e.U) {
-          e = e.U;
-          while (e.W) {
-            e = e.W;
-          }
-        } else {
-          let t = e.tt;
-          while (t.U === e) {
-            e = t;
-            t = e.tt;
-          }
-          e = t;
-        }
-        return e;
-      }
-      B() {
-        let e = this;
-        if (e.W) {
-          e = e.W;
-          while (e.U) {
-            e = e.U;
-          }
-          return e;
-        } else {
-          let t = e.tt;
-          while (t.W === e) {
-            e = t;
-            t = e.tt;
-          }
-          if (e.W !== t) {
-            return t;
-          } else return e;
-        }
-      }
-      te() {
-        const e = this.tt;
-        const t = this.W;
-        const s = t.U;
-        if (e.tt === this) e.tt = t;
-        else if (e.U === this) e.U = t;
-        else e.W = t;
-        t.tt = e;
-        t.U = this;
-        this.tt = t;
-        this.W = s;
-        if (s) s.tt = this;
-        return t;
-      }
-      se() {
-        const e = this.tt;
-        const t = this.U;
-        const s = t.W;
-        if (e.tt === this) e.tt = t;
-        else if (e.U === this) e.U = t;
-        else e.W = t;
-        t.tt = e;
-        t.W = this;
-        this.tt = t;
-        this.U = s;
-        if (s) s.tt = this;
-        return t;
-      }
-    };
-    exports2.TreeNode = TreeNode;
-    var TreeNodeEnableIndex = class extends TreeNode {
-      constructor() {
-        super(...arguments);
-        this.rt = 1;
-      }
-      te() {
-        const e = super.te();
-        this.ie();
-        e.ie();
-        return e;
-      }
-      se() {
-        const e = super.se();
-        this.ie();
-        e.ie();
-        return e;
-      }
-      ie() {
-        this.rt = 1;
-        if (this.U) {
-          this.rt += this.U.rt;
-        }
-        if (this.W) {
-          this.rt += this.W.rt;
-        }
-      }
-    };
-    exports2.TreeNodeEnableIndex = TreeNodeEnableIndex;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/TreeContainer/Base/index.js
-var require_Base2 = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/TreeContainer/Base/index.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _TreeNode = require_TreeNode();
-    var _ContainerBase = require_ContainerBase();
-    var _throwError = require_throwError();
-    var TreeContainer = class extends _ContainerBase.Container {
-      constructor(e = function(e2, t2) {
-        if (e2 < t2) return -1;
-        if (e2 > t2) return 1;
-        return 0;
-      }, t = false) {
-        super();
-        this.Y = void 0;
-        this.v = e;
-        if (t) {
-          this.re = _TreeNode.TreeNodeEnableIndex;
-          this.M = function(e2, t2, i) {
-            const s = this.ne(e2, t2, i);
-            if (s) {
-              let e3 = s.tt;
-              while (e3 !== this.h) {
-                e3.rt += 1;
-                e3 = e3.tt;
-              }
-              const t3 = this.he(s);
-              if (t3) {
-                const { parentNode: e4, grandParent: i2, curNode: s2 } = t3;
-                e4.ie();
-                i2.ie();
-                s2.ie();
-              }
-            }
-            return this.i;
-          };
-          this.V = function(e2) {
-            let t2 = this.fe(e2);
-            while (t2 !== this.h) {
-              t2.rt -= 1;
-              t2 = t2.tt;
-            }
-          };
-        } else {
-          this.re = _TreeNode.TreeNode;
-          this.M = function(e2, t2, i) {
-            const s = this.ne(e2, t2, i);
-            if (s) this.he(s);
-            return this.i;
-          };
-          this.V = this.fe;
-        }
-        this.h = new this.re();
-      }
-      X(e, t) {
-        let i = this.h;
-        while (e) {
-          const s = this.v(e.u, t);
-          if (s < 0) {
-            e = e.W;
-          } else if (s > 0) {
-            i = e;
-            e = e.U;
-          } else return e;
-        }
-        return i;
-      }
-      Z(e, t) {
-        let i = this.h;
-        while (e) {
-          const s = this.v(e.u, t);
-          if (s <= 0) {
-            e = e.W;
-          } else {
-            i = e;
-            e = e.U;
-          }
-        }
-        return i;
-      }
-      $(e, t) {
-        let i = this.h;
-        while (e) {
-          const s = this.v(e.u, t);
-          if (s < 0) {
-            i = e;
-            e = e.W;
-          } else if (s > 0) {
-            e = e.U;
-          } else return e;
-        }
-        return i;
-      }
-      rr(e, t) {
-        let i = this.h;
-        while (e) {
-          const s = this.v(e.u, t);
-          if (s < 0) {
-            i = e;
-            e = e.W;
-          } else {
-            e = e.U;
-          }
-        }
-        return i;
-      }
-      ue(e) {
-        while (true) {
-          const t = e.tt;
-          if (t === this.h) return;
-          if (e.ee === 1) {
-            e.ee = 0;
-            return;
-          }
-          if (e === t.U) {
-            const i = t.W;
-            if (i.ee === 1) {
-              i.ee = 0;
-              t.ee = 1;
-              if (t === this.Y) {
-                this.Y = t.te();
-              } else t.te();
-            } else {
-              if (i.W && i.W.ee === 1) {
-                i.ee = t.ee;
-                t.ee = 0;
-                i.W.ee = 0;
-                if (t === this.Y) {
-                  this.Y = t.te();
-                } else t.te();
-                return;
-              } else if (i.U && i.U.ee === 1) {
-                i.ee = 1;
-                i.U.ee = 0;
-                i.se();
-              } else {
-                i.ee = 1;
-                e = t;
-              }
-            }
-          } else {
-            const i = t.U;
-            if (i.ee === 1) {
-              i.ee = 0;
-              t.ee = 1;
-              if (t === this.Y) {
-                this.Y = t.se();
-              } else t.se();
-            } else {
-              if (i.U && i.U.ee === 1) {
-                i.ee = t.ee;
-                t.ee = 0;
-                i.U.ee = 0;
-                if (t === this.Y) {
-                  this.Y = t.se();
-                } else t.se();
-                return;
-              } else if (i.W && i.W.ee === 1) {
-                i.ee = 1;
-                i.W.ee = 0;
-                i.te();
-              } else {
-                i.ee = 1;
-                e = t;
-              }
-            }
-          }
-        }
-      }
-      fe(e) {
-        if (this.i === 1) {
-          this.clear();
-          return this.h;
-        }
-        let t = e;
-        while (t.U || t.W) {
-          if (t.W) {
-            t = t.W;
-            while (t.U) t = t.U;
-          } else {
-            t = t.U;
-          }
-          [e.u, t.u] = [t.u, e.u];
-          [e.l, t.l] = [t.l, e.l];
-          e = t;
-        }
-        if (this.h.U === t) {
-          this.h.U = t.tt;
-        } else if (this.h.W === t) {
-          this.h.W = t.tt;
-        }
-        this.ue(t);
-        const i = t.tt;
-        if (t === i.U) {
-          i.U = void 0;
-        } else i.W = void 0;
-        this.i -= 1;
-        this.Y.ee = 0;
-        return i;
-      }
-      oe(e, t) {
-        if (e === void 0) return false;
-        const i = this.oe(e.U, t);
-        if (i) return true;
-        if (t(e)) return true;
-        return this.oe(e.W, t);
-      }
-      he(e) {
-        while (true) {
-          const t = e.tt;
-          if (t.ee === 0) return;
-          const i = t.tt;
-          if (t === i.U) {
-            const s = i.W;
-            if (s && s.ee === 1) {
-              s.ee = t.ee = 0;
-              if (i === this.Y) return;
-              i.ee = 1;
-              e = i;
-              continue;
-            } else if (e === t.W) {
-              e.ee = 0;
-              if (e.U) e.U.tt = t;
-              if (e.W) e.W.tt = i;
-              t.W = e.U;
-              i.U = e.W;
-              e.U = t;
-              e.W = i;
-              if (i === this.Y) {
-                this.Y = e;
-                this.h.tt = e;
-              } else {
-                const t2 = i.tt;
-                if (t2.U === i) {
-                  t2.U = e;
-                } else t2.W = e;
-              }
-              e.tt = i.tt;
-              t.tt = e;
-              i.tt = e;
-              i.ee = 1;
-              return {
-                parentNode: t,
-                grandParent: i,
-                curNode: e
-              };
-            } else {
-              t.ee = 0;
-              if (i === this.Y) {
-                this.Y = i.se();
-              } else i.se();
-              i.ee = 1;
-            }
-          } else {
-            const s = i.U;
-            if (s && s.ee === 1) {
-              s.ee = t.ee = 0;
-              if (i === this.Y) return;
-              i.ee = 1;
-              e = i;
-              continue;
-            } else if (e === t.U) {
-              e.ee = 0;
-              if (e.U) e.U.tt = i;
-              if (e.W) e.W.tt = t;
-              i.W = e.U;
-              t.U = e.W;
-              e.U = i;
-              e.W = t;
-              if (i === this.Y) {
-                this.Y = e;
-                this.h.tt = e;
-              } else {
-                const t2 = i.tt;
-                if (t2.U === i) {
-                  t2.U = e;
-                } else t2.W = e;
-              }
-              e.tt = i.tt;
-              t.tt = e;
-              i.tt = e;
-              i.ee = 1;
-              return {
-                parentNode: t,
-                grandParent: i,
-                curNode: e
-              };
-            } else {
-              t.ee = 0;
-              if (i === this.Y) {
-                this.Y = i.te();
-              } else i.te();
-              i.ee = 1;
-            }
-          }
-          return;
-        }
-      }
-      ne(e, t, i) {
-        if (this.Y === void 0) {
-          this.i += 1;
-          this.Y = new this.re(e, t);
-          this.Y.ee = 0;
-          this.Y.tt = this.h;
-          this.h.tt = this.Y;
-          this.h.U = this.Y;
-          this.h.W = this.Y;
-          return;
-        }
-        let s;
-        const r = this.h.U;
-        const n = this.v(r.u, e);
-        if (n === 0) {
-          r.l = t;
-          return;
-        } else if (n > 0) {
-          r.U = new this.re(e, t);
-          r.U.tt = r;
-          s = r.U;
-          this.h.U = s;
-        } else {
-          const r2 = this.h.W;
-          const n2 = this.v(r2.u, e);
-          if (n2 === 0) {
-            r2.l = t;
-            return;
-          } else if (n2 < 0) {
-            r2.W = new this.re(e, t);
-            r2.W.tt = r2;
-            s = r2.W;
-            this.h.W = s;
-          } else {
-            if (i !== void 0) {
-              const r3 = i.o;
-              if (r3 !== this.h) {
-                const i2 = this.v(r3.u, e);
-                if (i2 === 0) {
-                  r3.l = t;
-                  return;
-                } else if (i2 > 0) {
-                  const i3 = r3.L();
-                  const n3 = this.v(i3.u, e);
-                  if (n3 === 0) {
-                    i3.l = t;
-                    return;
-                  } else if (n3 < 0) {
-                    s = new this.re(e, t);
-                    if (i3.W === void 0) {
-                      i3.W = s;
-                      s.tt = i3;
-                    } else {
-                      r3.U = s;
-                      s.tt = r3;
-                    }
-                  }
-                }
-              }
-            }
-            if (s === void 0) {
-              s = this.Y;
-              while (true) {
-                const i2 = this.v(s.u, e);
-                if (i2 > 0) {
-                  if (s.U === void 0) {
-                    s.U = new this.re(e, t);
-                    s.U.tt = s;
-                    s = s.U;
-                    break;
-                  }
-                  s = s.U;
-                } else if (i2 < 0) {
-                  if (s.W === void 0) {
-                    s.W = new this.re(e, t);
-                    s.W.tt = s;
-                    s = s.W;
-                    break;
-                  }
-                  s = s.W;
-                } else {
-                  s.l = t;
-                  return;
-                }
-              }
-            }
-          }
-        }
-        this.i += 1;
-        return s;
-      }
-      I(e, t) {
-        while (e) {
-          const i = this.v(e.u, t);
-          if (i < 0) {
-            e = e.W;
-          } else if (i > 0) {
-            e = e.U;
-          } else return e;
-        }
-        return e || this.h;
-      }
-      clear() {
-        this.i = 0;
-        this.Y = void 0;
-        this.h.tt = void 0;
-        this.h.U = this.h.W = void 0;
-      }
-      updateKeyByIterator(e, t) {
-        const i = e.o;
-        if (i === this.h) {
-          (0, _throwError.throwIteratorAccessError)();
-        }
-        if (this.i === 1) {
-          i.u = t;
-          return true;
-        }
-        if (i === this.h.U) {
-          if (this.v(i.B().u, t) > 0) {
-            i.u = t;
-            return true;
-          }
-          return false;
-        }
-        if (i === this.h.W) {
-          if (this.v(i.L().u, t) < 0) {
-            i.u = t;
-            return true;
-          }
-          return false;
-        }
-        const s = i.L().u;
-        if (this.v(s, t) >= 0) return false;
-        const r = i.B().u;
-        if (this.v(r, t) <= 0) return false;
-        i.u = t;
-        return true;
-      }
-      eraseElementByPos(e) {
-        if (e < 0 || e > this.i - 1) {
-          throw new RangeError();
-        }
-        let t = 0;
-        const i = this;
-        this.oe(this.Y, (function(s) {
-          if (e === t) {
-            i.V(s);
-            return true;
-          }
-          t += 1;
-          return false;
-        }));
-        return this.i;
-      }
-      eraseElementByKey(e) {
-        if (this.i === 0) return false;
-        const t = this.I(this.Y, e);
-        if (t === this.h) return false;
-        this.V(t);
-        return true;
-      }
-      eraseElementByIterator(e) {
-        const t = e.o;
-        if (t === this.h) {
-          (0, _throwError.throwIteratorAccessError)();
-        }
-        const i = t.W === void 0;
-        const s = e.iteratorType === 0;
-        if (s) {
-          if (i) e.next();
-        } else {
-          if (!i || t.U === void 0) e.next();
-        }
-        this.V(t);
-        return e;
-      }
-      forEach(e) {
-        let t = 0;
-        for (const i of this) e(i, t++, this);
-      }
-      getElementByPos(e) {
-        if (e < 0 || e > this.i - 1) {
-          throw new RangeError();
-        }
-        let t;
-        let i = 0;
-        for (const s of this) {
-          if (i === e) {
-            t = s;
-            break;
-          }
-          i += 1;
-        }
-        return t;
-      }
-      getHeight() {
-        if (this.i === 0) return 0;
-        const traversal = function(e) {
-          if (!e) return 0;
-          return Math.max(traversal(e.U), traversal(e.W)) + 1;
-        };
-        return traversal(this.Y);
-      }
-    };
-    var _default = TreeContainer;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/TreeContainer/Base/TreeIterator.js
-var require_TreeIterator = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/TreeContainer/Base/TreeIterator.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _ContainerBase = require_ContainerBase();
-    var _throwError = require_throwError();
-    var TreeIterator = class extends _ContainerBase.ContainerIterator {
-      constructor(t, r, i) {
-        super(i);
-        this.o = t;
-        this.h = r;
-        if (this.iteratorType === 0) {
-          this.pre = function() {
-            if (this.o === this.h.U) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.L();
-            return this;
-          };
-          this.next = function() {
-            if (this.o === this.h) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.B();
-            return this;
-          };
-        } else {
-          this.pre = function() {
-            if (this.o === this.h.W) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.B();
-            return this;
-          };
-          this.next = function() {
-            if (this.o === this.h) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.L();
-            return this;
-          };
-        }
-      }
-      get index() {
-        let t = this.o;
-        const r = this.h.tt;
-        if (t === this.h) {
-          if (r) {
-            return r.rt - 1;
-          }
-          return 0;
-        }
-        let i = 0;
-        if (t.U) {
-          i += t.U.rt;
-        }
-        while (t !== r) {
-          const r2 = t.tt;
-          if (t === r2.W) {
-            i += 1;
-            if (r2.U) {
-              i += r2.U.rt;
-            }
-          }
-          t = r2;
-        }
-        return i;
-      }
-    };
-    var _default = TreeIterator;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/TreeContainer/OrderedSet.js
-var require_OrderedSet = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/TreeContainer/OrderedSet.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _Base = _interopRequireDefault(require_Base2());
-    var _TreeIterator = _interopRequireDefault(require_TreeIterator());
-    var _throwError = require_throwError();
-    function _interopRequireDefault(e) {
-      return e && e.t ? e : {
-        default: e
-      };
-    }
-    var OrderedSetIterator = class _OrderedSetIterator extends _TreeIterator.default {
-      constructor(e, t, r, i) {
-        super(e, t, i);
-        this.container = r;
-      }
-      get pointer() {
-        if (this.o === this.h) {
-          (0, _throwError.throwIteratorAccessError)();
-        }
-        return this.o.u;
-      }
-      copy() {
-        return new _OrderedSetIterator(this.o, this.h, this.container, this.iteratorType);
-      }
-    };
-    var OrderedSet = class extends _Base.default {
-      constructor(e = [], t, r) {
-        super(t, r);
-        const i = this;
-        e.forEach((function(e2) {
-          i.insert(e2);
-        }));
-      }
-      *K(e) {
-        if (e === void 0) return;
-        yield* this.K(e.U);
-        yield e.u;
-        yield* this.K(e.W);
-      }
-      begin() {
-        return new OrderedSetIterator(this.h.U || this.h, this.h, this);
-      }
-      end() {
-        return new OrderedSetIterator(this.h, this.h, this);
-      }
-      rBegin() {
-        return new OrderedSetIterator(this.h.W || this.h, this.h, this, 1);
-      }
-      rEnd() {
-        return new OrderedSetIterator(this.h, this.h, this, 1);
-      }
-      front() {
-        return this.h.U ? this.h.U.u : void 0;
-      }
-      back() {
-        return this.h.W ? this.h.W.u : void 0;
-      }
-      insert(e, t) {
-        return this.M(e, void 0, t);
-      }
-      find(e) {
-        const t = this.I(this.Y, e);
-        return new OrderedSetIterator(t, this.h, this);
-      }
-      lowerBound(e) {
-        const t = this.X(this.Y, e);
-        return new OrderedSetIterator(t, this.h, this);
-      }
-      upperBound(e) {
-        const t = this.Z(this.Y, e);
-        return new OrderedSetIterator(t, this.h, this);
-      }
-      reverseLowerBound(e) {
-        const t = this.$(this.Y, e);
-        return new OrderedSetIterator(t, this.h, this);
-      }
-      reverseUpperBound(e) {
-        const t = this.rr(this.Y, e);
-        return new OrderedSetIterator(t, this.h, this);
-      }
-      union(e) {
-        const t = this;
-        e.forEach((function(e2) {
-          t.insert(e2);
-        }));
-        return this.i;
-      }
-      [Symbol.iterator]() {
-        return this.K(this.Y);
-      }
-    };
-    var _default = OrderedSet;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/TreeContainer/OrderedMap.js
-var require_OrderedMap = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/TreeContainer/OrderedMap.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _Base = _interopRequireDefault(require_Base2());
-    var _TreeIterator = _interopRequireDefault(require_TreeIterator());
-    var _throwError = require_throwError();
-    function _interopRequireDefault(r) {
-      return r && r.t ? r : {
-        default: r
-      };
-    }
-    var OrderedMapIterator = class _OrderedMapIterator extends _TreeIterator.default {
-      constructor(r, t, e, s) {
-        super(r, t, s);
-        this.container = e;
-      }
-      get pointer() {
-        if (this.o === this.h) {
-          (0, _throwError.throwIteratorAccessError)();
-        }
-        const r = this;
-        return new Proxy([], {
-          get(t, e) {
-            if (e === "0") return r.o.u;
-            else if (e === "1") return r.o.l;
-          },
-          set(t, e, s) {
-            if (e !== "1") {
-              throw new TypeError("props must be 1");
-            }
-            r.o.l = s;
-            return true;
-          }
-        });
-      }
-      copy() {
-        return new _OrderedMapIterator(this.o, this.h, this.container, this.iteratorType);
-      }
-    };
-    var OrderedMap = class extends _Base.default {
-      constructor(r = [], t, e) {
-        super(t, e);
-        const s = this;
-        r.forEach((function(r2) {
-          s.setElement(r2[0], r2[1]);
-        }));
-      }
-      *K(r) {
-        if (r === void 0) return;
-        yield* this.K(r.U);
-        yield [r.u, r.l];
-        yield* this.K(r.W);
-      }
-      begin() {
-        return new OrderedMapIterator(this.h.U || this.h, this.h, this);
-      }
-      end() {
-        return new OrderedMapIterator(this.h, this.h, this);
-      }
-      rBegin() {
-        return new OrderedMapIterator(this.h.W || this.h, this.h, this, 1);
-      }
-      rEnd() {
-        return new OrderedMapIterator(this.h, this.h, this, 1);
-      }
-      front() {
-        if (this.i === 0) return;
-        const r = this.h.U;
-        return [r.u, r.l];
-      }
-      back() {
-        if (this.i === 0) return;
-        const r = this.h.W;
-        return [r.u, r.l];
-      }
-      lowerBound(r) {
-        const t = this.X(this.Y, r);
-        return new OrderedMapIterator(t, this.h, this);
-      }
-      upperBound(r) {
-        const t = this.Z(this.Y, r);
-        return new OrderedMapIterator(t, this.h, this);
-      }
-      reverseLowerBound(r) {
-        const t = this.$(this.Y, r);
-        return new OrderedMapIterator(t, this.h, this);
-      }
-      reverseUpperBound(r) {
-        const t = this.rr(this.Y, r);
-        return new OrderedMapIterator(t, this.h, this);
-      }
-      setElement(r, t, e) {
-        return this.M(r, t, e);
-      }
-      find(r) {
-        const t = this.I(this.Y, r);
-        return new OrderedMapIterator(t, this.h, this);
-      }
-      getElementByKey(r) {
-        const t = this.I(this.Y, r);
-        return t.l;
-      }
-      union(r) {
-        const t = this;
-        r.forEach((function(r2) {
-          t.setElement(r2[0], r2[1]);
-        }));
-        return this.i;
-      }
-      [Symbol.iterator]() {
-        return this.K(this.Y);
-      }
-    };
-    var _default = OrderedMap;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/utils/checkObject.js
-var require_checkObject = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/utils/checkObject.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = checkObject;
-    function checkObject(e) {
-      const t = typeof e;
-      return t === "object" && e !== null || t === "function";
-    }
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/HashContainer/Base/index.js
-var require_Base3 = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/HashContainer/Base/index.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.HashContainerIterator = exports2.HashContainer = void 0;
-    var _ContainerBase = require_ContainerBase();
-    var _checkObject = _interopRequireDefault(require_checkObject());
-    var _throwError = require_throwError();
-    function _interopRequireDefault(t) {
-      return t && t.t ? t : {
-        default: t
-      };
-    }
-    var HashContainerIterator = class extends _ContainerBase.ContainerIterator {
-      constructor(t, e, i) {
-        super(i);
-        this.o = t;
-        this.h = e;
-        if (this.iteratorType === 0) {
-          this.pre = function() {
-            if (this.o.L === this.h) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.L;
-            return this;
-          };
-          this.next = function() {
-            if (this.o === this.h) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.B;
-            return this;
-          };
-        } else {
-          this.pre = function() {
-            if (this.o.B === this.h) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.B;
-            return this;
-          };
-          this.next = function() {
-            if (this.o === this.h) {
-              (0, _throwError.throwIteratorAccessError)();
-            }
-            this.o = this.o.L;
-            return this;
-          };
-        }
-      }
-    };
-    exports2.HashContainerIterator = HashContainerIterator;
-    var HashContainer = class extends _ContainerBase.Container {
-      constructor() {
-        super();
-        this.H = [];
-        this.g = {};
-        this.HASH_TAG = Symbol("@@HASH_TAG");
-        Object.setPrototypeOf(this.g, null);
-        this.h = {};
-        this.h.L = this.h.B = this.p = this._ = this.h;
-      }
-      V(t) {
-        const { L: e, B: i } = t;
-        e.B = i;
-        i.L = e;
-        if (t === this.p) {
-          this.p = i;
-        }
-        if (t === this._) {
-          this._ = e;
-        }
-        this.i -= 1;
-      }
-      M(t, e, i) {
-        if (i === void 0) i = (0, _checkObject.default)(t);
-        let s;
-        if (i) {
-          const i2 = t[this.HASH_TAG];
-          if (i2 !== void 0) {
-            this.H[i2].l = e;
-            return this.i;
-          }
-          Object.defineProperty(t, this.HASH_TAG, {
-            value: this.H.length,
-            configurable: true
-          });
-          s = {
-            u: t,
-            l: e,
-            L: this._,
-            B: this.h
-          };
-          this.H.push(s);
-        } else {
-          const i2 = this.g[t];
-          if (i2) {
-            i2.l = e;
-            return this.i;
-          }
-          s = {
-            u: t,
-            l: e,
-            L: this._,
-            B: this.h
-          };
-          this.g[t] = s;
-        }
-        if (this.i === 0) {
-          this.p = s;
-          this.h.B = s;
-        } else {
-          this._.B = s;
-        }
-        this._ = s;
-        this.h.L = s;
-        return ++this.i;
-      }
-      I(t, e) {
-        if (e === void 0) e = (0, _checkObject.default)(t);
-        if (e) {
-          const e2 = t[this.HASH_TAG];
-          if (e2 === void 0) return this.h;
-          return this.H[e2];
-        } else {
-          return this.g[t] || this.h;
-        }
-      }
-      clear() {
-        const t = this.HASH_TAG;
-        this.H.forEach((function(e) {
-          delete e.u[t];
-        }));
-        this.H = [];
-        this.g = {};
-        Object.setPrototypeOf(this.g, null);
-        this.i = 0;
-        this.p = this._ = this.h.L = this.h.B = this.h;
-      }
-      eraseElementByKey(t, e) {
-        let i;
-        if (e === void 0) e = (0, _checkObject.default)(t);
-        if (e) {
-          const e2 = t[this.HASH_TAG];
-          if (e2 === void 0) return false;
-          delete t[this.HASH_TAG];
-          i = this.H[e2];
-          delete this.H[e2];
-        } else {
-          i = this.g[t];
-          if (i === void 0) return false;
-          delete this.g[t];
-        }
-        this.V(i);
-        return true;
-      }
-      eraseElementByIterator(t) {
-        const e = t.o;
-        if (e === this.h) {
-          (0, _throwError.throwIteratorAccessError)();
-        }
-        this.V(e);
-        return t.next();
-      }
-      eraseElementByPos(t) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        let e = this.p;
-        while (t--) {
-          e = e.B;
-        }
-        this.V(e);
-        return this.i;
-      }
-    };
-    exports2.HashContainer = HashContainer;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/HashContainer/HashSet.js
-var require_HashSet = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/HashContainer/HashSet.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _Base = require_Base3();
-    var _throwError = require_throwError();
-    var HashSetIterator = class _HashSetIterator extends _Base.HashContainerIterator {
-      constructor(t, e, r, s) {
-        super(t, e, s);
-        this.container = r;
-      }
-      get pointer() {
-        if (this.o === this.h) {
-          (0, _throwError.throwIteratorAccessError)();
-        }
-        return this.o.u;
-      }
-      copy() {
-        return new _HashSetIterator(this.o, this.h, this.container, this.iteratorType);
-      }
-    };
-    var HashSet = class extends _Base.HashContainer {
-      constructor(t = []) {
-        super();
-        const e = this;
-        t.forEach((function(t2) {
-          e.insert(t2);
-        }));
-      }
-      begin() {
-        return new HashSetIterator(this.p, this.h, this);
-      }
-      end() {
-        return new HashSetIterator(this.h, this.h, this);
-      }
-      rBegin() {
-        return new HashSetIterator(this._, this.h, this, 1);
-      }
-      rEnd() {
-        return new HashSetIterator(this.h, this.h, this, 1);
-      }
-      front() {
-        return this.p.u;
-      }
-      back() {
-        return this._.u;
-      }
-      insert(t, e) {
-        return this.M(t, void 0, e);
-      }
-      getElementByPos(t) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        let e = this.p;
-        while (t--) {
-          e = e.B;
-        }
-        return e.u;
-      }
-      find(t, e) {
-        const r = this.I(t, e);
-        return new HashSetIterator(r, this.h, this);
-      }
-      forEach(t) {
-        let e = 0;
-        let r = this.p;
-        while (r !== this.h) {
-          t(r.u, e++, this);
-          r = r.B;
-        }
-      }
-      [Symbol.iterator]() {
-        return function* () {
-          let t = this.p;
-          while (t !== this.h) {
-            yield t.u;
-            t = t.B;
-          }
-        }.bind(this)();
-      }
-    };
-    var _default = HashSet;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/container/HashContainer/HashMap.js
-var require_HashMap = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/container/HashContainer/HashMap.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    exports2.default = void 0;
-    var _Base = require_Base3();
-    var _checkObject = _interopRequireDefault(require_checkObject());
-    var _throwError = require_throwError();
-    function _interopRequireDefault(t) {
-      return t && t.t ? t : {
-        default: t
-      };
-    }
-    var HashMapIterator = class _HashMapIterator extends _Base.HashContainerIterator {
-      constructor(t, e, r, s) {
-        super(t, e, s);
-        this.container = r;
-      }
-      get pointer() {
-        if (this.o === this.h) {
-          (0, _throwError.throwIteratorAccessError)();
-        }
-        const t = this;
-        return new Proxy([], {
-          get(e, r) {
-            if (r === "0") return t.o.u;
-            else if (r === "1") return t.o.l;
-          },
-          set(e, r, s) {
-            if (r !== "1") {
-              throw new TypeError("props must be 1");
-            }
-            t.o.l = s;
-            return true;
-          }
-        });
-      }
-      copy() {
-        return new _HashMapIterator(this.o, this.h, this.container, this.iteratorType);
-      }
-    };
-    var HashMap = class extends _Base.HashContainer {
-      constructor(t = []) {
-        super();
-        const e = this;
-        t.forEach((function(t2) {
-          e.setElement(t2[0], t2[1]);
-        }));
-      }
-      begin() {
-        return new HashMapIterator(this.p, this.h, this);
-      }
-      end() {
-        return new HashMapIterator(this.h, this.h, this);
-      }
-      rBegin() {
-        return new HashMapIterator(this._, this.h, this, 1);
-      }
-      rEnd() {
-        return new HashMapIterator(this.h, this.h, this, 1);
-      }
-      front() {
-        if (this.i === 0) return;
-        return [this.p.u, this.p.l];
-      }
-      back() {
-        if (this.i === 0) return;
-        return [this._.u, this._.l];
-      }
-      setElement(t, e, r) {
-        return this.M(t, e, r);
-      }
-      getElementByKey(t, e) {
-        if (e === void 0) e = (0, _checkObject.default)(t);
-        if (e) {
-          const e2 = t[this.HASH_TAG];
-          return e2 !== void 0 ? this.H[e2].l : void 0;
-        }
-        const r = this.g[t];
-        return r ? r.l : void 0;
-      }
-      getElementByPos(t) {
-        if (t < 0 || t > this.i - 1) {
-          throw new RangeError();
-        }
-        let e = this.p;
-        while (t--) {
-          e = e.B;
-        }
-        return [e.u, e.l];
-      }
-      find(t, e) {
-        const r = this.I(t, e);
-        return new HashMapIterator(r, this.h, this);
-      }
-      forEach(t) {
-        let e = 0;
-        let r = this.p;
-        while (r !== this.h) {
-          t([r.u, r.l], e++, this);
-          r = r.B;
-        }
-      }
-      [Symbol.iterator]() {
-        return function* () {
-          let t = this.p;
-          while (t !== this.h) {
-            yield [t.u, t.l];
-            t = t.B;
-          }
-        }.bind(this)();
-      }
-    };
-    var _default = HashMap;
-    exports2.default = _default;
-  }
-});
-
-// node_modules/js-sdsl/dist/cjs/index.js
-var require_cjs2 = __commonJS({
-  "node_modules/js-sdsl/dist/cjs/index.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "t", {
-      value: true
-    });
-    Object.defineProperty(exports2, "Deque", {
-      enumerable: true,
-      get: function() {
-        return _Deque.default;
-      }
-    });
-    Object.defineProperty(exports2, "HashMap", {
-      enumerable: true,
-      get: function() {
-        return _HashMap.default;
-      }
-    });
-    Object.defineProperty(exports2, "HashSet", {
-      enumerable: true,
-      get: function() {
-        return _HashSet.default;
-      }
-    });
-    Object.defineProperty(exports2, "LinkList", {
-      enumerable: true,
-      get: function() {
-        return _LinkList.default;
-      }
-    });
-    Object.defineProperty(exports2, "OrderedMap", {
-      enumerable: true,
-      get: function() {
-        return _OrderedMap.default;
-      }
-    });
-    Object.defineProperty(exports2, "OrderedSet", {
-      enumerable: true,
-      get: function() {
-        return _OrderedSet.default;
-      }
-    });
-    Object.defineProperty(exports2, "PriorityQueue", {
-      enumerable: true,
-      get: function() {
-        return _PriorityQueue.default;
-      }
-    });
-    Object.defineProperty(exports2, "Queue", {
-      enumerable: true,
-      get: function() {
-        return _Queue.default;
-      }
-    });
-    Object.defineProperty(exports2, "Stack", {
-      enumerable: true,
-      get: function() {
-        return _Stack.default;
-      }
-    });
-    Object.defineProperty(exports2, "Vector", {
-      enumerable: true,
-      get: function() {
-        return _Vector.default;
-      }
-    });
-    var _Stack = _interopRequireDefault(require_Stack());
-    var _Queue = _interopRequireDefault(require_Queue());
-    var _PriorityQueue = _interopRequireDefault(require_PriorityQueue());
-    var _Vector = _interopRequireDefault(require_Vector());
-    var _LinkList = _interopRequireDefault(require_LinkList());
-    var _Deque = _interopRequireDefault(require_Deque());
-    var _OrderedSet = _interopRequireDefault(require_OrderedSet());
-    var _OrderedMap = _interopRequireDefault(require_OrderedMap());
-    var _HashSet = _interopRequireDefault(require_HashSet());
-    var _HashMap = _interopRequireDefault(require_HashMap());
-    function _interopRequireDefault(e) {
-      return e && e.t ? e : {
-        default: e
-      };
-    }
-  }
-});
-
-// node_modules/number-allocator/lib/number-allocator.js
+// node_modules/mqtt/build/lib/number-allocator.js
 var require_number_allocator = __commonJS({
-  "node_modules/number-allocator/lib/number-allocator.js"(exports2, module2) {
+  "node_modules/mqtt/build/lib/number-allocator.js"(exports2) {
     "use strict";
-    var SortedSet = require_cjs2().OrderedSet;
-    var debugTrace = require_src()("number-allocator:trace");
-    var debugError = require_src()("number-allocator:error");
-    function Interval(low, high) {
-      this.low = low;
-      this.high = high;
-    }
-    Interval.prototype.equals = function(other) {
-      return this.low === other.low && this.high === other.high;
-    };
-    Interval.prototype.compare = function(other) {
-      if (this.low < other.low && this.high < other.low) return -1;
-      if (other.low < this.low && other.high < this.low) return 1;
-      return 0;
-    };
-    function NumberAllocator(min5, max5) {
-      if (!(this instanceof NumberAllocator)) {
-        return new NumberAllocator(min5, max5);
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.NumberAllocator = void 0;
+    var NumberAllocator = class {
+      used;
+      min;
+      max;
+      lowWaterMark;
+      constructor(min5, max5) {
+        this.min = min5;
+        this.max = max5;
+        this.used = /* @__PURE__ */ new Set();
+        this.lowWaterMark = min5;
       }
-      this.min = min5;
-      this.max = max5;
-      this.ss = new SortedSet(
-        [],
-        (lhs, rhs) => {
-          return lhs.compare(rhs);
+      firstVacant() {
+        if (this.used.size === this.max - this.min + 1) {
+          return null;
         }
-      );
-      debugTrace("Create");
-      this.clear();
-    }
-    NumberAllocator.prototype.firstVacant = function() {
-      if (this.ss.size() === 0) return null;
-      return this.ss.front().low;
-    };
-    NumberAllocator.prototype.alloc = function() {
-      if (this.ss.size() === 0) {
-        debugTrace("alloc():empty");
+        for (let i = this.lowWaterMark; i <= this.max; i++) {
+          if (!this.used.has(i)) {
+            return i;
+          }
+        }
         return null;
       }
-      const it = this.ss.begin();
-      const low = it.pointer.low;
-      const high = it.pointer.high;
-      const num = low;
-      if (num + 1 <= high) {
-        this.ss.updateKeyByIterator(it, new Interval(low + 1, high));
-      } else {
-        this.ss.eraseElementByPos(0);
+      alloc() {
+        if (this.used.size === this.max - this.min + 1) {
+          return null;
+        }
+        for (let i = this.lowWaterMark; i <= this.max; i++) {
+          if (!this.used.has(i)) {
+            this.used.add(i);
+            this.lowWaterMark = i + 1;
+            return i;
+          }
+        }
+        return null;
       }
-      debugTrace("alloc():" + num);
-      return num;
-    };
-    NumberAllocator.prototype.use = function(num) {
-      const key = new Interval(num, num);
-      const it = this.ss.lowerBound(key);
-      if (!it.equals(this.ss.end())) {
-        const low = it.pointer.low;
-        const high = it.pointer.high;
-        if (it.pointer.equals(key)) {
-          this.ss.eraseElementByIterator(it);
-          debugTrace("use():" + num);
-          return true;
+      use(num) {
+        if (num < this.min || num > this.max || this.used.has(num)) {
+          return false;
         }
-        if (low > num) return false;
-        if (low === num) {
-          this.ss.updateKeyByIterator(it, new Interval(low + 1, high));
-          debugTrace("use():" + num);
-          return true;
-        }
-        if (high === num) {
-          this.ss.updateKeyByIterator(it, new Interval(low, high - 1));
-          debugTrace("use():" + num);
-          return true;
-        }
-        this.ss.updateKeyByIterator(it, new Interval(num + 1, high));
-        this.ss.insert(new Interval(low, num - 1));
-        debugTrace("use():" + num);
+        this.used.add(num);
         return true;
       }
-      debugTrace("use():failed");
-      return false;
-    };
-    NumberAllocator.prototype.free = function(num) {
-      if (num < this.min || num > this.max) {
-        debugError("free():" + num + " is out of range");
-        return;
-      }
-      const key = new Interval(num, num);
-      const it = this.ss.upperBound(key);
-      if (it.equals(this.ss.end())) {
-        if (it.equals(this.ss.begin())) {
-          this.ss.insert(key);
+      free(num) {
+        if (num < this.min || num > this.max) {
           return;
         }
-        it.pre();
-        const low = it.pointer.high;
-        const high = it.pointer.high;
-        if (high + 1 === num) {
-          this.ss.updateKeyByIterator(it, new Interval(low, num));
-        } else {
-          this.ss.insert(key);
-        }
-      } else {
-        if (it.equals(this.ss.begin())) {
-          if (num + 1 === it.pointer.low) {
-            const high = it.pointer.high;
-            this.ss.updateKeyByIterator(it, new Interval(num, high));
-          } else {
-            this.ss.insert(key);
-          }
-        } else {
-          const rLow = it.pointer.low;
-          const rHigh = it.pointer.high;
-          it.pre();
-          const lLow = it.pointer.low;
-          const lHigh = it.pointer.high;
-          if (lHigh + 1 === num) {
-            if (num + 1 === rLow) {
-              this.ss.eraseElementByIterator(it);
-              this.ss.updateKeyByIterator(it, new Interval(lLow, rHigh));
-            } else {
-              this.ss.updateKeyByIterator(it, new Interval(lLow, num));
-            }
-          } else {
-            if (num + 1 === rLow) {
-              this.ss.eraseElementByIterator(it.next());
-              this.ss.insert(new Interval(num, rHigh));
-            } else {
-              this.ss.insert(key);
-            }
-          }
+        this.used.delete(num);
+        if (num < this.lowWaterMark) {
+          this.lowWaterMark = num;
         }
       }
-      debugTrace("free():" + num);
-    };
-    NumberAllocator.prototype.clear = function() {
-      debugTrace("clear()");
-      this.ss.clear();
-      this.ss.insert(new Interval(this.min, this.max));
-    };
-    NumberAllocator.prototype.intervalCount = function() {
-      return this.ss.size();
-    };
-    NumberAllocator.prototype.dump = function() {
-      console.log("length:" + this.ss.size());
-      for (const element of this.ss) {
-        console.log(element);
+      clear() {
+        this.used.clear();
+        this.lowWaterMark = this.min;
       }
     };
-    module2.exports = NumberAllocator;
-  }
-});
-
-// node_modules/number-allocator/index.js
-var require_number_allocator2 = __commonJS({
-  "node_modules/number-allocator/index.js"(exports2, module2) {
-    var NumberAllocator = require_number_allocator();
-    module2.exports.NumberAllocator = NumberAllocator;
+    exports2.NumberAllocator = NumberAllocator;
   }
 });
 
@@ -17671,7 +15059,7 @@ var require_topic_alias_send = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var lru_cache_1 = require_commonjs();
-    var number_allocator_1 = require_number_allocator2();
+    var number_allocator_1 = require_number_allocator();
     var TopicAliasSend = class {
       aliasToTopic;
       topicToAlias;
@@ -17739,16 +15127,27 @@ var require_connack = __commonJS({
     var ack_1 = require_ack();
     var topic_alias_send_1 = __importDefault(require_topic_alias_send());
     var shared_1 = require_shared();
-    var handleConnack = (client, packet) => {
+    var handleConnack = (client, packet, pump) => {
       client.log("_handleConnack");
       const { options } = client;
       const version = options.protocolVersion;
       const rc = version === 5 ? packet.reasonCode : packet.returnCode;
+      if (client["connackReceived"]) {
+        const err = new shared_1.ErrorWithReasonCode("Protocol error: duplicate CONNACK on the same network connection", 130);
+        pump?.discardParsedPackets();
+        client["_cleanUp"](true);
+        client.emit("error", err);
+        return;
+      }
+      client["connackReceived"] = true;
       clearTimeout(client["connackTimer"]);
       delete client["topicAliasSend"];
+      client["_serverProperties"] = packet.properties;
       if (packet.properties) {
         if (packet.properties.topicAliasMaximum) {
           if (packet.properties.topicAliasMaximum > 65535) {
+            pump?.discardParsedPackets();
+            client["_cleanUp"](true);
             client.emit("error", new Error("topicAliasMaximum from broker is out of range"));
             return;
           }
@@ -17756,24 +15155,23 @@ var require_connack = __commonJS({
             client["topicAliasSend"] = new topic_alias_send_1.default(packet.properties.topicAliasMaximum);
           }
         }
-        if (packet.properties.serverKeepAlive && options.keepalive) {
-          options.keepalive = packet.properties.serverKeepAlive;
-        }
-        if (packet.properties.maximumPacketSize) {
-          if (!options.properties) {
-            options.properties = {};
-          }
-          options.properties.maximumPacketSize = packet.properties.maximumPacketSize;
-        }
       }
       if (rc === 0) {
         client.reconnecting = false;
         client["_onConnect"](packet);
       } else if (rc > 0) {
+        client.log("_handleConnack :: connection refused with reason code %d", rc);
         const err = new shared_1.ErrorWithReasonCode(`Connection refused: ${ack_1.ReasonCodes[rc]}`, rc);
-        client.emit("error", err);
-        if (client.options.reconnectOnConnackError) {
-          client["_cleanUp"](true);
+        pump?.discardParsedPackets();
+        client["reconnectSuppressed"] = true;
+        client["_cleanUp"](true);
+        try {
+          client.emit("error", err);
+        } finally {
+          if (options.reconnectOnConnackError) {
+            client["reconnectSuppressed"] = false;
+            client["_setupReconnect"]();
+          }
         }
       }
     };
@@ -17799,6 +15197,7 @@ var require_pubrel = __commonJS({
               return callback(err2);
             }
             client.incomingStore.del(pub, client.noop);
+            client["_releaseIncomingQoS2Publish"](messageId);
             client["_sendPacket"](comp, callback);
           });
         } else {
@@ -17823,21 +15222,34 @@ var require_handlers = __commonJS({
     var connack_1 = __importDefault(require_connack());
     var ack_1 = __importDefault(require_ack());
     var pubrel_1 = __importDefault(require_pubrel());
-    var handle = (client, packet, done) => {
+    var shared_1 = require_shared();
+    var remainingLengthBytes = (remainingLength) => {
+      if (remainingLength < 128)
+        return 1;
+      if (remainingLength < 16384)
+        return 2;
+      if (remainingLength < 2097152)
+        return 3;
+      return 4;
+    };
+    var totalPacketSize = (remainingLength) => 1 + remainingLengthBytes(remainingLength) + remainingLength;
+    var handle = (client, packet, done, pump) => {
       const { options } = client;
-      if (options.protocolVersion === 5 && options.properties && options.properties.maximumPacketSize && options.properties.maximumPacketSize < packet.length) {
-        client.emit("error", new Error(`exceeding packets size ${packet.cmd}`));
-        client.end({
-          reasonCode: 149,
-          properties: { reasonString: "Maximum packet size was exceeded" }
-        });
+      const maximumPacketSize = options.properties?.maximumPacketSize;
+      const packetSize = totalPacketSize(packet.length);
+      if (options.protocolVersion === 5 && maximumPacketSize && maximumPacketSize < packetSize) {
+        client.log("_handlePacket :: %s packet of %d bytes exceeds the advertised maximumPacketSize %d", packet.cmd, packetSize, maximumPacketSize);
+        pump?.discardParsedPackets();
+        client["_cleanUp"](true);
+        done();
+        client.emit("error", new shared_1.ErrorWithReasonCode(`exceeding packets size ${packet.cmd}: ${packetSize} bytes, maximumPacketSize is ${maximumPacketSize}`, 149));
         return client;
       }
       client.log("_handlePacket :: emitting packetreceive");
       client.emit("packetreceive", packet);
       switch (packet.cmd) {
         case "publish":
-          (0, publish_1.default)(client, packet, done);
+          (0, publish_1.default)(client, packet, done, pump);
           break;
         case "puback":
         case "pubrec":
@@ -17845,21 +15257,30 @@ var require_handlers = __commonJS({
         case "suback":
         case "unsuback":
           client.reschedulePing();
-          (0, ack_1.default)(client, packet);
-          done();
+          try {
+            (0, ack_1.default)(client, packet);
+          } finally {
+            done();
+          }
           break;
         case "pubrel":
           client.reschedulePing();
           (0, pubrel_1.default)(client, packet, done);
           break;
         case "connack":
-          (0, connack_1.default)(client, packet);
-          done();
+          try {
+            (0, connack_1.default)(client, packet, pump);
+          } finally {
+            done();
+          }
           break;
         case "auth":
           client.reschedulePing();
-          (0, auth_1.default)(client, packet);
-          done();
+          try {
+            (0, auth_1.default)(client, packet, pump);
+          } finally {
+            done();
+          }
           break;
         case "pingresp":
           client.log("_handlePacket :: received pingresp");
@@ -18790,7 +16211,7 @@ var require_bundle2 = __commonJS({
             for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
               args[_key - 2] = arguments[_key];
             }
-            var symbol = Symbol();
+            var symbol = /* @__PURE__ */ Symbol();
             var timerId = generateUniqueNumber(scheduledIntervalsState2);
             scheduledIntervalsState2.set(timerId, symbol);
             var _schedule = function schedule() {
@@ -18819,7 +16240,7 @@ var require_bundle2 = __commonJS({
             for (var _len = arguments.length, args = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
               args[_key - 2] = arguments[_key];
             }
-            var symbol = Symbol();
+            var symbol = /* @__PURE__ */ Symbol();
             var timerId = generateUniqueNumber(scheduledTimeoutsState2);
             scheduledTimeoutsState2.set(timerId, symbol);
             set(delay, timerId).then(function() {
@@ -19068,7 +16489,7 @@ var require_KeepaliveManager = __commonJS({
       constructor(client, variant) {
         this.client = client;
         this.timer = typeof variant === "object" && "set" in variant && "clear" in variant ? variant : (0, get_timer_1.default)(variant);
-        this.setKeepalive(client.options.keepalive);
+        this.setKeepalive(client.keepalive);
       }
       clear() {
         if (this.timerId) {
@@ -19167,6 +16588,7 @@ var require_client = __commonJS({
     var validations = __importStar(require_validations());
     var store_1 = __importDefault(require_store());
     var handlers_1 = __importDefault(require_handlers());
+    var ack_1 = require_ack();
     var default_message_id_provider_1 = __importDefault(require_default_message_id_provider());
     var topic_alias_recv_1 = __importDefault(require_topic_alias_recv());
     var shared_1 = require_shared();
@@ -19179,6 +16601,8 @@ var require_client = __commonJS({
         callback(...args);
       });
     });
+    var MAX_RECEIVE_MAXIMUM = 65535;
+    var RECEIVE_MAXIMUM_EXCEEDED = 147;
     var defaultConnectOptions = {
       keepalive: 60,
       reschedulePings: true,
@@ -19221,8 +16645,15 @@ var require_client = __commonJS({
       _firstConnection;
       topicAliasRecv;
       topicAliasSend;
+      _incomingQoS2Ids;
+      _receiveMaximum;
       _deferredReconnect;
+      _currentPump;
+      connackReceived;
+      reconnectSuppressed;
+      _authenticationMethod;
       connackPacket;
+      _serverProperties;
       static defaultId() {
         return `mqttjs_${Math.random().toString(16).substr(2, 8)}`;
       }
@@ -19263,6 +16694,16 @@ var require_client = __commonJS({
         this.messageIdProvider = typeof this.options.messageIdProvider === "undefined" ? new default_message_id_provider_1.default() : this.options.messageIdProvider;
         this.outgoingStore = options.outgoingStore || new store_1.default();
         this.incomingStore = options.incomingStore || new store_1.default();
+        this._incomingQoS2Ids = /* @__PURE__ */ new Set();
+        this._receiveMaximum = MAX_RECEIVE_MAXIMUM;
+        const receiveMaximum = options.properties?.receiveMaximum;
+        if (receiveMaximum !== void 0) {
+          if (Number.isInteger(receiveMaximum) && receiveMaximum >= 1 && receiveMaximum <= MAX_RECEIVE_MAXIMUM) {
+            this._receiveMaximum = receiveMaximum;
+          } else {
+            this.log("MqttClient :: options.properties.receiveMaximum %o is not an integer between 1 and %d, enforcing and advertising %d instead", receiveMaximum, MAX_RECEIVE_MAXIMUM, MAX_RECEIVE_MAXIMUM);
+          }
+        }
         this.queueQoSZero = options.queueQoSZero === void 0 ? true : options.queueQoSZero;
         this._resubscribeTopics = {};
         this.messageIdToTopic = {};
@@ -19272,6 +16713,8 @@ var require_client = __commonJS({
         this.reconnecting = false;
         this.queue = [];
         this.connackTimer = null;
+        this.connackReceived = false;
+        this.reconnectSuppressed = false;
         this.reconnectTimer = null;
         this._storeProcessing = false;
         this._packetIdsDuringStoreProcessing = {};
@@ -19324,6 +16767,7 @@ var require_client = __commonJS({
           this.log("close :: clearing connackTimer");
           clearTimeout(this.connackTimer);
           this._destroyKeepaliveManager();
+          this._serverProperties = void 0;
           if (this.topicAliasRecv) {
             this.topicAliasRecv.clear();
           }
@@ -19347,16 +16791,57 @@ var require_client = __commonJS({
       getLastMessageId() {
         return this.messageIdProvider.getLastAllocated();
       }
+      _trackIncomingQoS2Publish(messageId, done, pump) {
+        if (this._incomingQoS2Ids.has(messageId)) {
+          return true;
+        }
+        if (this.options.protocolVersion === 5 && this._incomingQoS2Ids.size >= this._receiveMaximum) {
+          this.log("_trackIncomingQoS2Publish :: inbound QoS 2 messages exceeded receiveMaximum %d", this._receiveMaximum);
+          pump?.discardParsedPackets();
+          if (!pump || pump.isCurrent()) {
+            this._cleanUp(true);
+          }
+          done();
+          this.emit("error", new shared_1.ErrorWithReasonCode(`${ack_1.ReasonCodes[RECEIVE_MAXIMUM_EXCEEDED]}: ${this._incomingQoS2Ids.size + 1} inbound QoS 2 messages in flight, receiveMaximum is ${this._receiveMaximum}`, RECEIVE_MAXIMUM_EXCEEDED));
+          return false;
+        }
+        this._incomingQoS2Ids.add(messageId);
+        return true;
+      }
+      _releaseIncomingQoS2Publish(messageId) {
+        this._incomingQoS2Ids.delete(messageId);
+      }
+      _discardIncomingQoS2State() {
+        if (this._incomingQoS2Ids.size === 0) {
+          return;
+        }
+        this.log("_discardIncomingQoS2State :: session not resumed, dropping %d inbound QoS 2 message(s)", this._incomingQoS2Ids.size);
+        for (const messageId of this._incomingQoS2Ids) {
+          this.incomingStore.del({ messageId }, this.noop);
+        }
+        this._incomingQoS2Ids.clear();
+      }
       connect() {
         const writable = new readable_stream_1.Writable();
         const parser = mqtt_packet_1.default.parser(this.options);
         let completeParse = null;
         const packets = [];
+        const pump = {
+          discardParsedPackets: () => {
+            packets.length = 0;
+          },
+          isCurrent: () => this._currentPump === pump
+        };
+        this._currentPump = pump;
+        this.connackReceived = false;
+        this.reconnectSuppressed = false;
         this.log("connect :: calling method to clear reconnect");
         this._clearReconnect();
+        this._serverProperties = void 0;
         if (this.disconnected && !this.reconnecting) {
           this.incomingStore = this.options.incomingStore || new store_1.default();
           this.outgoingStore = this.options.outgoingStore || new store_1.default();
+          this._incomingQoS2Ids.clear();
           this.disconnecting = false;
           this.disconnected = false;
         }
@@ -19368,10 +16853,14 @@ var require_client = __commonJS({
         });
         const work = () => {
           this.log("work :: getting next packet in queue");
+          if (this._currentPump !== pump) {
+            this.log("work :: pump superseded, dropping %d queued packets", packets.length);
+            packets.length = 0;
+          }
           const packet = packets.shift();
           if (packet) {
             this.log("work :: packet pulled from queue");
-            (0, handlers_1.default)(this, packet, nextTickWork);
+            (0, handlers_1.default)(this, packet, nextTickWork, pump);
           } else {
             this.log("work :: no packets in queue");
             const done = completeParse;
@@ -19387,7 +16876,8 @@ var require_client = __commonJS({
           } else {
             const done = completeParse;
             completeParse = null;
-            done();
+            if (done)
+              done();
           }
         };
         writable._write = (buf, enc, done) => {
@@ -19424,8 +16914,11 @@ var require_client = __commonJS({
           keepalive: this.options.keepalive,
           username: this.options.username,
           password: this.options.password,
-          properties: this.options.properties
+          properties: this.options.properties ? { ...this.options.properties } : void 0
         };
+        if (connectPacket.properties?.receiveMaximum !== void 0) {
+          connectPacket.properties.receiveMaximum = this._receiveMaximum;
+        }
         if (this.options.will) {
           connectPacket.will = {
             ...this.options.will,
@@ -19440,6 +16933,7 @@ var require_client = __commonJS({
             connectPacket.properties.topicAliasMaximum = this.topicAliasRecv.max;
           }
         }
+        this._authenticationMethod = connectPacket.properties?.authenticationMethod;
         this._writePacket(connectPacket);
         parser.on("error", this.emit.bind(this, "error"));
         if (this.options.properties) {
@@ -19458,12 +16952,13 @@ var require_client = __commonJS({
         }
         this.stream.setMaxListeners(1e3);
         clearTimeout(this.connackTimer);
-        this.connackTimer = setTimeout(() => {
-          this.log("!!connectTimeout hit!! Calling _cleanUp with force `true`");
-          this.emit("error", new Error("connack timeout"));
-          this._cleanUp(true);
-        }, this.options.connectTimeout);
+        this.connackTimer = setTimeout(() => this._onConnackTimeout(), this.options.connectTimeout);
         return this;
+      }
+      _onConnackTimeout() {
+        this.log("!!connectTimeout hit!! Calling _cleanUp with force `true`");
+        this._cleanUp(true);
+        this.emit("error", new Error("connack timeout"));
       }
       publish(topic, message, opts, callback) {
         this.log("publish :: message `%s` to topic `%s`", message, topic);
@@ -19510,6 +17005,7 @@ var require_client = __commonJS({
             case 2:
               this.outgoing[packet.messageId] = {
                 volatile: false,
+                cmd: "publish",
                 cb: callback || this.noop
               };
               this.log("MqttClient:publish: packet cmd: %s", packet.cmd);
@@ -19642,18 +17138,22 @@ var require_client = __commonJS({
           const promise = new Promise((resolve, reject) => {
             this.outgoing[packet.messageId] = {
               volatile: true,
-              cb(err, packet2) {
-                if (!err) {
-                  const { granted } = packet2;
-                  for (let grantedI = 0; grantedI < granted.length; grantedI += 1) {
-                    chunkedSubs[grantedI].qos = granted[grantedI];
-                  }
-                }
-                if (!err) {
-                  resolve(packet2);
-                } else {
+              cmd: "subscribe",
+              cb: (err, packet2) => {
+                if (err) {
                   reject(new shared_1.ErrorWithSubackPacket(err.message, packet2));
+                  return;
                 }
+                const { granted } = packet2;
+                if (granted.length !== chunkedSubs.length) {
+                  reject(new shared_1.ErrorWithSubackPacket(`Protocol error: suback granted ${granted.length} reason code(s) for ${chunkedSubs.length} subscription(s)`, packet2));
+                  this._cleanUp(true);
+                  return;
+                }
+                for (let grantedI = 0; grantedI < granted.length; grantedI += 1) {
+                  chunkedSubs[grantedI].qos = granted[grantedI];
+                }
+                resolve(packet2);
               }
             };
           });
@@ -19741,6 +17241,7 @@ var require_client = __commonJS({
           }
           this.outgoing[packet.messageId] = {
             volatile: true,
+            cmd: "unsubscribe",
             cb: callback
           };
           this.log("unsubscribe: call _sendPacket");
@@ -19784,6 +17285,7 @@ var require_client = __commonJS({
         const closeStores = () => {
           this.log("end :: closeStores: closing incoming and outgoing stores");
           this.disconnected = true;
+          this._incomingQoS2Ids.clear();
           this.incomingStore.close((e1) => {
             this.outgoingStore.close((e2) => {
               this.log("end :: closeStores: emitting end");
@@ -19855,6 +17357,7 @@ var require_client = __commonJS({
           }
           this.incomingStore = this.options.incomingStore || new store_1.default();
           this.outgoingStore = this.options.outgoingStore || new store_1.default();
+          this._incomingQoS2Ids.clear();
           this.disconnecting = false;
           this.disconnected = false;
           this._deferredReconnect = null;
@@ -19923,7 +17426,7 @@ var require_client = __commonJS({
       _reconnect() {
         this.log("_reconnect: emitting reconnect to client");
         this.emit("reconnect");
-        if (this.connected) {
+        if (this.connected && !this.stream.destroyed) {
           this.end(() => {
             this.connect();
           });
@@ -19934,7 +17437,7 @@ var require_client = __commonJS({
         }
       }
       _setupReconnect() {
-        if (!this.disconnecting && !this.reconnectTimer && this.options.reconnectPeriod > 0) {
+        if (!this.disconnecting && !this.reconnectSuppressed && !this.reconnectTimer && this.options.reconnectPeriod > 0) {
           if (!this.reconnecting) {
             this.log("_setupReconnect :: emit `offline` state");
             this.emit("offline");
@@ -20156,9 +17659,16 @@ var require_client = __commonJS({
           cb(new Error("No connection to broker"));
         }
       }
+      get serverProperties() {
+        return this._serverProperties;
+      }
+      get keepalive() {
+        const serverKeepAlive = this.connected ? this._serverProperties?.serverKeepAlive : void 0;
+        return serverKeepAlive && this.options.keepalive ? serverKeepAlive : this.options.keepalive;
+      }
       _setupKeepaliveManager() {
-        this.log("_setupKeepaliveManager :: keepalive %d (seconds)", this.options.keepalive);
-        if (!this.keepaliveManager && this.options.keepalive) {
+        this.log("_setupKeepaliveManager :: keepalive %d (seconds)", this.keepalive);
+        if (!this.keepaliveManager && this.keepalive) {
           this.keepaliveManager = new KeepaliveManager_1.default(this, this.options.timerVariant);
         }
       }
@@ -20170,7 +17680,7 @@ var require_client = __commonJS({
         }
       }
       reschedulePing(force = false) {
-        if (this.keepaliveManager && this.options.keepalive && (force || this.options.reschedulePings)) {
+        if (this.keepaliveManager && this.keepalive && (force || this.options.reschedulePings)) {
           this._reschedulePing();
         }
       }
@@ -20183,9 +17693,9 @@ var require_client = __commonJS({
         this._sendPacket({ cmd: "pingreq" });
       }
       onKeepaliveTimeout() {
-        this.emit("error", new Error("Keepalive timeout"));
         this.log("onKeepaliveTimeout :: calling _cleanUp with force true");
         this._cleanUp(true);
+        this.emit("error", new Error("Keepalive timeout"));
       }
       _resubscribe() {
         this.log("_resubscribe");
@@ -20218,9 +17728,13 @@ var require_client = __commonJS({
           return;
         }
         this.connackPacket = packet;
+        const sessionResumed = !this.options.clean && (this.options.protocolVersion < 4 || packet.sessionPresent === true);
+        if (!sessionResumed) {
+          this._discardIncomingQoS2State();
+        }
         this.messageIdProvider.clear();
-        this._setupKeepaliveManager();
         this.connected = true;
+        this._setupKeepaliveManager();
         const startStreamProcess = () => {
           let outStore = this.outgoingStore.createStream();
           const remove = () => {
@@ -20259,6 +17773,7 @@ var require_client = __commonJS({
               cb = this.outgoing[packet2.messageId] ? this.outgoing[packet2.messageId].cb : null;
               this.outgoing[packet2.messageId] = {
                 volatile: false,
+                cmd: packet2.cmd,
                 cb(err, status) {
                   if (cb) {
                     cb(err, status);
@@ -20338,7 +17853,7 @@ var require_unique_message_id_provider = __commonJS({
   "node_modules/mqtt/build/lib/unique-message-id-provider.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    var number_allocator_1 = require_number_allocator2();
+    var number_allocator_1 = require_number_allocator();
     var UniqueMessageIdProvider = class {
       numberAllocator;
       lastId;
@@ -20379,10 +17894,10 @@ var require_constants2 = __commonJS({
       EMPTY_BUFFER: Buffer.alloc(0),
       GUID: "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
       hasBlob,
-      kForOnEventAttribute: Symbol("kIsForOnEventAttribute"),
-      kListener: Symbol("kListener"),
-      kStatusCode: Symbol("status-code"),
-      kWebSocket: Symbol("websocket"),
+      kForOnEventAttribute: /* @__PURE__ */ Symbol("kIsForOnEventAttribute"),
+      kListener: /* @__PURE__ */ Symbol("kListener"),
+      kStatusCode: /* @__PURE__ */ Symbol("status-code"),
+      kWebSocket: /* @__PURE__ */ Symbol("websocket"),
       NOOP: () => {
       }
     };
@@ -20393,6 +17908,7 @@ var require_constants2 = __commonJS({
 var require_buffer_util = __commonJS({
   "node_modules/ws/lib/buffer-util.js"(exports2, module2) {
     "use strict";
+    var { websocketMask, websocketUnmask } = require("http");
     var { EMPTY_BUFFER } = require_constants2();
     var FastBuffer = Buffer[Symbol.species];
     function concat(list, totalLength) {
@@ -20447,7 +17963,16 @@ var require_buffer_util = __commonJS({
       toBuffer,
       unmask: _unmask
     };
-    if (!process.env.WS_NO_BUFFER_UTIL) {
+    if (websocketMask) {
+      module2.exports.mask = function(source, mask, output, offset, length) {
+        if (length < 24) _mask(source, mask, output, offset, length);
+        else websocketMask(source, mask, output, offset, length);
+      };
+      module2.exports.unmask = function(buffer, mask) {
+        if (buffer.length < 24) _unmask(buffer, mask);
+        else websocketUnmask(buffer, mask);
+      };
+    } else if (!process.env.WS_NO_BUFFER_UTIL) {
       try {
         const bufferUtil = require("bufferutil");
         module2.exports.mask = function(source, mask, output, offset, length) {
@@ -20468,8 +17993,8 @@ var require_buffer_util = __commonJS({
 var require_limiter = __commonJS({
   "node_modules/ws/lib/limiter.js"(exports2, module2) {
     "use strict";
-    var kDone = Symbol("kDone");
-    var kRun = Symbol("kRun");
+    var kDone = /* @__PURE__ */ Symbol("kDone");
+    var kRun = /* @__PURE__ */ Symbol("kRun");
     var Limiter = class {
       /**
        * Creates a new `Limiter`.
@@ -20524,11 +18049,11 @@ var require_permessage_deflate = __commonJS({
     var { kStatusCode } = require_constants2();
     var FastBuffer = Buffer[Symbol.species];
     var TRAILER = Buffer.from([0, 0, 255, 255]);
-    var kPerMessageDeflate = Symbol("permessage-deflate");
-    var kTotalLength = Symbol("total-length");
-    var kCallback = Symbol("callback");
-    var kBuffers = Symbol("buffers");
-    var kError = Symbol("error");
+    var kPerMessageDeflate = /* @__PURE__ */ Symbol("permessage-deflate");
+    var kTotalLength = /* @__PURE__ */ Symbol("total-length");
+    var kCallback = /* @__PURE__ */ Symbol("callback");
+    var kBuffers = /* @__PURE__ */ Symbol("buffers");
+    var kError = /* @__PURE__ */ Symbol("error");
     var zlibLimiter;
     var PerMessageDeflate = class {
       /**
@@ -20643,7 +18168,7 @@ var require_permessage_deflate = __commonJS({
       acceptAsServer(offers) {
         const opts = this._options;
         const accepted = offers.find((params) => {
-          if (opts.serverNoContextTakeover === false && params.server_no_context_takeover || params.server_max_window_bits && (opts.serverMaxWindowBits === false || typeof opts.serverMaxWindowBits === "number" && opts.serverMaxWindowBits > params.server_max_window_bits) || typeof opts.clientMaxWindowBits === "number" && !params.client_max_window_bits) {
+          if (opts.serverNoContextTakeover === false && params.server_no_context_takeover || params.server_max_window_bits && (opts.serverMaxWindowBits === false || typeof opts.serverMaxWindowBits === "number" && opts.serverMaxWindowBits > params.server_max_window_bits) || typeof opts.clientMaxWindowBits === "number" && (typeof params.client_max_window_bits === "number" ? opts.clientMaxWindowBits > params.client_max_window_bits : !params.client_max_window_bits)) {
             return false;
           }
           return true;
@@ -21734,7 +19259,7 @@ var require_sender = __commonJS({
     var { EMPTY_BUFFER, kWebSocket, NOOP } = require_constants2();
     var { isBlob, isValidStatusCode } = require_validation();
     var { mask: applyMask, toBuffer } = require_buffer_util();
-    var kByteLength = Symbol("kByteLength");
+    var kByteLength = /* @__PURE__ */ Symbol("kByteLength");
     var maskBuffer = Buffer.alloc(4);
     var RANDOM_POOL_SIZE = 8 * 1024;
     var randomPool;
@@ -21842,12 +19367,15 @@ var require_sender = __commonJS({
           target[2] = target[3] = 0;
           target.writeUIntBE(dataLength, 4, 6);
         }
-        if (!options.mask) return [target, data];
+        if (!options.mask) {
+          return dataLength ? [target, data] : [target];
+        }
         target[1] |= 128;
         target[offset - 4] = mask[0];
         target[offset - 3] = mask[1];
         target[offset - 2] = mask[2];
         target[offset - 1] = mask[3];
+        if (!dataLength) return [target];
         if (skipMasking) return [target, data];
         if (merge) {
           applyMask(data, mask, target, offset, dataLength);
@@ -22219,14 +19747,14 @@ var require_event_target = __commonJS({
   "node_modules/ws/lib/event-target.js"(exports2, module2) {
     "use strict";
     var { kForOnEventAttribute, kListener } = require_constants2();
-    var kCode = Symbol("kCode");
-    var kData = Symbol("kData");
-    var kError = Symbol("kError");
-    var kMessage = Symbol("kMessage");
-    var kReason = Symbol("kReason");
-    var kTarget = Symbol("kTarget");
-    var kType = Symbol("kType");
-    var kWasClean = Symbol("kWasClean");
+    var kCode = /* @__PURE__ */ Symbol("kCode");
+    var kData = /* @__PURE__ */ Symbol("kData");
+    var kError = /* @__PURE__ */ Symbol("kError");
+    var kMessage = /* @__PURE__ */ Symbol("kMessage");
+    var kReason = /* @__PURE__ */ Symbol("kReason");
+    var kTarget = /* @__PURE__ */ Symbol("kTarget");
+    var kType = /* @__PURE__ */ Symbol("kType");
+    var kWasClean = /* @__PURE__ */ Symbol("kWasClean");
     var Event2 = class {
       /**
        * Create a new `Event`.
@@ -22628,7 +20156,7 @@ var require_websocket = __commonJS({
     } = require_event_target();
     var { format, parse } = require_extension();
     var { toBuffer } = require_buffer_util();
-    var kAborted = Symbol("kAborted");
+    var kAborted = /* @__PURE__ */ Symbol("kAborted");
     var protocolVersions = [8, 13];
     var readyStates = ["CONNECTING", "OPEN", "CLOSING", "CLOSED"];
     var subprotocolRegex = /^[!#$%&'*+\-.0-9A-Z^_`|a-z~]+$/;
@@ -22661,11 +20189,23 @@ var require_websocket = __commonJS({
           this._isServer = false;
           this._redirects = 0;
           if (protocols === void 0) {
-            protocols = [];
+            if (!options || options.protocols === void 0) {
+              protocols = [];
+            } else if (Array.isArray(options.protocols)) {
+              protocols = options.protocols;
+            } else {
+              protocols = [options.protocols];
+            }
           } else if (!Array.isArray(protocols)) {
             if (typeof protocols === "object" && protocols !== null) {
               options = protocols;
-              protocols = [];
+              if (options.protocols === void 0) {
+                protocols = [];
+              } else if (Array.isArray(options.protocols)) {
+                protocols = options.protocols;
+              } else {
+                protocols = [options.protocols];
+              }
             } else {
               protocols = [protocols];
             }
@@ -22862,7 +20402,6 @@ var require_websocket = __commonJS({
           }
           return;
         }
-        this._readyState = _WebSocket.CLOSING;
         this._sender.close(code, data, !this._isServer, (err) => {
           if (err) return;
           this._closeFrameSent = true;
@@ -22870,6 +20409,7 @@ var require_websocket = __commonJS({
             this._socket.end();
           }
         });
+        this._readyState = _WebSocket.CLOSING;
         setCloseTimer(this);
       }
       /**
@@ -23094,6 +20634,7 @@ var require_websocket = __commonJS({
         socketPath: void 0,
         hostname: void 0,
         protocol: void 0,
+        protocols: void 0,
         timeout: void 0,
         method: "GET",
         host: void 0,
@@ -23192,9 +20733,14 @@ var require_websocket = __commonJS({
         opts.auth = `${parsedUrl.username}:${parsedUrl.password}`;
       }
       if (isIpcUrl) {
-        const parts = opts.path.split(":");
-        opts.socketPath = parts[0];
-        opts.path = parts[1];
+        const i = opts.path.indexOf(":");
+        if (i === -1) {
+          opts.socketPath = opts.path;
+          opts.path = "";
+        } else {
+          opts.socketPath = opts.path.slice(0, i);
+          opts.path = opts.path.slice(i + 1);
+        }
       }
       let req;
       if (opts.followRedirects) {
@@ -27802,7 +25348,7 @@ var require_receivebuffer = __commonJS({
 var require_socksclient = __commonJS({
   "node_modules/socks/build/client/socksclient.js"(exports2) {
     "use strict";
-    var __awaiter31 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
+    var __awaiter32 = exports2 && exports2.__awaiter || function(thisArg, _arguments, P, generator) {
       function adopt(value) {
         return value instanceof P ? value : new P(function(resolve) {
           resolve(value);
@@ -27901,7 +25447,7 @@ var require_socksclient = __commonJS({
        * @returns { Promise }
        */
       static createConnectionChain(options, callback) {
-        return new Promise((resolve, reject) => __awaiter31(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => __awaiter32(this, void 0, void 0, function* () {
           try {
             (0, helpers_1.validateSocksClientChainOptions)(options);
           } catch (err) {
@@ -28279,24 +25825,24 @@ var require_socksclient = __commonJS({
         this.setState(constants_1.SocksClientState.SentAuthentication);
       }
       sendSocks5CustomAuthentication() {
-        return __awaiter31(this, void 0, void 0, function* () {
+        return __awaiter32(this, void 0, void 0, function* () {
           this.nextRequiredPacketBufferSize = this.options.proxy.custom_auth_response_size;
           this.socket.write(yield this.options.proxy.custom_auth_request_handler());
           this.setState(constants_1.SocksClientState.SentAuthentication);
         });
       }
       handleSocks5CustomAuthHandshakeResponse(data) {
-        return __awaiter31(this, void 0, void 0, function* () {
+        return __awaiter32(this, void 0, void 0, function* () {
           return yield this.options.proxy.custom_auth_response_handler(data);
         });
       }
       handleSocks5AuthenticationNoAuthHandshakeResponse(data) {
-        return __awaiter31(this, void 0, void 0, function* () {
+        return __awaiter32(this, void 0, void 0, function* () {
           return data[1] === 0;
         });
       }
       handleSocks5AuthenticationUserPassHandshakeResponse(data) {
-        return __awaiter31(this, void 0, void 0, function* () {
+        return __awaiter32(this, void 0, void 0, function* () {
           return data[1] === 0;
         });
       }
@@ -28305,7 +25851,7 @@ var require_socksclient = __commonJS({
        * @param data
        */
       handleInitialSocks5AuthenticationHandshakeResponse() {
-        return __awaiter31(this, void 0, void 0, function* () {
+        return __awaiter32(this, void 0, void 0, function* () {
           this.setState(constants_1.SocksClientState.ReceivedAuthenticationResponse);
           let authResult = false;
           if (this.socks5ChosenAuthType === constants_1.Socks5Auth.NoAuth) {
@@ -29696,14 +27242,12 @@ var DependencyContainer = class _DependencyContainer {
     return this._services.get(name);
   }
   GetServiceAsync(name, token) {
-    var _a, _b;
-    if (this._services.has(name)) {
-      (_a = _DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_DependencyContainer.ServiceName, `Resolved service "${name}" immediately.`);
+    var _a;
+    if (this._services.has(name))
       return Promise.resolve(this._services.get(name));
-    }
     const resolution = this.CreatePendingResolution(name);
     this._pendingResolutions.set(resolution.Id, resolution);
-    (_b = _DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_DependencyContainer.ServiceName, `Waiting for service "${name}" (request #${resolution.Id}). Registered services: ${this.GetRegisteredServiceNamesForLogs()}.`);
+    (_a = _DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_DependencyContainer.ServiceName, `Waiting for service "${name}" (request #${resolution.Id}). Registered services: ${this.GetRegisteredServiceNamesForLogs()}.`);
     return new Promise((resolve, reject) => {
       const h = (s) => {
         var _a2;
@@ -29729,14 +27273,12 @@ var DependencyContainer = class _DependencyContainer {
     });
   }
   GetServiceWithTimeoutAsync(name, timeout) {
-    var _a, _b;
-    if (this._services.has(name)) {
-      (_a = _DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_DependencyContainer.ServiceName, `Resolved service "${name}" immediately.`);
+    var _a;
+    if (this._services.has(name))
       return Promise.resolve(this._services.get(name));
-    }
     const resolution = this.CreatePendingResolution(name);
     this._pendingResolutions.set(resolution.Id, resolution);
-    (_b = _DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Debug(_DependencyContainer.ServiceName, `Waiting for service "${name}" with timeout ${timeout}ms (request #${resolution.Id}). Registered services: ${this.GetRegisteredServiceNamesForLogs()}.`);
+    (_a = _DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_DependencyContainer.ServiceName, `Waiting for service "${name}" with timeout ${timeout}ms (request #${resolution.Id}). Registered services: ${this.GetRegisteredServiceNamesForLogs()}.`);
     return new Promise((resolve, reject) => {
       const h = (s) => {
         var _a2;
@@ -31156,18 +28698,20 @@ var SessionService = class _SessionService {
   }
   RestoreSessionAsync() {
     return __awaiter3(this, void 0, void 0, function* () {
-      var _a, _b, _c;
-      (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_SessionService.ServiceName, `Creating RestoreSessionAsync ${this._email} ${this._password}`);
+      var _a, _b, _c, _d;
+      (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Debug(_SessionService.ServiceName, "Creating RestoreSessionAsync");
       if (this._user === void 0 || this._user === null || !this._isLoggedIn)
         return false;
       let res = yield this.UserLogInAsync(this._email, this._password);
       if (this.isLoginError(res)) {
-        (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_SessionService.ServiceName, `RestoreSessionAsync failed, user login failed`);
-        if (res == LoginError.WrongAuthData)
+        if (res == LoginError.WrongAuthData) {
+          (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_SessionService.ServiceName, `RestoreSessionAsync failed, user login rejected`);
           throw new Error("Wrong authentication data!");
+        }
+        (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Warning(_SessionService.ServiceName, `RestoreSessionAsync did not complete: ${LoginError[res]}`);
         return false;
       }
-      (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Debug(_SessionService.ServiceName, `RestoreSessionAsync completed successfully`);
+      (_d = DependencyContainer.Log) === null || _d === void 0 ? void 0 : _d.Debug(_SessionService.ServiceName, `RestoreSessionAsync completed successfully`);
       return true;
     });
   }
@@ -31235,12 +28779,13 @@ var SessionService = class _SessionService {
         user.Surname = result.Data.Surname;
         user.SoftwareVersion = result.Data.SoftwareVersion;
         let conf = Api.Get(ControllerConfigurationService.ServiceName);
+        let configurationChanged;
         if (result.Data.ConfigurationTime !== void 0 && result.Data.ConfigurationTime != null) {
           ControllerConfigurationService.ConfigurationTimeRetrieved = new Date(result.Data.ConfigurationTime);
-          yield conf.CheckIfConfigurationTimeHasChangedAsync(new Date(result.Data.ConfigurationTime));
+          configurationChanged = yield conf.CheckIfConfigurationTimeHasChangedAsync(new Date(result.Data.ConfigurationTime));
         } else
-          yield conf.CheckIfConfigurationHasChangedAsync();
-        if (shouldClearCache)
+          configurationChanged = yield conf.CheckIfConfigurationHasChangedAsync();
+        if (shouldClearCache && !configurationChanged)
           Api.Get(WebApiCacheService.ServiceName).ClearCache();
         if (!this._alreadySubsribedToNetworkEvents) {
           this._alreadySubsribedToNetworkEvents = true;
@@ -31271,7 +28816,7 @@ var SessionService = class _SessionService {
   }
   UserLogInAsync(email, password) {
     return __awaiter3(this, void 0, void 0, function* () {
-      var _a, _b, _c;
+      var _a, _b, _c, _d, _e, _f;
       let connection = Api.Get(ExalusConnectionService.ServiceName);
       const result = yield connection.SendAndWaitForResponseAsync(new LoginUserRequest(email, password), 2e4, false);
       if (result.Status == Status.OK && result.Data != null) {
@@ -31292,12 +28837,13 @@ var SessionService = class _SessionService {
         user.Surname = result.Data.Surname;
         user.SoftwareVersion = result.Data.SoftwareVersion;
         let conf = Api.Get(ControllerConfigurationService.ServiceName);
+        let configurationChanged;
         if (result.Data.ConfigurationTime !== void 0 && result.Data.ConfigurationTime != null) {
           ControllerConfigurationService.ConfigurationTimeRetrieved = new Date(result.Data.ConfigurationTime);
-          yield conf.CheckIfConfigurationTimeHasChangedAsync(new Date(result.Data.ConfigurationTime));
+          configurationChanged = yield conf.CheckIfConfigurationTimeHasChangedAsync(new Date(result.Data.ConfigurationTime));
         } else
-          yield conf.CheckIfConfigurationHasChangedAsync();
-        if (shouldClearCache)
+          configurationChanged = yield conf.CheckIfConfigurationHasChangedAsync();
+        if (shouldClearCache && !configurationChanged)
           Api.Get(WebApiCacheService.ServiceName).ClearCache();
         if (!this._alreadySubsribedToNetworkEvents) {
           this._alreadySubsribedToNetworkEvents = true;
@@ -31314,9 +28860,18 @@ var SessionService = class _SessionService {
         this._isLoggedIn = true;
         this._onUserLoggedInEvent.Invoke(this._user);
         return user;
-      } else {
-        (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Debug(_SessionService.ServiceName, `User login response: ${result.Data}`);
+      } else if (result.Status === Status.WrongData) {
+        (_c = DependencyContainer.Log) === null || _c === void 0 ? void 0 : _c.Debug(_SessionService.ServiceName, `User login rejected: ${result.Data}`);
         return LoginError.WrongAuthData;
+      } else if (result.Status === Status.OperationNotPermitted) {
+        (_d = DependencyContainer.Log) === null || _d === void 0 ? void 0 : _d.Debug(_SessionService.ServiceName, `Controller login is disabled: ${result.Data}`);
+        return LoginError.AuthDisabled;
+      } else if (result.Status === Status.ResourceDoesNotExists) {
+        (_e = DependencyContainer.Log) === null || _e === void 0 ? void 0 : _e.Debug(_SessionService.ServiceName, `Controller login method is not supported: ${result.Data}`);
+        return LoginError.MethodNotSupported;
+      } else {
+        (_f = DependencyContainer.Log) === null || _f === void 0 ? void 0 : _f.Debug(_SessionService.ServiceName, `Controller login failed with status ${result.Status}: ${result.Data}`);
+        return LoginError.Unknown;
       }
     });
   }
@@ -32323,8 +29878,9 @@ var __awaiter7 = function(thisArg, _arguments, P, generator) {
   });
 };
 var FastRetryPolicy = class {
-  nextRetryDelayInMilliseconds() {
-    return 1e3;
+  nextRetryDelayInMilliseconds(context) {
+    const retryDelays = [0, 1e3, 3e3, 5e3, 1e4, 3e4];
+    return retryDelays[Math.min(context.previousRetryCount, retryDelays.length - 1)];
   }
 };
 var TRANSPORTS = [
@@ -32360,10 +29916,18 @@ var SignalrLogger = class {
 var ExalusConnectionService = class _ExalusConnectionService {
   constructor() {
     this._connectTask = null;
+    this._connectTaskVersion = null;
+    this._reconnectTask = null;
+    this._reconnectTaskVersion = null;
+    this._restoreTask = null;
+    this._restoreTaskVersion = null;
+    this._connectionValidationTask = null;
     this._authorizeTask = null;
+    this._authorizeTaskVersion = null;
     this._pingTimerId = null;
     this._consecutivePingFailures = 0;
     this._disconnectedOnPurpose = false;
+    this._lifecycleVersion = 0;
     this._address = "packets-broker1.tr7.pl";
     this._serversBrokerAddress = "https://servers-broker.tr7.pl";
     this._serversBrokerAddressList = [
@@ -32395,56 +29959,38 @@ var ExalusConnectionService = class _ExalusConnectionService {
     this._connectionStateChangedEvent = new TypedEvent();
     this._errorOccuredEvent = new TypedEvent();
     this._tryReconnect = () => {
-      if (this._connectTask)
-        return;
-      if (navigator.onLine) {
-        this.validateConnectionToController().then((isConnected) => {
-          if (!isConnected) {
-            this._log.Debug(_ExalusConnectionService.ServiceName, "Connection lost \u2192 reconnecting...");
-            void this.serialisedConnect();
-          }
-        });
-      }
+      this.ensureConnectionIsHealthy();
     };
     this._onVisibility = () => {
-      if (this._connectTask)
-        return;
       if (document.visibilityState === "visible") {
         this._log.Debug(_ExalusConnectionService.ServiceName, "Page visible \u2192 connection check");
-        this.validateConnectionToController().then((isConnected) => {
-          if (!isConnected) {
-            this._log.Debug(_ExalusConnectionService.ServiceName, "Connection lost \u2192 reconnecting...");
-            void this.serialisedConnect();
-          }
-        });
+        this.ensureConnectionIsHealthy();
       }
     };
     this._onHidden = () => {
     };
     this._onVisible = () => {
-      if (this._connectTask)
-        return;
-      this.validateConnectionToController().then((isConnected) => {
-        if (!isConnected) {
-          this._log.Debug(_ExalusConnectionService.ServiceName, "Connection lost \u2192 reconnecting...");
-          void this.serialisedConnect();
-        }
-      });
+      this.ensureConnectionIsHealthy();
     };
-    this._appState.OnAppStateChanged().Subscribe((newState) => __awaiter7(this, void 0, void 0, function* () {
-      var _a;
-      this._log.Debug(_ExalusConnectionService.ServiceName, `App state changed: ${newState}`);
-      switch (newState) {
-        case AppState.ExitedLowPowerMode:
-        case AppState.ReturnedFromSuspension:
-          this._log.Debug(_ExalusConnectionService.ServiceName, `Handling app state change: ${newState}`);
-          if (yield this.RestoreConnectionAsync())
-            (_a = this._session) === null || _a === void 0 ? void 0 : _a.RestoreSessionAsync();
-          break;
-        case AppState.Connected:
-          this.resolveConnectedBrokerInfo(this._serversBrokerAddress, this._address);
-      }
-    }));
+    this._appState.OnAppStateChanged().Subscribe((newState) => {
+      void (() => __awaiter7(this, void 0, void 0, function* () {
+        var _a;
+        this._log.Debug(_ExalusConnectionService.ServiceName, `App state changed: ${newState}`);
+        switch (newState) {
+          case AppState.ExitedLowPowerMode:
+          case AppState.ReturnedFromSuspension:
+            this._log.Debug(_ExalusConnectionService.ServiceName, `Handling app state change: ${newState}`);
+            if (this.GetAuthorizationInfo() !== null && (yield this.RestoreConnectionAsync()))
+              yield (_a = this._session) === null || _a === void 0 ? void 0 : _a.RestoreSessionAsync();
+            break;
+          case AppState.Connected:
+            this.resolveConnectedBrokerInfo(this._serversBrokerAddress, this._address);
+            break;
+        }
+      }))().catch((error) => {
+        this._log.Warning(_ExalusConnectionService.ServiceName, `App state handling failed: ${error}`);
+      });
+    });
   }
   GetServiceName() {
     return _ExalusConnectionService.ServiceName;
@@ -32502,14 +30048,25 @@ var ExalusConnectionService = class _ExalusConnectionService {
     this._dataReceivedEvent.Subscribe(h);
     return () => this._dataReceivedEvent.Unsubscribe(h);
   }
+  isLifecycleCurrent(version) {
+    return version === this._lifecycleVersion && !this._disconnectedOnPurpose;
+  }
+  beginExplicitConnection() {
+    var _a;
+    (_a = this._authorizeTaskCancel) === null || _a === void 0 ? void 0 : _a.call(this);
+    this._lifecycleVersion++;
+    this._disconnectedOnPurpose = false;
+    return this._lifecycleVersion;
+  }
   reauthorizeIfPossible() {
-    return __awaiter7(this, void 0, void 0, function* () {
+    return __awaiter7(this, arguments, void 0, function* (version = this._lifecycleVersion) {
       if (!this._serialId || !this._PIN) {
         this._isAuthorized = false;
         return false;
       }
-      const ok = yield this.AuthorizeAsync(new AuthorizationInfo(this._serialId, this._PIN));
-      this._isAuthorized = ok;
+      const ok = yield this.authorizeAsyncCore(new AuthorizationInfo(this._serialId, this._PIN), version);
+      if (this.isLifecycleCurrent(version))
+        this._isAuthorized = ok;
       return ok;
     });
   }
@@ -32564,12 +30121,21 @@ var ExalusConnectionService = class _ExalusConnectionService {
   }
   ConnectAsync(address) {
     return __awaiter7(this, void 0, void 0, function* () {
+      const version = this.beginExplicitConnection();
       this._address = address;
-      return this.serialisedConnect();
+      return this.serialisedConnect(version);
     });
   }
   ConnectAndAuthorizeAsync(info) {
     return __awaiter7(this, void 0, void 0, function* () {
+      const version = this.beginExplicitConnection();
+      return this.connectAndAuthorizeCore(info, version);
+    });
+  }
+  connectAndAuthorizeCore(info, version) {
+    return __awaiter7(this, void 0, void 0, function* () {
+      if (!this.isLifecycleCurrent(version))
+        return ConnectionResult.FailedToConnect;
       this.resetConnectedServerAddressResolution();
       this._serialId = info.serialNumber;
       this._PIN = info.pin;
@@ -32577,21 +30143,38 @@ var ExalusConnectionService = class _ExalusConnectionService {
       this._allBrokersChecked = false;
       this._serversBrokerAddress = this._serversBrokerAddressList[0];
       const packetsBroker = yield this.GetServerAddressAsync();
+      if (!this.isLifecycleCurrent(version))
+        return ConnectionResult.FailedToConnect;
       if (packetsBroker) {
         this.SetDefaultPacketsBrokerAddress(packetsBroker);
-        if ((yield this.serialisedConnect()) === ConnectionResult.Connected && (yield this.AuthorizeAsync(info))) {
+        const result = yield this.connectAndEnsureAuthorized(info, version);
+        if (result === ConnectionResult.Connected) {
           return ConnectionResult.Connected;
         }
       }
       for (const host of this._packetsBrokerServers) {
+        if (!this.isLifecycleCurrent(version))
+          return ConnectionResult.FailedToConnect;
         this._log.Info(_ExalusConnectionService.ServiceName, `Fallback broker: ${host}`);
         this.SetDefaultPacketsBrokerAddress(host);
-        if ((yield this.serialisedConnect()) === ConnectionResult.Connected && (yield this.AuthorizeAsync(info))) {
-          this._disconnectedOnPurpose = false;
+        const result = yield this.connectAndEnsureAuthorized(info, version);
+        if (result === ConnectionResult.Connected) {
           return ConnectionResult.Connected;
         }
       }
       return ConnectionResult.FailedToConnect;
+    });
+  }
+  connectAndEnsureAuthorized(info, version) {
+    return __awaiter7(this, void 0, void 0, function* () {
+      if (!this.isLifecycleCurrent(version))
+        return ConnectionResult.FailedToConnect;
+      const connectionResult = yield this.serialisedConnect(version);
+      if (connectionResult !== ConnectionResult.Connected)
+        return connectionResult;
+      if (!this.isLifecycleCurrent(version))
+        return ConnectionResult.FailedToConnect;
+      return this._isAuthorized || (yield this.authorizeAsyncCore(info, version)) ? ConnectionResult.Connected : ConnectionResult.FailedToConnect;
     });
   }
   resetConnectedServerAddressResolution() {
@@ -32610,35 +30193,70 @@ var ExalusConnectionService = class _ExalusConnectionService {
   }
   AuthorizeAsync(info) {
     return __awaiter7(this, void 0, void 0, function* () {
-      if (this._authorizeTask)
-        return this._authorizeTask;
-      this._authorizeTask = new Promise((resolve) => __awaiter7(this, void 0, void 0, function* () {
-        var _a;
-        const timeoutId = window.setTimeout(() => {
-          this._authorizationReceivedEvent.Unsubscribe(onAuth);
-          this._isAuthorized = false;
-          this._log.Debug(_ExalusConnectionService.ServiceName, `AuthorizeAsync timed out for id ${timeoutId}`);
-          resolve(false);
-        }, 2e3);
-        this._log.Debug(_ExalusConnectionService.ServiceName, `AuthorizeAsync - created timeoutId ${timeoutId}`);
-        const onAuth = (ok) => {
-          window.clearTimeout(timeoutId);
-          this._authorizationReceivedEvent.Unsubscribe(onAuth);
-          this._log.Debug(_ExalusConnectionService.ServiceName, `Authorization \u2192 ${ok}`);
-          this._isAuthorized = ok;
-          if (ok)
-            this._connectionStateChangedEvent.Invoke(ConnectionState.ConnectedAndAuthorized);
-          this._log.Debug(_ExalusConnectionService.ServiceName, `AuthorizeAsync isAuthorized: ${ok} cleared timeoutId ${timeoutId}`);
-          resolve(ok);
-        };
-        this._authorizationReceivedEvent.Subscribe(onAuth);
-        this._log.Debug(_ExalusConnectionService.ServiceName, `Authorizing to ${info.SerialNumber}... for timoeoutId ${timeoutId}`);
-        yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.send("AuthorizeTo", info.SerialNumber, info.PIN);
-      })).finally(() => {
-        this._authorizeTask = null;
-      });
-      return this._authorizeTask;
+      this._serialId = info.SerialNumber;
+      this._PIN = info.PIN;
+      Api.WorksInContextOf = this._serialId;
+      return this.authorizeAsyncCore(info, this._lifecycleVersion);
     });
+  }
+  authorizeAsyncCore(info, version) {
+    var _a;
+    if (!this.isLifecycleCurrent(version))
+      return Promise.resolve(false);
+    const connection = this._connection;
+    if ((connection === null || connection === void 0 ? void 0 : connection.state) !== signalR.HubConnectionState.Connected)
+      return Promise.resolve(false);
+    if (this._authorizeTask && this._authorizeTaskVersion === version && this._authorizeTaskConnection === connection)
+      return this._authorizeTask;
+    (_a = this._authorizeTaskCancel) === null || _a === void 0 ? void 0 : _a.call(this);
+    let task;
+    let cancelAuthorization;
+    const authorizationTask = new Promise((resolve) => {
+      let completed = false;
+      let timeoutId;
+      const complete = (ok) => {
+        if (completed)
+          return;
+        completed = true;
+        if (timeoutId !== void 0)
+          window.clearTimeout(timeoutId);
+        this._authorizationReceivedEvent.Unsubscribe(onAuth);
+        const isCurrent = this.isLifecycleCurrent(version) && this._connection === connection;
+        if (isCurrent)
+          this._isAuthorized = ok;
+        if (isCurrent && ok)
+          this._connectionStateChangedEvent.Invoke(ConnectionState.ConnectedAndAuthorized);
+        resolve(isCurrent && ok);
+      };
+      const onAuth = (ok) => {
+        this._log.Debug(_ExalusConnectionService.ServiceName, `Authorization -> ${ok}`);
+        complete(ok);
+      };
+      timeoutId = window.setTimeout(() => {
+        this._log.Debug(_ExalusConnectionService.ServiceName, "AuthorizeAsync timed out");
+        complete(false);
+      }, 2e3);
+      this._authorizationReceivedEvent.Subscribe(onAuth);
+      cancelAuthorization = () => complete(false);
+      this._log.Debug(_ExalusConnectionService.ServiceName, `Authorizing to ${info.SerialNumber}...`);
+      void connection.send("AuthorizeTo", info.SerialNumber, info.PIN).catch((error) => {
+        this._log.Warning(_ExalusConnectionService.ServiceName, `Authorization request failed: ${error}`);
+        complete(false);
+      });
+    });
+    task = authorizationTask.finally(() => {
+      if (this._authorizeTask === task) {
+        this._authorizeTask = null;
+        this._authorizeTaskVersion = null;
+        this._authorizeTaskConnection = void 0;
+        this._authorizeTaskCancel = void 0;
+      }
+    });
+    this._authorizeTask = task;
+    this._authorizeTaskVersion = version;
+    this._authorizeTaskConnection = connection;
+    this._authorizeTaskCancel = cancelAuthorization;
+    return task;
   }
   IsConnected() {
     var _a;
@@ -32646,10 +30264,17 @@ var ExalusConnectionService = class _ExalusConnectionService {
   }
   DisconnectAsync() {
     return __awaiter7(this, void 0, void 0, function* () {
-      var _a;
+      var _a, _b;
+      (_a = this._authorizeTaskCancel) === null || _a === void 0 ? void 0 : _a.call(this);
+      this._lifecycleVersion++;
       this._disconnectedOnPurpose = true;
+      this._isAuthorized = false;
       this._log.Debug(_ExalusConnectionService.ServiceName, "Disconnecting...");
-      yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.stop();
+      try {
+        yield (_b = this._connection) === null || _b === void 0 ? void 0 : _b.stop();
+      } catch (error) {
+        this._log.Warning(_ExalusConnectionService.ServiceName, `Disconnect failed: ${error}`);
+      }
       this.cleanup();
     });
   }
@@ -32704,31 +30329,63 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
   }
   RestoreConnectionAsync() {
     return __awaiter7(this, void 0, void 0, function* () {
-      var _a, _b;
       if (this._disconnectedOnPurpose)
         return false;
+      const version = this._lifecycleVersion;
+      if (this._reconnectTask && this._reconnectTaskVersion === version)
+        return this._reconnectTask.then((result) => result === ConnectionResult.Connected && this._isAuthorized);
+      if (this.IsConnected()) {
+        const auth = this.GetAuthorizationInfo();
+        if (auth !== null)
+          return this.authorizeAsyncCore(auth, version);
+        return false;
+      }
+      if (this._restoreTask && this._restoreTaskVersion === version)
+        return this._restoreTask;
+      let task;
+      task = this.restoreConnectionCore(version).finally(() => {
+        if (this._restoreTask === task) {
+          this._restoreTask = null;
+          this._restoreTaskVersion = null;
+        }
+      });
+      this._restoreTask = task;
+      this._restoreTaskVersion = version;
+      return task;
+    });
+  }
+  restoreConnectionCore(version) {
+    return __awaiter7(this, void 0, void 0, function* () {
+      var _a, _b;
       const auth = this.GetAuthorizationInfo();
       if (auth === null) {
-        (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Error(_ExalusConnectionService.ServiceName, "RestoreSessionAsync failed, no authorization info");
+        (_a = DependencyContainer.Log) === null || _a === void 0 ? void 0 : _a.Error(_ExalusConnectionService.ServiceName, "Connection restore failed, no controller authorization info");
         return false;
       }
       const start = Date.now();
       const maxTime = 30 * 60 * 1e3;
       let attempt = 0;
       do {
+        if (!this.isLifecycleCurrent(version))
+          return false;
         if (this.IsConnected()) {
-          if (yield this.AuthorizeAsync(auth))
+          if (yield this.authorizeAsyncCore(auth, version))
+            return true;
+        } else {
+          const result = yield this.connectAndAuthorizeCore(auth, version);
+          if (result === ConnectionResult.Connected)
             return true;
         }
-        const result = yield this.ConnectAndAuthorizeAsync(auth);
-        if (result === ConnectionResult.Connected)
-          return true;
+        if (!this.isLifecycleCurrent(version))
+          return false;
         const delay = Math.min(3e4, 5e3 * Math.pow(2, attempt++));
         yield new Promise((r) => setTimeout(r, delay));
+        if (!this.isLifecycleCurrent(version))
+          return false;
         this._allBrokersChecked = false;
         this._serversBrokerAddress = this._serversBrokerAddressList[0];
       } while (Date.now() - start < maxTime);
-      (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_ExalusConnectionService.ServiceName, "RestoreSessionAsync failed, authorization failed");
+      (_b = DependencyContainer.Log) === null || _b === void 0 ? void 0 : _b.Error(_ExalusConnectionService.ServiceName, "Connection restore failed");
       return false;
     });
   }
@@ -32909,11 +30566,70 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
   OnErrorOccuredEvent() {
     return this._errorOccuredEvent;
   }
-  serialisedConnect() {
-    if (this._connectTask)
+  serialisedConnect(version = this._lifecycleVersion) {
+    if (!this.isLifecycleCurrent(version))
+      return Promise.resolve(ConnectionResult.FailedToConnect);
+    if (this._connectTask && this._connectTaskVersion === version)
       return this._connectTask;
-    this._connectTask = this.connectCore().finally(() => this._connectTask = null);
-    return this._connectTask;
+    let task;
+    task = this.connectCore(version).finally(() => {
+      if (this._connectTask === task) {
+        this._connectTask = null;
+        this._connectTaskVersion = null;
+      }
+    });
+    this._connectTask = task;
+    this._connectTaskVersion = version;
+    return task;
+  }
+  reconnectAsync(version = this._lifecycleVersion) {
+    if (!this.isLifecycleCurrent(version))
+      return Promise.resolve(ConnectionResult.FailedToConnect);
+    if (this._reconnectTask && this._reconnectTaskVersion === version)
+      return this._reconnectTask;
+    let task;
+    task = this.reconnectCore(version).finally(() => {
+      if (this._reconnectTask === task) {
+        this._reconnectTask = null;
+        this._reconnectTaskVersion = null;
+      }
+    });
+    this._reconnectTask = task;
+    this._reconnectTaskVersion = version;
+    return task;
+  }
+  reconnectCore(version) {
+    return __awaiter7(this, void 0, void 0, function* () {
+      if (!this.isLifecycleCurrent(version))
+        return ConnectionResult.FailedToConnect;
+      if (!this._serialId || !this._PIN)
+        return ConnectionResult.FailedToConnect;
+      const start = Date.now();
+      const maxTime = 30 * 60 * 1e3;
+      let attempt = 0;
+      while (Date.now() - start < maxTime) {
+        if (!this.isLifecycleCurrent(version))
+          return ConnectionResult.FailedToConnect;
+        const connection = this._connection;
+        if (connection) {
+          if (this._connection === connection)
+            this.cleanup();
+          try {
+            yield connection.stop();
+          } catch (_a) {
+          }
+        }
+        this._isAuthorized = false;
+        const result = yield this.serialisedConnect(version);
+        if (result === ConnectionResult.Connected && this._isAuthorized)
+          return result;
+        if (!this.isLifecycleCurrent(version))
+          return ConnectionResult.FailedToConnect;
+        const delay = Math.min(3e4, 5e3 * Math.pow(2, attempt++));
+        yield new Promise((resolve) => setTimeout(resolve, delay));
+      }
+      return ConnectionResult.FailedToConnect;
+    });
   }
   // Wait until connection reaches any of the target states (or timeout)
   waitForState(targets_1) {
@@ -32922,6 +30638,8 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
       const start = Date.now();
       while (true) {
         const st = (_a = this._connection) === null || _a === void 0 ? void 0 : _a.state;
+        if (st == null)
+          return;
         if (st != null && targets.includes(st))
           return;
         if (Date.now() - start > timeoutMs)
@@ -32930,36 +30648,62 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
       }
     });
   }
-  connectCore() {
+  connectCore(version) {
     return __awaiter7(this, void 0, void 0, function* () {
-      var _a, _b;
+      var _a, _b, _c;
+      if (!this.isLifecycleCurrent(version))
+        return ConnectionResult.FailedToConnect;
       if (!this._address)
         return ConnectionResult.ControllerIsNotConnected;
       if (this._connection && this._currentAddress !== this._address) {
         this._log.Info(_ExalusConnectionService.ServiceName, "Broker changed \u2192 rebuilding connection");
-        try {
-          yield this._connection.stop();
-        } catch (_c) {
-        }
+        const oldConnection = this._connection;
         this.cleanup();
+        try {
+          yield oldConnection.stop();
+        } catch (_d) {
+        }
       }
       if (this._connection) {
-        const s = this._connection.state;
+        const existingConnection = this._connection;
+        const s = existingConnection.state;
         if (s === signalR.HubConnectionState.Connected) {
-          if (!this._isAuthorized)
-            yield this.reauthorizeIfPossible();
+          if (this._serialId && this._PIN && !(yield this.reauthorizeIfPossible(version))) {
+            this.cleanup();
+            try {
+              yield existingConnection.stop();
+            } catch (_e) {
+            }
+            return ConnectionResult.FailedToConnect;
+          }
           return ConnectionResult.Connected;
         }
         if (s === signalR.HubConnectionState.Connecting || s === signalR.HubConnectionState.Reconnecting) {
           this._log.Info(_ExalusConnectionService.ServiceName, "Existing connection is starting/reconnecting \u2013 waiting.");
           try {
             yield this.waitForState([signalR.HubConnectionState.Connected, signalR.HubConnectionState.Disconnected]);
-          } catch (_d) {
+          } catch (_f) {
           }
+          if (!this.isLifecycleCurrent(version))
+            return ConnectionResult.FailedToConnect;
           if (((_a = this._connection) === null || _a === void 0 ? void 0 : _a.state) === signalR.HubConnectionState.Connected) {
-            if (!this._isAuthorized)
-              yield this.reauthorizeIfPossible();
+            const connectedConnection = this._connection;
+            if (this._serialId && this._PIN && !(yield this.reauthorizeIfPossible(version))) {
+              this.cleanup();
+              try {
+                yield connectedConnection.stop();
+              } catch (_g) {
+              }
+              return ConnectionResult.FailedToConnect;
+            }
             return ConnectionResult.Connected;
+          }
+          if (this._connection === existingConnection) {
+            this.cleanup();
+            try {
+              yield existingConnection.stop();
+            } catch (_h) {
+            }
           }
         }
         if (s === signalR.HubConnectionState.Disconnecting) {
@@ -32967,9 +30711,13 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
           });
         }
       }
+      if (!this.isLifecycleCurrent(version))
+        return ConnectionResult.FailedToConnect;
       this.initializeServices();
       this.cleanup();
       for (const t of TRANSPORTS) {
+        if (!this.isLifecycleCurrent(version))
+          return ConnectionResult.FailedToConnect;
         const builder = new signalR.HubConnectionBuilder().withAutomaticReconnect(new FastRetryPolicy()).configureLogging(new SignalrLogger()).withStatefulReconnect({ bufferSize: 256e3 }).withServerTimeout(_ExalusConnectionService.SERVER_TIMOUT_MS).withKeepAliveInterval(_ExalusConnectionService.PING_INTERVAL_MS - 1e3).withUrl(`https://${this._address}/broker`, {
           // skipNegotiation only for WebSockets
           skipNegotiation: t === signalR.HttpTransportType.WebSockets,
@@ -32981,22 +30729,55 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
         const conn = builder.build();
         this._connection = conn;
         this._currentAddress = this._address;
-        this.wireConnectionEvents();
+        this.wireConnectionEvents(conn);
         try {
           yield conn.start();
-          yield this.reauthorizeIfPossible();
+          if (!this.isLifecycleCurrent(version) || this._connection !== conn) {
+            try {
+              yield conn.stop();
+            } catch (_j) {
+            }
+            try {
+              (_b = conn === null || conn === void 0 ? void 0 : conn.off) === null || _b === void 0 ? void 0 : _b.call(conn);
+            } catch (_k) {
+            }
+            return ConnectionResult.FailedToConnect;
+          }
+          this._everConnected = true;
+          if (this._serialId && this._PIN && !(yield this.reauthorizeIfPossible(version))) {
+            if (this._connection === conn)
+              this.cleanup();
+            try {
+              yield conn.stop();
+            } catch (_l) {
+            }
+            this._connectionStateChangedEvent.Invoke(ConnectionState.Failed);
+            return ConnectionResult.FailedToConnect;
+          }
+          if (!this.isLifecycleCurrent(version) || this._connection !== conn) {
+            if (this._connection === conn)
+              this.cleanup();
+            try {
+              yield conn.stop();
+            } catch (_m) {
+            }
+            return ConnectionResult.FailedToConnect;
+          }
+          this._consecutivePingFailures = 0;
           this.startPingLoop();
           this._connectionStateChangedEvent.Invoke(ConnectionState.Connected);
           return ConnectionResult.Connected;
         } catch (err) {
           this._log.Warning(_ExalusConnectionService.ServiceName, `Transport ${signalR.HttpTransportType[t]} failed (${err === null || err === void 0 ? void 0 : err.message}).`);
+          if (this._connection === conn)
+            this.cleanup();
           try {
             yield conn.stop();
-          } catch (_e) {
+          } catch (_o) {
           }
           try {
-            (_b = conn === null || conn === void 0 ? void 0 : conn.off) === null || _b === void 0 ? void 0 : _b.call(conn);
-          } catch (_f) {
+            (_c = conn === null || conn === void 0 ? void 0 : conn.off) === null || _c === void 0 ? void 0 : _c.call(conn);
+          } catch (_p) {
           }
         }
       }
@@ -33048,44 +30829,92 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
     this._cache = Api.Get(WebApiCacheService.ServiceName);
     this._session = Api.Get(SessionService.ServiceName);
   }
-  wireConnectionEvents() {
-    if (!this._connection)
-      return;
-    this._connection.on("Pong", () => {
+  wireConnectionEvents(connection) {
+    const isCurrentConnection = () => this._connection === connection;
+    connection.on("Pong", () => {
+      if (!isCurrentConnection())
+        return;
       this._lastReceivedPacket = Date.now();
       this._pongReceivedEvent.Invoke();
     });
-    this._connection.on("controllerdisconnected", () => {
+    connection.on("controllerdisconnected", () => {
+      if (!isCurrentConnection())
+        return;
       this._isAuthorized = false;
       this._connectionStateChangedEvent.Invoke(ConnectionState.Disconnected);
     });
-    this._connection.on("Authorization", (ok) => this._authorizationReceivedEvent.Invoke(ok));
-    this._connection.on("Registration", (d) => this._registrationReceivedEvent.Invoke(d));
-    this._connection.on("SendError", (s, d) => {
+    connection.on("Authorization", (ok) => {
+      if (isCurrentConnection())
+        this._authorizationReceivedEvent.Invoke(ok);
+    });
+    connection.on("Registration", (d) => {
+      if (isCurrentConnection())
+        this._registrationReceivedEvent.Invoke(d);
+    });
+    connection.on("SendError", (s, d) => {
+      if (!isCurrentConnection())
+        return;
       if (s.startsWith("NotAuthorized:")) {
-        this.AuthorizeAsync(new AuthorizationInfo(this._serialId, this._PIN));
+        if (this._serialId && this._PIN) {
+          void this.AuthorizeAsync(new AuthorizationInfo(this._serialId, this._PIN)).catch((error) => {
+            this._log.Warning(_ExalusConnectionService.ServiceName, `Re-authorization failed: ${error}`);
+          });
+        }
       } else {
         this._errorOccuredEvent.Invoke([s, d]);
       }
     });
-    this._connection.on("Data", (_, json) => {
+    connection.on("Data", (_, json) => {
+      if (!isCurrentConnection())
+        return;
       this._lastReceivedPacket = Date.now();
       if (window["packets"] === true)
         this._log.Debug(_ExalusConnectionService.ServiceName, `Received: ${JSON.stringify(JSON.parse(json), null, 2)}`);
       this._dataReceivedEvent.Invoke(JSON.parse(json));
     });
-    this._connection.onclose(() => {
+    connection.onclose(() => {
+      if (!isCurrentConnection())
+        return;
       this._isAuthorized = false;
       this.cleanup();
       this._connectionStateChangedEvent.Invoke(ConnectionState.Disconnected);
+      if (this._everConnected && !this._disconnectedOnPurpose && !this._restoreTask && this._serialId && this._PIN) {
+        this._connectionStateChangedEvent.Invoke(ConnectionState.Reconnecting);
+        void this.reconnectAsync().catch((error) => {
+          this._log.Warning(_ExalusConnectionService.ServiceName, `Automatic reconnect failed: ${error}`);
+        });
+      }
     });
-    this._connection.onreconnecting(() => this._connectionStateChangedEvent.Invoke(ConnectionState.Reconnecting));
-    this._connection.onreconnected(() => __awaiter7(this, void 0, void 0, function* () {
-      var _a;
-      this._connectionStateChangedEvent.Invoke(ConnectionState.Connected);
-      if (yield this.RestoreConnectionAsync())
-        (_a = this._session) === null || _a === void 0 ? void 0 : _a.RestoreSessionAsync();
-    }));
+    connection.onreconnecting(() => {
+      if (!isCurrentConnection())
+        return;
+      this._isAuthorized = false;
+      this._connectionStateChangedEvent.Invoke(ConnectionState.Reconnecting);
+    });
+    connection.onreconnected(() => {
+      void (() => __awaiter7(this, void 0, void 0, function* () {
+        var _a;
+        if (!isCurrentConnection())
+          return;
+        const version = this._lifecycleVersion;
+        this._consecutivePingFailures = 0;
+        const restored = yield this.RestoreConnectionAsync();
+        if (!isCurrentConnection() || !this.isLifecycleCurrent(version))
+          return;
+        if (restored) {
+          this._connectionStateChangedEvent.Invoke(ConnectionState.Connected);
+          yield (_a = this._session) === null || _a === void 0 ? void 0 : _a.RestoreSessionAsync();
+        } else if (!this._disconnectedOnPurpose) {
+          this._connectionStateChangedEvent.Invoke(ConnectionState.Reconnecting);
+          yield this.reconnectAsync(version);
+        }
+      }))().catch((error) => {
+        this._log.Warning(_ExalusConnectionService.ServiceName, `Post-reconnect restore failed: ${error}`);
+        if (!this._disconnectedOnPurpose)
+          void this.reconnectAsync().catch(() => {
+          });
+      });
+    });
   }
   startPingLoop() {
     if (this._pingTimerId !== null)
@@ -33104,7 +30933,7 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
   }
   pingOnce() {
     return __awaiter7(this, void 0, void 0, function* () {
-      if (!this.IsConnected() || this.isBusy())
+      if (this._disconnectedOnPurpose || !this.IsConnected() || this.isBusy())
         return;
       if (Date.now() - this._lastReceivedPacket < _ExalusConnectionService.PING_INTERVAL_MS)
         return;
@@ -33114,11 +30943,21 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
       } else if (++this._consecutivePingFailures >= _ExalusConnectionService.MAX_CONSECUTIVE_PING_FAILURES) {
         this._consecutivePingFailures = 0;
         this._log.Warning(_ExalusConnectionService.ServiceName, "Ping failed too many times \u2192 reconnecting...");
-        void this.serialisedConnect();
+        void this.reconnectAsync().catch((error) => {
+          this._log.Warning(_ExalusConnectionService.ServiceName, `Ping reconnect failed: ${error}`);
+        });
       }
     });
   }
   validateConnectionToController() {
+    if (this._connectionValidationTask)
+      return this._connectionValidationTask;
+    this._connectionValidationTask = this.validateConnectionToControllerCore().finally(() => {
+      this._connectionValidationTask = null;
+    });
+    return this._connectionValidationTask;
+  }
+  validateConnectionToControllerCore() {
     return __awaiter7(this, void 0, void 0, function* () {
       var _a;
       if (this.IsConnected()) {
@@ -33146,6 +30985,18 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
       }
     });
   }
+  ensureConnectionIsHealthy() {
+    if (this._disconnectedOnPurpose || this._connectTask || this._reconnectTask || this._restoreTask || this.isBusy() || !navigator.onLine)
+      return;
+    void this.validateConnectionToController().then((isConnected) => {
+      if (!isConnected) {
+        this._log.Debug(_ExalusConnectionService.ServiceName, "Connection lost -> reconnecting...");
+        void this.reconnectAsync().catch((error) => {
+          this._log.Warning(_ExalusConnectionService.ServiceName, `Health reconnect failed: ${error}`);
+        });
+      }
+    });
+  }
   cleanup() {
     var _a, _b;
     if (this._pingTimerId !== null) {
@@ -33166,6 +31017,7 @@ ${JSON.stringify(dataFrame, null, 2)}` : ""));
       (_b = (_a = this._connection) === null || _a === void 0 ? void 0 : _a.off) === null || _b === void 0 ? void 0 : _b.call(_a);
     } catch (_c) {
     }
+    this._isAuthorized = false;
     this._connection = void 0;
     this._currentAddress = void 0;
   }
@@ -51547,9 +49399,10 @@ var LocalNetworkExalusConnectionService = class _LocalNetworkExalusConnectionSer
     this._controllerConfiguration = null;
     this._cache = null;
     this._session = null;
-    this._logPackets = true;
+    this._logPackets = false;
     this.socket = null;
     this._address = null;
+    this._connectedAddress = null;
     this._port = "81";
     this._isOpen = false;
     this._pin = void 0;
@@ -51560,17 +49413,58 @@ var LocalNetworkExalusConnectionService = class _LocalNetworkExalusConnectionSer
     this._pingIntervalId = null;
     this._lastReceivedPacketTime = Date.now();
     this._disconnectedOnPurpose = false;
+    this._lifecycleVersion = 0;
+    this._connectTask = null;
+    this._connectTaskVersion = null;
+    this._reconnectTask = null;
+    this._reconnectTaskVersion = null;
     this._restoreTask = null;
-    Api.Get(AppStateService.ServiceName).OnAppStateChanged().Subscribe((newState) => __awaiter27(this, void 0, void 0, function* () {
-      var _a;
-      switch (newState) {
-        case AppState.ExitedLowPowerMode:
-        case AppState.ReturnedFromSuspension:
-          if (yield this.RestoreConnectionAsync())
-            (_a = this._session) === null || _a === void 0 ? void 0 : _a.RestoreSessionAsync();
-          break;
-      }
-    }));
+    this._restoreTaskVersion = null;
+    Api.Get(AppStateService.ServiceName).OnAppStateChanged().Subscribe((newState) => {
+      void (() => __awaiter27(this, void 0, void 0, function* () {
+        var _a;
+        switch (newState) {
+          case AppState.ExitedLowPowerMode:
+          case AppState.ReturnedFromSuspension:
+            if (this._auth !== null && (yield this.RestoreConnectionAsync()))
+              yield (_a = this._session) === null || _a === void 0 ? void 0 : _a.RestoreSessionAsync();
+            break;
+        }
+      }))().catch((error) => {
+        this._log.Warning(_LocalNetworkExalusConnectionService.ServiceName, `App state handling failed: ${error}`);
+      });
+    });
+  }
+  isLifecycleCurrent(version) {
+    return version === this._lifecycleVersion && !this._disconnectedOnPurpose;
+  }
+  beginExplicitConnection() {
+    const cancel = this._connectAttemptCancel;
+    this._connectAttemptCancel = void 0;
+    cancel === null || cancel === void 0 ? void 0 : cancel();
+    this._lifecycleVersion++;
+    this._disconnectedOnPurpose = false;
+    return this._lifecycleVersion;
+  }
+  clearPingInterval() {
+    if (this._pingIntervalId !== null) {
+      clearInterval(this._pingIntervalId);
+      this._pingIntervalId = null;
+    }
+  }
+  detachAndCloseSocket(socket = this.socket) {
+    if (socket == null)
+      return;
+    if (this.socket === socket) {
+      this.socket = null;
+      this._connectedAddress = null;
+      this._isOpen = false;
+      this.clearPingInterval();
+    }
+    try {
+      socket.close();
+    } catch (_a) {
+    }
   }
   GetConnectedBrokerInfoAsync() {
     return __awaiter27(this, arguments, void 0, function* (timeoutMs = 8e3) {
@@ -51590,10 +49484,15 @@ var LocalNetworkExalusConnectionService = class _LocalNetworkExalusConnectionSer
   checkIfAuthInfoIsCorrectAsync(authInfo) {
     return __awaiter27(this, void 0, void 0, function* () {
       const url = `http://${window.location.hostname}/controller_info`;
-      let res = yield fetch(url, { method: "GET" });
-      if (res.ok)
-        return (yield res.text()) === `${authInfo.SerialNumber}:${authInfo.PIN}`;
-      return false;
+      try {
+        let res = yield fetch(url, { method: "GET" });
+        if (res.ok)
+          return (yield res.text()) === `${authInfo.SerialNumber}:${authInfo.PIN}`;
+        return false;
+      } catch (error) {
+        this._log.Warning(_LocalNetworkExalusConnectionService.ServiceName, `Authorization check failed: ${error}`);
+        return false;
+      }
     });
   }
   PingControllerAsync() {
@@ -51634,112 +49533,214 @@ var LocalNetworkExalusConnectionService = class _LocalNetworkExalusConnectionSer
     return Promise.resolve(this._address);
   }
   ConnectAsync(address) {
-    return new Promise((resolve, reject) => {
-      this.Initialize();
-      this._disconnectedOnPurpose = false;
-      this._address = address;
-      const previousSocket = this.socket;
-      const socket = new WebSocket(`ws://${address}/api`);
-      this.socket = socket;
-      if (this._pingIntervalId !== null) {
-        clearInterval(this._pingIntervalId);
-        this._pingIntervalId = null;
+    const version = this.beginExplicitConnection();
+    this.Initialize();
+    this._address = address;
+    return this.serialisedConnect(address, version);
+  }
+  serialisedConnect(address, version = this._lifecycleVersion, authorizationInfo) {
+    var _a;
+    if (!this.isLifecycleCurrent(version))
+      return Promise.resolve(ConnectionResult.FailedToConnect);
+    if (this._connectTask && this._connectTaskVersion === version)
+      return this._connectTask;
+    (_a = this._connectAttemptCancel) === null || _a === void 0 ? void 0 : _a.call(this);
+    let task;
+    task = this.connectCore(address, version, authorizationInfo).finally(() => {
+      if (this._connectTask === task) {
+        this._connectTask = null;
+        this._connectTaskVersion = null;
+        this._connectAttemptCancel = void 0;
       }
-      previousSocket === null || previousSocket === void 0 ? void 0 : previousSocket.close();
+    });
+    this._connectTask = task;
+    this._connectTaskVersion = version;
+    return task;
+  }
+  connectCore(address, version, authorizationInfo) {
+    return __awaiter27(this, void 0, void 0, function* () {
+      if (!this.isLifecycleCurrent(version))
+        return ConnectionResult.FailedToConnect;
+      this.Initialize();
+      const requiredAuthorization = authorizationInfo !== null && authorizationInfo !== void 0 ? authorizationInfo : this._auth;
+      const existingSocket = this.socket;
+      if ((existingSocket === null || existingSocket === void 0 ? void 0 : existingSocket.readyState) === WebSocket.OPEN && this._isOpen && this._connectedAddress === address) {
+        if (requiredAuthorization != null && !(yield this.authorizeAsyncCore(requiredAuthorization, version))) {
+          this.detachAndCloseSocket(existingSocket);
+          return ConnectionResult.FailedToConnect;
+        }
+        return ConnectionResult.Connected;
+      }
+      if (existingSocket !== null)
+        this.detachAndCloseSocket(existingSocket);
+      this._isOpen = false;
+      this.clearPingInterval();
       this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Connecting to the WebSockets server ${address}`);
-      socket.onerror = (ev) => {
-        if (this.socket !== socket)
-          return;
-        this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Error occured in the WebSockets server ${address} info: 
-${JSON.stringify(ev)}`);
-        this._isOpen = false;
-        this._errorOccuredEvent.Invoke(["WebSockets", ev.toString()]);
-        return reject(ConnectionResult.FailedToConnect);
-      };
-      socket.onopen = (ev) => {
-        if (this.socket !== socket)
-          return;
-        this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Connected to the WebSockets server ${address} info: 
-${JSON.stringify(ev)}`);
-        this._isOpen = true;
-        this._connectionStateChangedEvent.Invoke(ConnectionState.Connected);
-        this._pingIntervalId = setInterval(() => __awaiter27(this, void 0, void 0, function* () {
-          yield this.PingControllerAsync();
-        }), this._pingInterval);
-        return resolve(ConnectionResult.Connected);
-      };
-      socket.onclose = (ev) => {
-        if (this.socket !== socket)
-          return;
-        this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Disconnected from the WebSockets server ${address} info: 
-${JSON.stringify(ev)}`);
-        this._isOpen = false;
-        if (this._pingIntervalId !== null) {
-          clearInterval(this._pingIntervalId);
-          this._pingIntervalId = null;
-        }
-        this._connectionStateChangedEvent.Invoke(ConnectionState.Disconnected);
-      };
-      socket.onmessage = (ev) => {
-        if (this.socket !== socket)
-          return;
-        this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Message received from the WebSockets server ${address}: ${ev.data}`);
-        this._onMessageReceived.Invoke(ev.data);
-        try {
-          let frame = JSON.parse(ev.data);
-          this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Received data frame: ${frame.Status}`);
-          this._dataReceivedEvent.Invoke(frame);
-        } catch (err) {
-          this._log.Error(_LocalNetworkExalusConnectionService.ServiceName, `Failed to parse message: ${ev.data}`);
-        }
-      };
       this._connectionStateChangedEvent.Invoke(ConnectionState.Connecting);
+      return new Promise((resolve) => {
+        let socket;
+        let settled = false;
+        let opened = false;
+        let ready = false;
+        const settle = (result) => {
+          if (settled)
+            return;
+          settled = true;
+          resolve(result);
+        };
+        const isCurrentAttempt = () => this.socket === socket && this.isLifecycleCurrent(version);
+        try {
+          socket = new WebSocket(`ws://${address}/api`);
+        } catch (error) {
+          this._log.Warning(_LocalNetworkExalusConnectionService.ServiceName, `WebSocket creation failed: ${error}`);
+          settle(ConnectionResult.FailedToConnect);
+          return;
+        }
+        this.socket = socket;
+        this._connectAttemptCancel = () => {
+          settle(ConnectionResult.FailedToConnect);
+          this.detachAndCloseSocket(socket);
+        };
+        socket.onerror = (ev) => {
+          if (!isCurrentAttempt()) {
+            settle(ConnectionResult.FailedToConnect);
+            return;
+          }
+          this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Error occured in the WebSockets server ${address} info: 
+${JSON.stringify(ev)}`);
+          this._isOpen = false;
+          this.clearPingInterval();
+          this._errorOccuredEvent.Invoke(["WebSockets", ev.toString()]);
+          settle(ConnectionResult.FailedToConnect);
+        };
+        socket.onopen = (ev) => {
+          void (() => __awaiter27(this, void 0, void 0, function* () {
+            if (!isCurrentAttempt()) {
+              settle(ConnectionResult.FailedToConnect);
+              return;
+            }
+            this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Connected to the WebSockets server ${address} info: 
+${JSON.stringify(ev)}`);
+            this._isOpen = true;
+            this._connectedAddress = address;
+            opened = true;
+            this._lastReceivedPacketTime = Date.now();
+            if (requiredAuthorization != null && !(yield this.authorizeAsyncCore(requiredAuthorization, version))) {
+              this.detachAndCloseSocket(socket);
+              settle(ConnectionResult.FailedToConnect);
+              return;
+            }
+            if (!isCurrentAttempt()) {
+              this.detachAndCloseSocket(socket);
+              settle(ConnectionResult.FailedToConnect);
+              return;
+            }
+            this._pingIntervalId = setInterval(() => {
+              void this.PingControllerAsync().catch((error) => {
+                this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Ping failed: ${error}`);
+              });
+            }, this._pingInterval);
+            this._connectionStateChangedEvent.Invoke(ConnectionState.Connected);
+            ready = true;
+            settle(ConnectionResult.Connected);
+          }))().catch((error) => {
+            this._log.Warning(_LocalNetworkExalusConnectionService.ServiceName, `WebSocket open handling failed: ${error}`);
+            this.detachAndCloseSocket(socket);
+            settle(ConnectionResult.FailedToConnect);
+          });
+        };
+        socket.onclose = (ev) => {
+          if (this.socket !== socket || !this.isLifecycleCurrent(version)) {
+            settle(ConnectionResult.FailedToConnect);
+            return;
+          }
+          this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Disconnected from the WebSockets server ${address} info: 
+${JSON.stringify(ev)}`);
+          this._isOpen = false;
+          this._connectedAddress = null;
+          this.clearPingInterval();
+          settle(ready ? ConnectionResult.Connected : ConnectionResult.FailedToConnect);
+          this._connectionStateChangedEvent.Invoke(ConnectionState.Disconnected);
+          if (opened && !this._disconnectedOnPurpose && !this._restoreTask && this._auth !== null) {
+            this._connectionStateChangedEvent.Invoke(ConnectionState.Reconnecting);
+            void this.reconnectAsync().catch((error) => {
+              this._log.Warning(_LocalNetworkExalusConnectionService.ServiceName, `Automatic reconnect failed: ${error}`);
+            });
+          }
+        };
+        socket.onmessage = (ev) => {
+          if (this.socket !== socket)
+            return;
+          this._lastReceivedPacketTime = Date.now();
+          if (this._logPackets || window["packets"] === true)
+            this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Message received from the WebSockets server ${address}: ${ev.data}`);
+          this._onMessageReceived.Invoke(ev.data);
+          try {
+            let frame = JSON.parse(ev.data);
+            this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Received data frame: ${frame.Status}`);
+            this._dataReceivedEvent.Invoke(frame);
+          } catch (err) {
+            this._log.Error(_LocalNetworkExalusConnectionService.ServiceName, `Failed to parse message: ${ev.data}`);
+          }
+        };
+      });
     });
   }
   AuthorizeAsync(authorizationInfo) {
     return __awaiter27(this, void 0, void 0, function* () {
       Api.WorksInContextOf = authorizationInfo.SerialNumber;
-      let res = yield this.checkIfAuthInfoIsCorrectAsync(authorizationInfo);
-      if (res) {
-        this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Authorization successful for controller ${authorizationInfo.SerialNumber}`);
-        this._pin = authorizationInfo.PIN;
-        this._serial = authorizationInfo.SerialNumber;
-        this._auth = authorizationInfo;
-        if (this.IsConnected())
-          this._connectionStateChangedEvent.Invoke(ConnectionState.ConnectedAndAuthorized);
-        return true;
-      } else
+      return this.authorizeAsyncCore(authorizationInfo, this._lifecycleVersion);
+    });
+  }
+  authorizeAsyncCore(authorizationInfo, version) {
+    return __awaiter27(this, void 0, void 0, function* () {
+      if (!this.isLifecycleCurrent(version))
         return false;
+      const socket = this.socket;
+      if ((socket === null || socket === void 0 ? void 0 : socket.readyState) !== WebSocket.OPEN || !this._isOpen)
+        return false;
+      const valid = yield this.checkIfAuthInfoIsCorrectAsync(authorizationInfo);
+      if (!valid || !this.isLifecycleCurrent(version) || this.socket !== socket || socket.readyState !== WebSocket.OPEN || !this._isOpen)
+        return false;
+      this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Authorization successful for controller ${authorizationInfo.SerialNumber}`);
+      this._pin = authorizationInfo.PIN;
+      this._serial = authorizationInfo.SerialNumber;
+      this._auth = authorizationInfo;
+      this._connectionStateChangedEvent.Invoke(ConnectionState.ConnectedAndAuthorized);
+      return true;
     });
   }
   ConnectAndAuthorizeAsync(authorizationInfo) {
     return __awaiter27(this, void 0, void 0, function* () {
-      var _a;
+      const version = this.beginExplicitConnection();
       Api.WorksInContextOf = authorizationInfo.SerialNumber;
+      if (this._auth !== null && (this._auth.SerialNumber !== authorizationInfo.SerialNumber || this._auth.PIN !== authorizationInfo.PIN)) {
+        this._auth = null;
+        this._serial = void 0;
+        this._pin = void 0;
+      }
       this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Connecting and authorizing to the controller ${authorizationInfo.SerialNumber}`);
       let addr = yield this.GetServerAddressAsync();
-      if (addr == null)
+      if (addr == null || !this.isLifecycleCurrent(version))
         return ConnectionResult.FailedToConnectToServer;
-      const result = yield this.ConnectAsync(addr);
+      const result = yield this.serialisedConnect(addr, version, authorizationInfo);
       if (result !== ConnectionResult.Connected)
         return result;
-      let autRes = yield this.AuthorizeAsync(authorizationInfo);
-      if (!autRes) {
-        (_a = this.socket) === null || _a === void 0 ? void 0 : _a.close();
-        return ConnectionResult.AuthorizationFailed;
-      }
       return ConnectionResult.Connected;
     });
   }
   DisconnectAsync() {
-    var _a;
-    this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Disconnecting from the WebSockets server ${this._address}`);
-    this._disconnectedOnPurpose = true;
-    this._connectionStateChangedEvent.Invoke(ConnectionState.Disconnecting);
-    if (this._pingIntervalId !== null)
-      clearInterval(this._pingIntervalId);
-    (_a = this.socket) === null || _a === void 0 ? void 0 : _a.close();
-    return Promise.resolve();
+    return __awaiter27(this, void 0, void 0, function* () {
+      var _a;
+      this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Disconnecting from the WebSockets server ${this._address}`);
+      (_a = this._connectAttemptCancel) === null || _a === void 0 ? void 0 : _a.call(this);
+      this._lifecycleVersion++;
+      this._disconnectedOnPurpose = true;
+      this._isOpen = false;
+      this._connectionStateChangedEvent.Invoke(ConnectionState.Disconnecting);
+      this.clearPingInterval();
+      this.detachAndCloseSocket();
+    });
   }
   IsConnected() {
     return this._isOpen;
@@ -51757,11 +49758,17 @@ ${JSON.stringify(ev)}`);
     let fr = JSON.stringify(data);
     if (logTransmission)
       this._log.Debug(_LocalNetworkExalusConnectionService.ServiceName, `Sending data frame: ${fr}`);
-    if (this._isOpen)
-      (_a = this.socket) === null || _a === void 0 ? void 0 : _a.send(fr);
-    else
+    if (!this._isOpen || ((_a = this.socket) === null || _a === void 0 ? void 0 : _a.readyState) !== WebSocket.OPEN) {
       this._log.Error(_LocalNetworkExalusConnectionService.ServiceName, `Failed to send data frame: ${fr}`);
-    return this._isOpen;
+      return false;
+    }
+    try {
+      this.socket.send(fr);
+      return true;
+    } catch (error) {
+      this._log.Warning(_LocalNetworkExalusConnectionService.ServiceName, `Failed to send data frame: ${error}`);
+      return false;
+    }
   }
   SendAsync(dataFrame) {
     if (this._isOpen)
@@ -51832,6 +49839,8 @@ ${JSON.stringify(ev)}`);
         this._dataReceivedEvent.Subscribe(onReceivedFrame);
         timeoutId = enableTimeout();
         if (!this.SendData(dataFrame, logTransmission)) {
+          window.clearTimeout(timeoutId);
+          this._dataReceivedEvent.Unsubscribe(onReceivedFrame);
           let errorMessage = `Failed to send request, resource: ${dataFrame.Resource} method: ${dataFrame.Method} transaction id: ${dataFrame.TransactionId}`;
           reject(new Error(errorMessage));
         }
@@ -51889,6 +49898,8 @@ ${JSON.stringify(ev)}`);
           reject(new Error(errorMessage));
         }, timeout);
         if (!this.SendData(dataFrame, logTransmission)) {
+          window.clearTimeout(timeoutId);
+          this._dataReceivedEvent.Unsubscribe(onReceivedFrame);
           let errorMessage = `Failed to send request, resource: ${dataFrame.Resource} method: ${dataFrame.Method} transaction id: ${dataFrame.TransactionId}`;
           reject(new Error(errorMessage));
         }
@@ -51910,29 +49921,99 @@ ${JSON.stringify(ev)}`);
   GetServiceName() {
     return _LocalNetworkExalusConnectionService.ServiceName;
   }
+  reconnectAsync(version = this._lifecycleVersion) {
+    if (!this.isLifecycleCurrent(version))
+      return Promise.resolve(ConnectionResult.FailedToConnect);
+    if (this._auth === null)
+      return Promise.resolve(ConnectionResult.FailedToConnect);
+    if (this._reconnectTask && this._reconnectTaskVersion === version)
+      return this._reconnectTask;
+    let task;
+    task = this.reconnectCore(version).finally(() => {
+      if (this._reconnectTask === task) {
+        this._reconnectTask = null;
+        this._reconnectTaskVersion = null;
+      }
+    });
+    this._reconnectTask = task;
+    this._reconnectTaskVersion = version;
+    return task;
+  }
+  reconnectCore(version) {
+    return __awaiter27(this, void 0, void 0, function* () {
+      const auth = this._auth;
+      if (auth === null)
+        return ConnectionResult.FailedToConnect;
+      const start = Date.now();
+      const maxTime = 30 * 60 * 1e3;
+      let attempt = 0;
+      while (Date.now() - start < maxTime) {
+        if (!this.isLifecycleCurrent(version))
+          return ConnectionResult.FailedToConnect;
+        this.detachAndCloseSocket();
+        const addr = yield this.GetServerAddressAsync();
+        if (addr !== null) {
+          const result = yield this.serialisedConnect(addr, version);
+          if (result === ConnectionResult.Connected && this._auth === auth && (yield this.authorizeAsyncCore(auth, version)))
+            return ConnectionResult.Connected;
+        }
+        if (!this.isLifecycleCurrent(version))
+          return ConnectionResult.FailedToConnect;
+        const delay = Math.min(3e4, 5e3 * Math.pow(2, attempt++));
+        yield new Promise((resolve) => setTimeout(resolve, delay));
+      }
+      return ConnectionResult.FailedToConnect;
+    });
+  }
   RestoreConnectionAsync() {
     return __awaiter27(this, void 0, void 0, function* () {
       if (this._disconnectedOnPurpose)
         return false;
-      if (this._restoreTask)
+      const version = this._lifecycleVersion;
+      if (this._reconnectTask && this._reconnectTaskVersion === version)
+        return this._reconnectTask.then((result) => result === ConnectionResult.Connected && this._auth !== null);
+      if (this._restoreTask && this._restoreTaskVersion === version)
         return this._restoreTask;
-      this._restoreTask = (() => __awaiter27(this, void 0, void 0, function* () {
-        const auth = this._auth;
-        if (auth == null)
-          return false;
-        if (this.IsConnected())
-          return this.AuthorizeAsync(auth);
-        const addr = yield this.GetServerAddressAsync();
-        if (addr == null)
-          return false;
-        const connectionResult = yield this.ConnectAsync(addr);
-        if (connectionResult !== ConnectionResult.Connected)
-          return false;
-        return this.AuthorizeAsync(auth);
-      }))().finally(() => {
-        this._restoreTask = null;
+      let task;
+      task = this.restoreConnectionCore(version).finally(() => {
+        if (this._restoreTask === task) {
+          this._restoreTask = null;
+          this._restoreTaskVersion = null;
+        }
       });
-      return this._restoreTask;
+      this._restoreTask = task;
+      this._restoreTaskVersion = version;
+      return task;
+    });
+  }
+  restoreConnectionCore(version) {
+    return __awaiter27(this, void 0, void 0, function* () {
+      const auth = this._auth;
+      if (auth === null)
+        return false;
+      const start = Date.now();
+      const maxTime = 30 * 60 * 1e3;
+      let attempt = 0;
+      while (Date.now() - start < maxTime) {
+        if (!this.isLifecycleCurrent(version))
+          return false;
+        if (this.IsConnected()) {
+          if (yield this.authorizeAsyncCore(auth, version))
+            return true;
+        } else {
+          const addr = yield this.GetServerAddressAsync();
+          if (addr !== null) {
+            const result = yield this.serialisedConnect(addr, version);
+            if (result === ConnectionResult.Connected && (yield this.authorizeAsyncCore(auth, version)))
+              return true;
+          }
+        }
+        if (!this.isLifecycleCurrent(version))
+          return false;
+        const delay = Math.min(3e4, 5e3 * Math.pow(2, attempt++));
+        yield new Promise((resolve) => setTimeout(resolve, delay));
+      }
+      return false;
     });
   }
 };
@@ -51991,6 +50072,7 @@ var NotificationsServiceErrorCode;
   NotificationsServiceErrorCode2["NoData"] = "NoData";
   NotificationsServiceErrorCode2["IncorrectGuid"] = "IncorrectGuid";
   NotificationsServiceErrorCode2["IdentityIsEmpty"] = "IdentityIsEmpty";
+  NotificationsServiceErrorCode2["FirebaseInstallationIdIsEmpty"] = "FirebaseInstallationIdIsEmpty";
   NotificationsServiceErrorCode2["DeviceTokenIsEmpty"] = "DeviceTokenIsEmpty";
   NotificationsServiceErrorCode2["ClientNameIsEmpty"] = "ClientNameIsEmpty";
   NotificationsServiceErrorCode2["LavvaUserNameIsEmpty"] = "LavvaUserNameIsEmpty";
@@ -52034,17 +50116,17 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
   GetServiceName() {
     return _ControllerNotificationsService.ServiceName;
   }
+  IsFidSupported() {
+    return Api.Get(ControllerConfigurationService.ServiceName).CheckIfControllerSoftwareVersionIsEnough(_ControllerNotificationsService.FirebaseInstallationIdControllerVersion.major, _ControllerNotificationsService.FirebaseInstallationIdControllerVersion.minor);
+  }
   RegisterNotificationsClientAsync(registration) {
     return __awaiter28(this, void 0, void 0, function* () {
       var _a;
       try {
-        const request = new RegisterNotificationsClientRequest({
-          ClientName: registration.ClientName,
-          DeviceToken: registration.DeviceToken,
-          LavvaUserName: registration.LavvaUserName,
-          ClientType: this.getClientType(),
-          NotificationsEnabledForToken: registration.EnableNotifications
-        });
+        const requestData = this.createRegistrationRequestData(registration);
+        if (requestData instanceof ResponseResult)
+          return requestData;
+        const request = new RegisterNotificationsClientRequest(requestData);
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(request, 8e3, false);
         if (result == null || result.Status == null) {
           return new ResponseResult(NotificationsServiceErrorCode.UnknownError, `Cannot register notifications client - unknown error!`);
@@ -52076,14 +50158,10 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
     return __awaiter28(this, void 0, void 0, function* () {
       var _a;
       try {
-        const request = new UpdateNotificationsClientRequest({
-          ClientName: registration.ClientName,
-          DeviceToken: registration.DeviceToken,
-          LavvaUserName: registration.LavvaUserName,
-          ClientType: this.getClientType(),
-          NotificationsEnabledForToken: registration.EnableNotifications,
-          Guid: tokenGuid
-        });
+        const requestData = this.createRegistrationRequestData(registration);
+        if (requestData instanceof ResponseResult)
+          return requestData;
+        const request = new UpdateNotificationsClientRequest(Object.assign(Object.assign({}, requestData), { Guid: tokenGuid }));
         const result = yield (_a = this._connection) === null || _a === void 0 ? void 0 : _a.SendAndWaitForResponseAsync(request, 8e3, false);
         if (result == null || result.Status == null) {
           return new ResponseResult(NotificationsServiceErrorCode.UnknownError, `Cannot update notifications client - unknown error!`);
@@ -52137,6 +50215,7 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
           registration.ClientType = item.ClientType;
           registration.TokenGuid = item.TokenGuid;
           registration.Token = item.Token;
+          registration.FirebaseInstallationId = item.FirebaseInstallationId;
           registration.RegistrationDate = new Date(item.RegistrationDate);
           return registration;
         });
@@ -52362,11 +50441,26 @@ var ControllerNotificationsService = class _ControllerNotificationsService {
       return NotificationClientType.Web;
     }
   }
+  createRegistrationRequestData(registration) {
+    const supportsFirebaseInstallationId = this.IsFidSupported();
+    if (!supportsFirebaseInstallationId && !registration.DeviceToken) {
+      return new ResponseResult(NotificationsServiceErrorCode.FeatureUnsupported, "Firebase Installation ID notifications require controller software version 8.46 or later.");
+    }
+    return {
+      ClientName: registration.ClientName,
+      DeviceToken: registration.DeviceToken,
+      FirebaseInstallationId: supportsFirebaseInstallationId ? registration.FirebaseInstallationId : void 0,
+      LavvaUserName: registration.LavvaUserName,
+      ClientType: this.getClientType(),
+      NotificationsEnabledForToken: registration.EnableNotifications
+    };
+  }
   isValidErrorCode(value) {
     return Object.values(NotificationsServiceErrorCode).includes(value);
   }
 };
 ControllerNotificationsService.ServiceName = "NotificationsService";
+ControllerNotificationsService.FirebaseInstallationIdControllerVersion = { major: 9, minor: 15 };
 var RegisterNotificationsClientRequest = class extends DataFrame {
   constructor(data) {
     super();
@@ -52489,11 +50583,30 @@ var AndroidNotificationsService = class _AndroidNotificationsService {
     }
     return Promise.resolve(false);
   }
+  IsFidSupportedAsync() {
+    if (this.IsAndroidNotificationsAvailable()) {
+      return navigator.AndroidNotifications.IsFidSupportedAsync();
+    }
+    return Promise.resolve(false);
+  }
   GetDeviceFirebaseTokenAsync() {
     if (this.IsAndroidNotificationsAvailable()) {
       return navigator.AndroidNotifications.GetDeviceFirebaseTokenAsync();
     }
     return Promise.resolve(null);
+  }
+  GetDeviceFirebaseInstallationIdAsync() {
+    if (this.IsAndroidNotificationsAvailable()) {
+      return navigator.AndroidNotifications.GetDeviceFirebaseInstallationIdAsync();
+    }
+    return Promise.resolve(null);
+  }
+  SubscribeToDeviceFirebaseInstallationIdChanged(handler) {
+    if (this.IsAndroidNotificationsAvailable()) {
+      return navigator.AndroidNotifications.SubscribeToDeviceFirebaseInstallationIdChanged(handler);
+    }
+    return () => {
+    };
   }
   GetNotificationsQueueAsync() {
     if (this.IsAndroidNotificationsAvailable()) {
@@ -52762,6 +50875,172 @@ var ResetPairingFrame = class extends DataFrame {
   }
 };
 
+// node_modules/lavva.exalushome/build/js/Services/Controller/IConfigBackupService.js
+var ConfigBackupCreateResult;
+(function(ConfigBackupCreateResult2) {
+  ConfigBackupCreateResult2[ConfigBackupCreateResult2["ResourceIsNotAvailable"] = -2] = "ResourceIsNotAvailable";
+  ConfigBackupCreateResult2[ConfigBackupCreateResult2["BackupCreationFailed"] = -1] = "BackupCreationFailed";
+  ConfigBackupCreateResult2[ConfigBackupCreateResult2["UnknownError"] = 0] = "UnknownError";
+  ConfigBackupCreateResult2[ConfigBackupCreateResult2["Created"] = 1] = "Created";
+})(ConfigBackupCreateResult || (ConfigBackupCreateResult = {}));
+var ConfigBackupRestoreResult;
+(function(ConfigBackupRestoreResult2) {
+  ConfigBackupRestoreResult2[ConfigBackupRestoreResult2["ResourceIsNotAvailable"] = -4] = "ResourceIsNotAvailable";
+  ConfigBackupRestoreResult2[ConfigBackupRestoreResult2["BackupNotFound"] = -3] = "BackupNotFound";
+  ConfigBackupRestoreResult2[ConfigBackupRestoreResult2["WrongBackupData"] = -2] = "WrongBackupData";
+  ConfigBackupRestoreResult2[ConfigBackupRestoreResult2["RestoreFailed"] = -1] = "RestoreFailed";
+  ConfigBackupRestoreResult2[ConfigBackupRestoreResult2["UnknownError"] = 0] = "UnknownError";
+  ConfigBackupRestoreResult2[ConfigBackupRestoreResult2["Restored"] = 1] = "Restored";
+})(ConfigBackupRestoreResult || (ConfigBackupRestoreResult = {}));
+
+// node_modules/lavva.exalushome/build/js/Services/Controller/ConfigBackupService.js
+var __awaiter31 = function(thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function(resolve) {
+      resolve(value);
+    });
+  }
+  return new (P || (P = Promise))(function(resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+var ConfigBackupService = class _ConfigBackupService {
+  constructor() {
+    this._connection = Api.Get(ExalusConnectionService.ServiceName);
+  }
+  GetServiceName() {
+    return _ConfigBackupService.ServiceName;
+  }
+  IsSupported() {
+    return __awaiter31(this, void 0, void 0, function* () {
+      const response = yield this._connection.SendAndWaitForResponseAsync(new GetBackupsRequest(), 1e4, false);
+      return (response === null || response === void 0 ? void 0 : response.Status) !== Status.ResourceDoesNotExists;
+    });
+  }
+  GetBackupsAsync() {
+    return __awaiter31(this, void 0, void 0, function* () {
+      var _a, _b;
+      const response = yield this._connection.SendAndWaitForResponseAsync(new GetBackupsRequest(), 1e4, false);
+      if ((response === null || response === void 0 ? void 0 : response.Status) === Status.ResourceDoesNotExists) {
+        return Status.ResourceIsNotAvailable;
+      }
+      if ((response === null || response === void 0 ? void 0 : response.Status) !== Status.OK) {
+        return (_a = response === null || response === void 0 ? void 0 : response.Status) !== null && _a !== void 0 ? _a : Status.UnknownError;
+      }
+      return (_b = response.Data) !== null && _b !== void 0 ? _b : [];
+    });
+  }
+  CreateBackupAsync() {
+    return __awaiter31(this, void 0, void 0, function* () {
+      var _a;
+      const response = yield this._connection.SendAndWaitForResponseAsync(new CreateBackupRequest(), 15e3, false);
+      if ((response === null || response === void 0 ? void 0 : response.Status) === Status.OK) {
+        const data = response.Data;
+        const configurationId = (_a = data === null || data === void 0 ? void 0 : data.ConfigurationId) !== null && _a !== void 0 ? _a : "";
+        return {
+          ConfigurationId: configurationId
+        };
+      }
+      if ((response === null || response === void 0 ? void 0 : response.Status) === Status.ResourceDoesNotExists) {
+        return new ResponseResult(ConfigBackupCreateResult.ResourceIsNotAvailable, _ConfigBackupService.FeatureNotSupportedMessage);
+      }
+      if ((response === null || response === void 0 ? void 0 : response.Status) === Status.ResourceIsNotAvailable) {
+        return new ResponseResult(ConfigBackupCreateResult.ResourceIsNotAvailable, this.GetResponseDataAsString(response.Data));
+      }
+      if (this.GetResponseDataAsString(response === null || response === void 0 ? void 0 : response.Data) === "BackupCreationFailed") {
+        return new ResponseResult(ConfigBackupCreateResult.BackupCreationFailed, this.GetResponseDataAsString(response === null || response === void 0 ? void 0 : response.Data));
+      }
+      return new ResponseResult(ConfigBackupCreateResult.UnknownError, this.GetResponseDataAsString(response === null || response === void 0 ? void 0 : response.Data));
+    });
+  }
+  RestoreBackupAsync(configurationId) {
+    return __awaiter31(this, void 0, void 0, function* () {
+      const response = yield this._connection.SendAndWaitForResponseAsync(new RestoreBackupRequest(configurationId), 4e4, false);
+      return this.MapRestoreResponse(response === null || response === void 0 ? void 0 : response.Status, response === null || response === void 0 ? void 0 : response.Data);
+    });
+  }
+  RestoreLatestBackupAsync() {
+    return __awaiter31(this, void 0, void 0, function* () {
+      const response = yield this._connection.SendAndWaitForResponseAsync(new RestoreLatestBackupRequest(), 4e4, false);
+      return this.MapRestoreResponse(response === null || response === void 0 ? void 0 : response.Status, response === null || response === void 0 ? void 0 : response.Data);
+    });
+  }
+  MapRestoreResponse(status, data) {
+    if (status === Status.OK) {
+      return new ResponseResult(ConfigBackupRestoreResult.Restored, "");
+    }
+    if (status === Status.ResourceDoesNotExists) {
+      return new ResponseResult(ConfigBackupRestoreResult.ResourceIsNotAvailable, _ConfigBackupService.FeatureNotSupportedMessage);
+    }
+    if (data === "BackupNotFound") {
+      return new ResponseResult(ConfigBackupRestoreResult.BackupNotFound, data !== null && data !== void 0 ? data : "");
+    }
+    if (status === Status.WrongData || data === "WrongBackupData") {
+      return new ResponseResult(ConfigBackupRestoreResult.WrongBackupData, data !== null && data !== void 0 ? data : "");
+    }
+    if (status === Status.ResourceIsNotAvailable) {
+      return new ResponseResult(ConfigBackupRestoreResult.ResourceIsNotAvailable, data !== null && data !== void 0 ? data : "");
+    }
+    if (data === "RestoreBackupFailed" || data === "RestoreLatestBackupFailed") {
+      return new ResponseResult(ConfigBackupRestoreResult.RestoreFailed, data);
+    }
+    return new ResponseResult(ConfigBackupRestoreResult.UnknownError, data !== null && data !== void 0 ? data : "");
+  }
+  GetResponseDataAsString(data) {
+    return typeof data === "string" ? data : "";
+  }
+};
+ConfigBackupService.FeatureNotSupportedMessage = "Config backup feature not supported in controller.";
+ConfigBackupService.ServiceName = "ConfigBackupService";
+var GetBackupsRequest = class extends DataFrame {
+  constructor() {
+    super();
+    this.Resource = "/configuration/cloud-backup/list";
+    this.Method = Method.Get;
+  }
+};
+var CreateBackupRequest = class extends DataFrame {
+  constructor() {
+    super();
+    this.Resource = "/configuration/cloud-backup/create";
+    this.Method = Method.Post;
+  }
+};
+var RestoreBackupRequest = class extends DataFrame {
+  constructor(configurationId) {
+    super();
+    this.Resource = "/configuration/cloud-backup/restore";
+    this.Method = Method.Put;
+    this.Data = {
+      ConfigurationId: configurationId
+    };
+  }
+};
+var RestoreLatestBackupRequest = class extends DataFrame {
+  constructor() {
+    super();
+    this.Resource = "/configuration/cloud-backup/restore/latest";
+    this.Method = Method.Put;
+  }
+};
+
 // node_modules/lavva.exalushome/build/js/Api.js
 initializeLinq();
 var Api = class _Api {
@@ -52790,6 +51069,7 @@ var Api = class _Api {
       dep.RegisterService(new RemoteStorageService());
       dep.RegisterService(new GeolocationService());
       dep.RegisterService(new ControllerConfigurationService());
+      dep.RegisterService(new ConfigBackupService());
       dep.RegisterService(new FindControllerService());
       dep.RegisterService(new ManuallyPairedDevicesService());
       dep.RegisterService(new ControllerExtensionsService());
